@@ -147,7 +147,9 @@ const RequestEmailVerification = () => {
         autoClose: 3000,
         theme: "colored",
       });
-
+       
+      // this is where the users state is updated to as verified 
+      // gets the previous and then updates it 
       updateUser({ ...user, state: "verified" });
       setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {

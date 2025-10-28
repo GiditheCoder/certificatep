@@ -25,62 +25,114 @@ const Dashboard = () => {
 
   // 👇 3 possible states: "noapplication", "pending", "approved"
   const [status, setStatus] = useState("noapplication");
+  const [pendingPaymentLink, setPendingPaymentLink] = useState(null);
 
   useEffect(() => {
   console.log("User from context:", user);
 }, [user]);
 
 
+// useEffect(() => {
+//   const storedUser = localStorage.getItem("user");
+//   const token = localStorage.getItem("token");
+
+//   if (!storedUser || !token) {
+//     navigate("/login");
+//     return;
+//   }
+
+//   updateUser(JSON.parse(storedUser));
+
+//   const fetchApplication = async () => {
+//     try {
+//       const res = await axios.get(
+//         "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//           },
+//         }
+//       );
+
+//       const data = res.data;
+//       const applications = data?.data?.applications || [];
+
+//       if (applications.length === 0) {
+//         setStatus("noapplication");
+//         return;
+//       }
+
+//       // Check if any application is pending payment, approval, or already approved
+//       const existingPendingApp = applications.find(app =>
+//         app.isPendingPayment || app.isPendingApproval || app.isApproved
+//       );
+
+//       if (existingPendingApp) {
+//         if (existingPendingApp.isPendingPayment || existingPendingApp.isPendingApproval) {
+//           setStatus("pending");
+//         } else if (existingPendingApp.isApproved) {
+//           setStatus("approved");
+//         }
+//         return;
+//       }
+
+//       // All previous applications were rejected
+//       const allRejected = applications.every(app => app.isRejected);
+//       if (allRejected) {
+//         setStatus("noapplication"); // allow reapply
+//       }
+
+//     } catch (error) {
+//       console.error("Error fetching applications:", error);
+//       setStatus("noapplication");
+//     }
+//   };
+
+//   fetchApplication();
+// }, [navigate]);
+
+
+
+
 useEffect(() => {
-  const storedUser = localStorage.getItem("user");
-  const token = localStorage.getItem("token");
-
-  if (!storedUser || !token) {
-    navigate("/login");
-    return;
-  }
-
-  updateUser(JSON.parse(storedUser));
-
   const fetchApplication = async () => {
     try {
+      const token = localStorage.getItem("token");
       const res = await axios.get(
         "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const data = res.data;
-      const applications = data?.data?.applications || [];
+      const applications = res.data?.data?.applications || [];
 
       if (applications.length === 0) {
         setStatus("noapplication");
         return;
       }
 
-      // Check if any application is pending payment, approval, or already approved
-      const existingPendingApp = applications.find(app =>
-        app.isPendingPayment || app.isPendingApproval || app.isApproved
-      );
+      // Find the latest application (assuming newest last)
+      const latestApp = applications[applications.length - 1];
 
-      if (existingPendingApp) {
-        if (existingPendingApp.isPendingPayment || existingPendingApp.isPendingApproval) {
-          setStatus("pending");
-        } else if (existingPendingApp.isApproved) {
-          setStatus("approved");
-        }
+      // 🟡 If user didn't complete payment
+      if (latestApp.isPendingPayment || latestApp.paymentStatus === "incomplete") {
+        setPendingPaymentLink(
+          latestApp.pendingPaymentLink ||
+          latestApp.paymentLink ||
+          latestApp.payment_url ||
+          null
+        );
+        setStatus("noapplication"); // appear as though no app exists
         return;
       }
 
-      // All previous applications were rejected
-      const allRejected = applications.every(app => app.isRejected);
-      if (allRejected) {
-        setStatus("noapplication"); // allow reapply
+      // 🟢 Approved or waiting for approval
+      if (latestApp.isApproved) {
+        setStatus("approved");
+      } else if (latestApp.isPendingApproval) {
+        setStatus("pending");
+      } else {
+        setStatus("noapplication");
       }
-
     } catch (error) {
       console.error("Error fetching applications:", error);
       setStatus("noapplication");
@@ -88,16 +140,36 @@ useEffect(() => {
   };
 
   fetchApplication();
-}, [navigate]);
+}, []);
 
 
 
+
+// const handleNewApplication = () => {
+//   console.log("User state:", user?.state);
+
+//   if (user?.state !== "verified") {
+//     toast.error("User must be verified to start an application");
+//     return;
+//   }
+
+//   if (status === "pending" || status === "approved") {
+//     alert("You already have an application in progress or approved.");
+//     return;
+//   }
+
+//   navigate("/application");
+// };
 
 const handleNewApplication = () => {
-  console.log("User state:", user?.state);
-
   if (user?.state !== "verified") {
     toast.error("User must be verified to start an application");
+    return;
+  }
+
+  if (pendingPaymentLink) {
+    toast.info("💳 Redirecting to continue your incomplete payment...");
+    window.location.href = pendingPaymentLink;
     return;
   }
 
@@ -108,6 +180,7 @@ const handleNewApplication = () => {
 
   navigate("/application");
 };
+
 
 
 

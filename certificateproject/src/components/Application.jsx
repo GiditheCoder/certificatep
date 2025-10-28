@@ -29,6 +29,7 @@ const Application = () => {
     nativePoliticalWard: "",
     village: "",
     communityHead: "",
+    communityHeadContact: "",
     currentAddress: "",
     lga: "",
     nin: "",
@@ -68,38 +69,30 @@ useEffect(() => {
         return;
       }
 
-      // Check if any application is pending payment, approval, or already approved
-      const existingPendingApp = applications.find(app =>
-        app.isPendingPayment || app.isPendingApproval || app.isApproved
-      );
+   
+        if (existingPendingApp.isPendingPayment || existingPendingApp.paymentStatus === "incomplete") {
+  // ✅ Check for any possible payment link property names
+  const paymentLink =
+    existingPendingApp.pendingPaymentLink || // ✅ your preferred field
+    existingPendingApp.paymentLink ||
+    existingPendingApp.payment_url ||
+    existingPendingApp.paymentLinkUrl ||
+    existingPendingApp.payment_reference ||
+    null;
 
-      if (existingPendingApp) {
-        if (existingPendingApp.isPendingPayment) {
-          const paymentLink =
-            existingPendingApp.paymentLink ||
-            existingPendingApp.payment_url ||
-            existingPendingApp.paymentLinkUrl ||
-            existingPendingApp.payment_reference ||
-            null;
-
-          if (paymentLink) {
-            toast.info("💳 Redirecting to your payment page...");
-            setTimeout(() => {
-              window.location.href = paymentLink;
-            }, 1500);
-          } else {
-            toast.warning(
-              "⚠️ Your payment is pending, but we couldn’t find a payment link. Redirecting to your dashboard..."
-            );
-            setTimeout(() => navigate("/dashboard"), 4000);
-          }
-          return;
-        } else {
-          toast.warning("📝 You already have an active application. Redirecting...");
-          setTimeout(() => navigate("/dashboard"), 2000);
-          return;
-        }
-      }
+  if (paymentLink) {
+    toast.info("💳 You have an incomplete payment. Redirecting you to continue...");
+    setTimeout(() => {
+      window.location.href = paymentLink;
+    }, 1500);
+  } else {
+    toast.warning(
+      "⚠️ Your payment is pending, but we couldn’t find a valid payment link. Redirecting to your dashboard..."
+    );
+    setTimeout(() => navigate("/dashboard"), 4000);
+  }
+  return;
+}
 
       // Allow reapply only if all previous applications are rejected
       const allRejected = applications.every(app => app.isRejected);
@@ -219,6 +212,13 @@ const handleSubmit = async (e) => {
     newErrors.nativePoliticalWard = "Required";
   if (!formData.village?.trim()) newErrors.village = "Required";
   if (!formData.communityHead?.trim()) newErrors.communityHead = "Required";
+  if (!formData.communityHead?.trim()) newErrors.communityHead = "Required";
+  // check this  
+  if (!formData.communityHeadContact?.toString().trim()) {
+  newErrors.communityHeadContact = "Required";
+} else if (!/^[\d+\s-]+$/.test(formData.communityHeadContact)) {
+  newErrors.communityHeadContact = "Invalid contact format";
+}
   if (!formData.currentAddress?.trim()) newErrors.currentAddress = "Required";
   if (!formData.lga?.trim()) newErrors.lga = "Required";
   if (!formData.nin?.trim()) {
@@ -269,8 +269,13 @@ toast.success("✅ Application submitted! Redirecting to payment...");
     }
 
   } catch (error) {
-    console.error("❌ Error submitting application:", error);
-    toast.error("❌ Failed to submit application. Please try again.");
+    if (error.response) {
+    console.error("Backend message:", error.response.data);
+    toast.error(error.response.data.message || "Something went wrong.");
+  } else {
+    toast.error("Network error. Please try again.");
+  }
+
   }finally{
      setLoading(false); // ✅ Stop loading
   }
@@ -359,6 +364,11 @@ toast.success("✅ Application submitted! Redirecting to payment...");
               { name: "nativePoliticalWard", label: "Native Political Ward", placeholder: "Akute Central Ward" },
               { name: "village", label: "Village", placeholder: "Akute Village" },
               { name: "communityHead", label: "Community Head", placeholder: "Mr Ajayi Isaac" },
+              { 
+  name: "communityHeadContact", 
+  label: "Community Head Contact", 
+  placeholder: "e.g. 08012345678 or +2348012345678" 
+},
               { name: "currentAddress", label: "Current Address", placeholder: "No 2, Moon Street, Akute" },
             
               { name: "nin", label: "NIN", placeholder: "2839293892" },
