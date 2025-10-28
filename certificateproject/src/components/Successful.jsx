@@ -3,9 +3,19 @@ import Success from "../images/check-mark.png";
 import Guard from "../images/guard.png";
 import Document from "../images/document.png";
 import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from "react-router-dom";
 
 const Successful = () => {
   const navigate = useNavigate();
+   const [searchParams] = useSearchParams();
+
+
+    useEffect(() => {
+    if (status === "successful") {
+      console.log("Transaction reference:", txRef);
+      // Optional: verify payment again with your backend
+    }
+  }, [status, txRef]);
 
   const handleDashboardClick = () => {
     navigate('/dashboard'); // Navigate to the dashboard route
