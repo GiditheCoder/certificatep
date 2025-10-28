@@ -36,6 +36,18 @@ const Application = () => {
     passport: null,
   });
 
+// ✅ Detect successful payment redirect
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const paymentStatus = params.get("status"); // e.g. ?status=successful&ref=12345
+  const reference = params.get("ref");
+
+  if (paymentStatus === "successful") {
+    toast.success("🎉 Payment confirmed successfully!");
+    console.log("✅ Payment reference:", reference);
+    setTimeout(() => navigate("/successful"), 2000);
+  }
+}, [navigate]);
 
 
 
