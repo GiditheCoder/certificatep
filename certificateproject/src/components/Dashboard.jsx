@@ -43,7 +43,6 @@ const handleVerifyCertificateDashboard = () => {
 }, [user]);
 
 
-
 useEffect(() => {
   const storedUser = localStorage.getItem("user");
   const token = localStorage.getItem("token");
@@ -53,94 +52,80 @@ useEffect(() => {
     return;
   }
 
-  updateUser(JSON.parse(storedUser));
+  const parsedUser = JSON.parse(storedUser);
+  updateUser(parsedUser);
 
-  // const fetchApplication = async () => {
-  //   try {
-  //     const res = await axios.get(
-  //       "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
+  // ✅ Unified fetch function
+  const fetchApplication = async (applicationId = null) => {
+    try {
+      // If `applicationId` is provided, fetch that specific one
+      const url = applicationId
+        ? `https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application/${applicationId}`
+        : `https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application`;
 
-  //     const applications = res.data?.data?.applications || [];
-  //     console.log("Fetched applications:", applications);
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  //     if (applications.length === 0) {
-  //       setStatus("noapplication");
-  //       return;
-  //     }
+      // ✅ Handle data depending on what type of fetch was done
+      let applications = [];
 
-  //     const existingPendingApp = applications.find(
-  //       (app) => app.isPendingPayment || app.isPendingApproval || app.isApproved
-  //     );
+      if (applicationId) {
+        // Single application
+        applications = [res.data?.data?.application].filter(Boolean);
+      } else {
+        // All applications
+        applications = res.data?.data?.applications || [];
+      }
 
-  //     if (existingPendingApp) {
-  //       if (existingPendingApp.isPendingPayment || existingPendingApp.isPendingApproval) {
-  //         setStatus("pending");
-  //       } else if (existingPendingApp.isApproved) {
-  //         setStatus("approved");
-  //       }
-  //     } else if (applications.every((app) => app.isRejected)) {
-  //       setStatus("noapplication");
-  //     }
+      console.log("Fetched applications:", applications);
 
-  //   } catch (error) {
-  //     console.error("Error fetching applications:", error);
-  //     setStatus("noapplication");
-  //   }
-  // };
+      if (applications.length === 0) {
+        setStatus("noapplication");
+        return;
+      }
 
-  const fetchApplication = async () => {
-  try {
-    const res = await axios.get(
-      "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+      // ✅ Filter for the logged-in user's applications
+      const userApplications = applications.filter(
+        (app) => app.user === parsedUser._id
+      );
 
-    const applications = res.data?.data?.applications || [];
-    console.log("Fetched applications:", applications);
+      console.log("User's applications:", userApplications);
 
-    if (applications.length === 0) {
-      setStatus("noapplication");
-      return;
-    }
+      if (userApplications.length === 0) {
+        toast.info("You have not submitted any application yet.");
+        setStatus("noapplication");
+        return;
+      }
 
-    // ✅ Filter by the current user's ID (assuming `user._id` exists)
-    const userApplications = applications.filter(
-      (app) => app.user === user?._id
-    );
+      // ✅ Get latest or specific
+      const latestApp = userApplications[userApplications.length - 1];
+      setApplicationId(latestApp._id);
+      console.log("Saved Application ID:", latestApp._id);
 
-    console.log("User's applications:", userApplications);
+      // ✅ Determine status
+      if (latestApp.isPendingPayment || latestApp.isPendingApproval) {
+        setStatus("pending");
+      } else if (latestApp.isApproved) {
+        setStatus("approved");
+      } else if (latestApp.isRejected) {
+        setStatus("noapplication");
+      }
 
-    if (userApplications.length === 0) {
-      toast.info("You have not submitted any application yet.");
-      setStatus("noapplication");
-      return;
-    }
-
-    // ✅ Get the most recent one (optional)
-    const latestApp = userApplications[userApplications.length - 1];
-    setApplicationId(latestApp._id);
-    console.log("Saved Application ID:", latestApp._id);
-
-    // ✅ Determine status
-    if (latestApp.isPendingPayment || latestApp.isPendingApproval) {
-      setStatus("pending");
-    } else if (latestApp.isApproved) {
-      setStatus("approved");
-    } else if (latestApp.isRejected) {
+    } catch (error) {
+      console.error("Error fetching applications:", error);
       setStatus("noapplication");
     }
+  };
 
-  } catch (error) {
-    console.error("Error fetching applications:", error);
-    setStatus("noapplication");
-  }
-};
-
-
+  // ✅ Call it for all applications by default
   fetchApplication();
+
+  // ✅ (Optional) — if you want to fetch a specific one later:
+  // fetchApplication("66fd9e8882dbd1a43b4ff221");
+
 }, [navigate]);
+
 
 
 
