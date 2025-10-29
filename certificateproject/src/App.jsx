@@ -21,6 +21,7 @@ import OfficialResendOtp from './components/OfficialResendOtp.jsx'
 import { UserProvider } from './context/UserContext.jsx'
 import ApproveApplications from './components/ApproveApplications.jsx'
 import ApprovedCertificate from "./components/ApprovedCertificate";
+import VerifyCertificate from './components/VerifyCertificate.jsx'
 import './index.css'
 
 const App = () => {
@@ -30,7 +31,6 @@ const App = () => {
       <Routes>
         {/* Home page */}
         <Route path="/" element={<Home />} />
-
         {/* Signup page */}
         <Route path="/signup" element={<SignUp />} />
         {/* Login page */}
@@ -64,6 +64,7 @@ const App = () => {
              <Route path='/officialresetpassword' element={<OfficialResetPassword/>} />
             <Route path='/approveapplications' element={<ApproveApplications/>} />
             <Route path="/certificate" element={<ApprovedCertificate />} />
+            <Route path="/verify-certificate" element={<VerifyCertificate />} />
       </Routes>
        
     </Router>

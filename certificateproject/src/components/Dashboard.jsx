@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Bell, LogOutIcon } from "lucide-react";
+import { Bell, LogOutIcon , ShieldCheck } from "lucide-react";
 import StateLogo from "../images/StateLogo.png";
 import box from "../images/box.png";
 import blob from "../images/blob.png";
@@ -22,144 +22,127 @@ const Dashboard = () => {
   // const [user, setUser] = useState(null);
    const { user, updateUser } = useContext(UserContext);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [applicationId, setApplicationId] = useState(null);
 
   // 👇 3 possible states: "noapplication", "pending", "approved"
   const [status, setStatus] = useState("noapplication");
   const [pendingPaymentLink, setPendingPaymentLink] = useState(null);
+
+const handleVerifyCertificateDashboard = () => {
+  if (!applicationId) {
+    toast.error("No application found to verify.");
+    return;
+  }
+
+  navigate("/verify-certificate", { state: { certificateId: applicationId } });
+};
+
 
   useEffect(() => {
   console.log("User from context:", user);
 }, [user]);
 
 
-// useEffect(() => {
-//   const storedUser = localStorage.getItem("user");
-//   const token = localStorage.getItem("token");
-
-//   if (!storedUser || !token) {
-//     navigate("/login");
-//     return;
-//   }
-
-//   updateUser(JSON.parse(storedUser));
-
-//   const fetchApplication = async () => {
-//     try {
-//       const res = await axios.get(
-//         "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
-//         {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//           },
-//         }
-//       );
-
-//       const data = res.data;
-//       const applications = data?.data?.applications || [];
-
-//       if (applications.length === 0) {
-//         setStatus("noapplication");
-//         return;
-//       }
-
-//       // Check if any application is pending payment, approval, or already approved
-//       const existingPendingApp = applications.find(app =>
-//         app.isPendingPayment || app.isPendingApproval || app.isApproved
-//       );
-
-//       if (existingPendingApp) {
-//         if (existingPendingApp.isPendingPayment || existingPendingApp.isPendingApproval) {
-//           setStatus("pending");
-//         } else if (existingPendingApp.isApproved) {
-//           setStatus("approved");
-//         }
-//         return;
-//       }
-
-//       // All previous applications were rejected
-//       const allRejected = applications.every(app => app.isRejected);
-//       if (allRejected) {
-//         setStatus("noapplication"); // allow reapply
-//       }
-
-//     } catch (error) {
-//       console.error("Error fetching applications:", error);
-//       setStatus("noapplication");
-//     }
-//   };
-
-//   fetchApplication();
-// }, [navigate]);
-
-
-
 
 useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+  const token = localStorage.getItem("token");
+
+  if (!storedUser || !token) {
+    navigate("/login");
+    return;
+  }
+
+  updateUser(JSON.parse(storedUser));
+
+  // const fetchApplication = async () => {
+  //   try {
+  //     const res = await axios.get(
+  //       "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+
+  //     const applications = res.data?.data?.applications || [];
+  //     console.log("Fetched applications:", applications);
+
+  //     if (applications.length === 0) {
+  //       setStatus("noapplication");
+  //       return;
+  //     }
+
+  //     const existingPendingApp = applications.find(
+  //       (app) => app.isPendingPayment || app.isPendingApproval || app.isApproved
+  //     );
+
+  //     if (existingPendingApp) {
+  //       if (existingPendingApp.isPendingPayment || existingPendingApp.isPendingApproval) {
+  //         setStatus("pending");
+  //       } else if (existingPendingApp.isApproved) {
+  //         setStatus("approved");
+  //       }
+  //     } else if (applications.every((app) => app.isRejected)) {
+  //       setStatus("noapplication");
+  //     }
+
+  //   } catch (error) {
+  //     console.error("Error fetching applications:", error);
+  //     setStatus("noapplication");
+  //   }
+  // };
+
   const fetchApplication = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(
-        "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  try {
+    const res = await axios.get(
+      "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      const applications = res.data?.data?.applications || [];
+    const applications = res.data?.data?.applications || [];
+    console.log("Fetched applications:", applications);
 
-      if (applications.length === 0) {
-        setStatus("noapplication");
-        return;
-      }
+    if (applications.length === 0) {
+      setStatus("noapplication");
+      return;
+    }
 
-      // Find the latest application (assuming newest last)
-      const latestApp = applications[applications.length - 1];
+    // ✅ Filter by the current user's ID (assuming `user._id` exists)
+    const userApplications = applications.filter(
+      (app) => app.user === user?._id
+    );
 
-      // 🟡 If user didn't complete payment
-      if (latestApp.isPendingPayment || latestApp.paymentStatus === "incomplete") {
-        setPendingPaymentLink(
-          latestApp.pendingPaymentLink ||
-          latestApp.paymentLink ||
-          latestApp.payment_url ||
-          null
-        );
-        setStatus("noapplication"); // appear as though no app exists
-        return;
-      }
+    console.log("User's applications:", userApplications);
 
-      // 🟢 Approved or waiting for approval
-      if (latestApp.isApproved) {
-        setStatus("approved");
-      } else if (latestApp.isPendingApproval) {
-        setStatus("pending");
-      } else {
-        setStatus("noapplication");
-      }
-    } catch (error) {
-      console.error("Error fetching applications:", error);
+    if (userApplications.length === 0) {
+      toast.info("You have not submitted any application yet.");
+      setStatus("noapplication");
+      return;
+    }
+
+    // ✅ Get the most recent one (optional)
+    const latestApp = userApplications[userApplications.length - 1];
+    setApplicationId(latestApp._id);
+    console.log("Saved Application ID:", latestApp._id);
+
+    // ✅ Determine status
+    if (latestApp.isPendingPayment || latestApp.isPendingApproval) {
+      setStatus("pending");
+    } else if (latestApp.isApproved) {
+      setStatus("approved");
+    } else if (latestApp.isRejected) {
       setStatus("noapplication");
     }
-  };
+
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    setStatus("noapplication");
+  }
+};
+
 
   fetchApplication();
-}, []);
+}, [navigate]);
 
 
-
-
-// const handleNewApplication = () => {
-//   console.log("User state:", user?.state);
-
-//   if (user?.state !== "verified") {
-//     toast.error("User must be verified to start an application");
-//     return;
-//   }
-
-//   if (status === "pending" || status === "approved") {
-//     alert("You already have an application in progress or approved.");
-//     return;
-//   }
-
-//   navigate("/application");
-// };
 
 const handleNewApplication = () => {
   if (user?.state !== "verified") {
@@ -174,7 +157,7 @@ const handleNewApplication = () => {
   }
 
   if (status === "pending" || status === "approved") {
-    alert("You already have an application in progress or approved.");
+      toast.error("User has a verified or pending application");
     return;
   }
 
@@ -416,21 +399,58 @@ const handleNewApplication = () => {
           : "N/A"}
   </p>
  <div className="flex justify-center gap-3 w-full mt-4">
-  <button className="flex items-center gap-2 bg-[#11860F] text-white font-semibold px-5 py-3 rounded hover:bg-[#0d6b0b] transition-colors">
-    <img src={download} alt="Download icon" className="h-5 w-5" />
-    Download
-  </button>
+  <button
+        className="flex items-center gap-2 bg-[#11860F] text-white font-semibold px-5 py-3 rounded hover:bg-[#0d6b0b] transition-colors"
+        onClick={() =>
+          navigate("/certificate", {
+            state: {
+              name: `${user?.firstName || ""} ${user?.lastName || ""}`,
+              address: user?.address || "Unknown Address",
+              nativeTown: user?.town || "Unknown",
+              approvedDate: new Date().toLocaleDateString(),
+              autoDownload: true, // 👈 important
+            },
+          })
+        }
+      >
+        <img src={download} alt="Download icon" className="h-5 w-5" />
+        Download
+      </button>
 
-  <button className="bg-green-50 text-[#11860F] font-semibold px-5 py-3 rounded hover:bg-green-100 transition-colors">
-    View Details
-  </button>
+    {/* VIEW */}
+      <button
+        className="bg-green-50 text-[#11860F] font-semibold px-5 py-3 rounded hover:bg-green-100 transition-colors"
+        onClick={() =>
+          navigate("/certificate", {
+            state: {
+              name: `${user?.firstName || ""} ${user?.lastName || ""}`,
+              address: user?.address || "Unknown Address",
+              nativeTown: user?.town || "Unknown",
+              approvedDate: new Date().toLocaleDateString(),
+              autoDownload: false, // 👈 just preview
+            },
+          })
+        }
+      >
+        View Details
+      </button>
+
+
 </div>
 
 </>
             )}
           </div>
         </div>
+        
+     <button className="flex items-center gap-2 bg-[#11860F] text-white font-semibold px-5 py-3 rounded hover:bg-[#0d6b0b] transition-colors"
+     onClick={handleVerifyCertificateDashboard}>
+  <ShieldCheck className="h-5 w-5" />
+  Verify Certificate
+</button>
       </main>
+
+      
        <ToastContainer
               position="top-center"
               autoClose={3000}
@@ -446,3 +466,19 @@ const handleNewApplication = () => {
 };
 
 export default Dashboard;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

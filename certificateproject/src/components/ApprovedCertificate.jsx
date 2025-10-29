@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import certificateTemplate from "../images/certificateTemplate.jpg";
 import html2canvas from "html2canvas";
@@ -8,8 +8,7 @@ const ApprovedCertificate = () => {
   const certRef = useRef();
   const { state } = useLocation();
 
-  // Destructure data safely
-  const { name, address, nativeTown, approvedDate } = state || {};
+  const { name, address, nativeTown, approvedDate, autoDownload } = state || {};
 
   const downloadPDF = async () => {
     const element = certRef.current;
@@ -24,13 +23,19 @@ const ApprovedCertificate = () => {
     pdf.save(`${name || "certificate"}.pdf`);
   };
 
-  // 🔹 Prevent blank screen when no data is passed
+  // 🔹 Automatically download if requested
+  useEffect(() => {
+    if (autoDownload) {
+      downloadPDF();
+    }
+  }, [autoDownload]);
+
   if (!state) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-gray-700">
         <p className="text-lg font-semibold">No certificate data available.</p>
         <p className="text-sm text-gray-500 mt-2">
-          Please go back to the Approved list and select an application.
+          Please go back to the Dashboard and select your approved certificate.
         </p>
       </div>
     );
@@ -52,15 +57,12 @@ const ApprovedCertificate = () => {
         <div className="absolute top-[300px] left-[180px] text-[18px] font-semibold text-black">
           {name}
         </div>
-
         <div className="absolute top-[345px] left-[180px] text-[16px] font-medium text-black w-[500px]">
           {address}
         </div>
-
         <div className="absolute top-[390px] left-[180px] text-[18px] font-semibold text-black">
           {nativeTown}
         </div>
-
         <div className="absolute bottom-[90px] left-[380px] text-[15px] text-black font-semibold">
           {approvedDate}
         </div>
