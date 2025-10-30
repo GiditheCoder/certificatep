@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Search, LogOutIcon } from "lucide-react";
+import { Search, LogOutIcon, Check, X, Clock } from "lucide-react";
 import StateLogo from "../images/StateLogo.png";
 import checkBox from "../images/checkbox.png";
 import box from "../images/boxadmin.png";
 import close from "../images/closemark.png";
 import dropdown from "../images/Dropdown.png";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import MenuLogo from "../images/menu.png";
 import CloseLogo from "../images/close.png";
-import { Check, X, Clock } from "lucide-react";
-
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
 
@@ -21,7 +19,10 @@ const OfficialScreen = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false); // ✅ Menu state
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  const [filterMonth, setFilterMonth] = useState("");
+  const [filterYear, setFilterYear] = useState("");
 
   const navigate = useNavigate();
   const Admin = JSON.parse(localStorage.getItem("user"));
@@ -38,8 +39,6 @@ const OfficialScreen = () => {
           axios.get(`${baseURL}/api/v1/admin/applications/approved`, config),
           axios.get(`${baseURL}/api/v1/admin/applications/rejected`, config),
         ]);
-
-        console.log(rejectedRes)
 
         const normalize = (res) =>
           res?.data?.data?.applications ??
@@ -86,7 +85,18 @@ const OfficialScreen = () => {
     const matchesSearch = displayName
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
+
+    // ✅ Date Filtering (month & year)
+    const itemDate = item.approvedAt || item.createdAt || item.updatedAt;
+    const dateObj = itemDate ? new Date(itemDate) : null;
+    const matchesMonthYear =
+      !filterMonth ||
+      !filterYear ||
+      (dateObj &&
+        dateObj.getMonth() + 1 === parseInt(filterMonth) &&
+        dateObj.getFullYear() === parseInt(filterYear));
+
+    return matchesFilter && matchesSearch && matchesMonthYear;
   });
 
   const total = allApplications.length;
@@ -94,15 +104,11 @@ const OfficialScreen = () => {
   const rejectedCount = rejected.length;
 
   return (
-    <div className="min-h-screen bg-white p-6 font-sans text-gray-900">
+    <div className="min-h-screen bg-white p-6 font-sans text-gray-900 relative">
       {/* Header */}
       <header className="flex justify-between items-center border-b border-gray-200 sm:px-8 md:px-0.5 pb-3 mb-6">
         <div className="flex items-center space-x-2">
-          <img
-            src={StateLogo}
-            alt="State Logo"
-            className="w-8 h-8 rounded-full"
-          />
+          <img src={StateLogo} alt="State Logo" className="w-8 h-8 rounded-full" />
           <span className="text-base sm:text-lg font-semibold text-[#475467]">
             Ogun State Government
           </span>
@@ -111,20 +117,13 @@ const OfficialScreen = () => {
         {/* Desktop User Info */}
         <div className="hidden sm:flex items-center space-x-3 text-sm">
           <div className="text-right">
-            <p className="font-semibold">
-              {`${Admin?.firstName || ""} ${Admin?.lastName || ""}`}
-            </p>
+            <p className="font-semibold">{`${Admin?.firstName || ""} ${Admin?.lastName || ""}`}</p>
             <p className="text-gray-400 font-medium text-xs">{Admin?.position}</p>
           </div>
-          <LogOutIcon
-            onClick={handleLogout}
-            className="cursor-pointer hover:text-red-500 transition"
-          />
+          <LogOutIcon onClick={handleLogout} className="cursor-pointer hover:text-red-500 transition" />
         </div>
 
-
-
-        {/* Mobile Menu Button */}
+        {/* Mobile Menu */}
         <div className="sm:hidden">
           <img
             src={MenuLogo}
@@ -135,7 +134,7 @@ const OfficialScreen = () => {
         </div>
       </header>
 
-      {/* Mobile User Menu */}
+      {/* Mobile Menu Popup */}
       {menuOpen && (
         <div className="sm:hidden absolute top-16 right-4 bg-white shadow-lg border rounded-md p-4 z-50 w-64">
           <div className="flex justify-between items-center mb-4">
@@ -149,9 +148,7 @@ const OfficialScreen = () => {
           </div>
           <div className="flex items-center space-x-3 text-sm">
             <div className="text-right">
-              <p className="font-semibold">
-                {`${Admin?.firstName || ""} ${Admin?.lastName || ""}`}
-              </p>
+              <p className="font-semibold">{`${Admin?.firstName || ""} ${Admin?.lastName || ""}`}</p>
               <p className="text-gray-400 font-medium text-xs">{Admin?.position}</p>
             </div>
             <LogOutIcon
@@ -162,162 +159,132 @@ const OfficialScreen = () => {
         </div>
       )}
 
-
-      
-
-      {/* Page Title */}
+      {/* Title */}
       <h1 className="text-2xl font-bold mb-4">Approval Dashboard</h1>
-      <p className="mb-6 font-medium text-gray-600">
-        Review and manage applications
-      </p>
-
-
-      
+      <p className="mb-6 font-medium text-gray-600">Review and manage applications</p>
 
       {/* Summary Cards */}
+      <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
+        <div className="flex-1 p-4 rounded-lg shadow-sm">
+          <div className="flex justify-between items-center">
+            <p className="text-black font-bold text-xl sm:text-2xl">Total Applications</p>
+            <img src={dropdown} alt="" className="w-4 h-4" />
+          </div>
+          <div className="flex justify-between mt-2">
+            <p className="text-xl sm:text-2xl font-bold">{total}</p>
+            <img src={box} alt="" className="w-10 h-10" />
+          </div>
+        </div>
 
-    {/* Summary Cards */}
-<div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
-  {/* Total */}
-  <div className="flex-1 p-3 sm:p-4 rounded-lg shadow-sm flex flex-col justify-end">
-    <div className="flex justify-between items-center">
-      <p className="text-black font-bold text-xl sm:text-2xl">Total Applications</p>
-      <img src={dropdown} alt="" className="w-4 h-4 sm:w-5 sm:h-5" />
-    </div>
-    <div className="flex items-center justify-between mt-2">
-      <p className="text-xl sm:text-2xl font-bold">{total}</p>
-      <img src={box} alt="" className="w-10 h-10 sm:w-15 sm:h-15" />
-    </div>
-  </div>
+        <div className="flex-1 p-4 rounded-lg shadow-sm">
+          <div className="flex justify-between items-center">
+            <p className="text-black font-bold text-xl sm:text-2xl">Approved</p>
+            <img src={dropdown} alt="" className="w-4 h-4" />
+          </div>
+          <div className="flex justify-between mt-2">
+            <p className="text-xl sm:text-2xl font-bold">{approvedCount}</p>
+            <img src={checkBox} alt="" className="w-10 h-10" />
+          </div>
+        </div>
 
-  {/* Approved */}
-  <div className="flex-1 p-3 sm:p-4 rounded-lg shadow-sm flex flex-col justify-end">
-    <div className="flex justify-between items-center">
-      <p className="text-black font-bold text-xl sm:text-2xl">Approved</p>
-      <img src={dropdown} alt="" className="w-4 h-4 sm:w-5 sm:h-5" />
-    </div>
-    <div className="flex items-center justify-between mt-2">
-      <p className="text-xl sm:text-2xl font-bold">{approvedCount}</p>
-      <img src={checkBox} alt="" className="w-10 h-10 sm:w-15 sm:h-15" />
-    </div>
-  </div>
+        <div className="flex-1 p-4 rounded-lg shadow-sm">
+          <div className="flex justify-between items-center">
+            <p className="text-black font-bold text-xl sm:text-2xl">Rejected</p>
+            <img src={dropdown} alt="" className="w-4 h-4" />
+          </div>
+          <div className="flex justify-between mt-2">
+            <p className="text-xl sm:text-2xl font-bold">{rejectedCount}</p>
+            <img src={close} alt="" className="w-10 h-10" />
+          </div>
+        </div>
+      </div>
 
-  {/* Rejected */}
-  <div className="flex-1 p-3 sm:p-4 rounded-lg shadow-sm flex flex-col justify-end">
-    <div className="flex justify-between items-center">
-      <p className="text-black font-bold text-xl sm:text-2xl">Rejected</p>
-      <img src={dropdown} alt="" className="w-4 h-4 sm:w-5 sm:h-5" />
-    </div>
-    <div className="flex items-center justify-between mt-2">
-      <p className="text-xl sm:text-2xl font-bold">{rejectedCount}</p>
-      <img src={close} alt="" className="w-10 h-10 sm:w-15 sm:h-15" />
-    </div>
-  </div>
-</div>
+      {/* Search + Filter */}
+      <div className="flex justify-between items-center mb-4 relative flex-wrap gap-2">
+        <div className="relative flex-1 min-w-[150px]">
+          <input
+            type="text"
+            placeholder="Search"
+            className="border border-gray-400 font-medium rounded-md px-10 py-2 w-full"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        </div>
 
+        <button
+          className="flex items-center justify-center border border-gray-600 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-200"
+          onClick={() => setShowFilter(true)}
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 14.414V19a1 1 0 01-1.447.894l-4-2A1 1 0 018 17v-2.586L3.293 6.707A1 1 0 013 6V4z" />
+          </svg>
+          <span className="hidden sm:inline ml-1">Filters</span>
+        </button>
+      </div>
 
+      {/* Tabs */}
+      <div className="overflow-x-auto">
+        <div className="flex font-semibold space-x-4 mb-4 border-b border-gray-300 min-w-max">
+          {["All", "Pending", "Approved", "Rejected"].map((tab) => (
+            <button
+              key={tab}
+              className={`py-2 px-4 -mb-px border-b-2 whitespace-nowrap ${
+                filter === tab
+                  ? "border-green-600 font-semibold text-green-600"
+                  : "border-transparent text-gray-600"
+              }`}
+              onClick={() => setFilter(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
 
-
-      {/* Search and Filter */}
- <div className="flex justify-between items-center mb-4 relative flex-wrap gap-2">
-  {/* Search Input */}
-  <div className="relative flex-1 min-w-[150px]">
-    <input
-      type="text"
-      placeholder="Search"
-      className="border border-gray-400 font-medium rounded-md px-10 py-2 w-full"
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-    />
-    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-  </div>
-
-  {/* Filter Button */}
-  <button
-    className="flex items-center justify-center border border-gray-600 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-200"
-    onClick={() => alert("Filter dialog not implemented")}
-  >
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 14.414V19a1 1 0 01-1.447.894l-4-2A1 1 0 018 17v-2.586L3.293 6.707A1 1 0 013 6V4z" />
-    </svg>
-    {/* Only show text on medium and up screens */}
-    <span className="hidden sm:inline ml-1">Filters</span>
-  </button>
-</div>
-
-
-     {/* Tabs */}
-<div className="overflow-x-auto">
-  <div className="flex font-semibold space-x-4 mb-4 border-b border-gray-300 min-w-max">
-    {["All", "Pending", "Approved", "Rejected"].map((tab) => (
-      <button
-        key={tab}
-        className={`py-2 px-4 -mb-px border-b-2 whitespace-nowrap ${
-          filter === tab
-            ? "border-green-600 font-semibold text-green-600"
-            : "border-transparent text-gray-600"
-        }`}
-        onClick={() => setFilter(tab)}
-      >
-        {tab}
-      </button>
-    ))}
-  </div>
-</div>
-
-
-      {/* Loading / Data */}
+      {/* Applications */}
       {loading ? (
-        <p className="text-center py-10 text-gray-900 animate-pulse">
-          Loading applications...
-        </p>
+        <p className="text-center py-10 text-gray-900 animate-pulse">Loading applications...</p>
       ) : filteredData.length === 0 ? (
-        <p className="text-center py-10 font-medium text-gray-400">
-          No data currently.
-        </p>
+        <p className="text-center py-10 font-medium text-gray-400">No data currently.</p>
       ) : (
         <div className="bg-white border border-gray-200 rounded-md shadow-sm divide-y divide-gray-200">
           {filteredData.map((item, id) => (
             <div
               key={id}
               className="flex items-center p-4 space-x-4 hover:bg-gray-50 cursor-pointer"
-               onClick={() => {
-      if (item.status === "Pending") {
-        navigate("/approveapplications", { state: { application: item } });
-      }
-       
-       if (item.status === "Approved") {
-    navigate("/certificate", {
-      state: {
-        name: `${item.fullNames}`,
-        image: item.passport ,
-        address: item.currentAddress,
-        nativeTown: item.nativeTown,
-        approvedDate: new Date(item.updatedAt).toLocaleDateString(),
-      },
-    });
-  }
-
-    }}
+              onClick={() => {
+                if (item.status === "Pending") {
+                  navigate("/approveapplications", { state: { application: item } });
+                }
+                if (item.status === "Approved") {
+                  navigate("/certificate", {
+                    state: {
+                      name: `${item.fullNames}`,
+                      image: item.passport,
+                      address: item.currentAddress,
+                      nativeTown: item.nativeTown,
+                      approvedDate: new Date(item.updatedAt).toLocaleDateString(),
+                      certificateId: item._id,
+                      lga: item.lga,
+                    },
+                  });
+                }
+              }}
             >
-              {/* Passport Image */}
-              <div className="w-12 h-12 rounded-full overflow-hidden  flex items-center justify-center ">
+              <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center">
                 {item.passport ? (
                   <img
                     src={
-                      item.passport
-                        ? item.passport.startsWith("data:image")
-                          ? item.passport
-                          : item.passport.startsWith("http")
-                          ? item.passport
-                          : `${baseURL}/${item.passport}`
-                        : "https://via.placeholder.com/40"
+                      item.passport.startsWith("http")
+                        ? item.passport
+                        : `${baseURL}/${item.passport}`
                     }
                     alt="Applicant Passport"
                     className="w-full h-full object-cover"
@@ -328,14 +295,12 @@ const OfficialScreen = () => {
                 )}
               </div>
 
-              {/* Applicant Info */}
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">{item.fullNames || "Unknown"}</p>
               </div>
 
-              {/* Status Badge */}
-              {/* <span
-                className={`text-xs px-3 py-1 rounded-full ${
+              <span
+                className={`text-xs px-3 py-1 rounded-full flex items-center space-x-1 ${
                   item.status === "Approved"
                     ? "bg-green-200 text-green-700 font-medium"
                     : item.status === "Rejected"
@@ -343,28 +308,130 @@ const OfficialScreen = () => {
                     : "bg-yellow-100 text-yellow-700"
                 }`}
               >
-                {item.status}
-              </span> */}
-              {/* Status Badge */}
-<span
-  className={`text-xs px-3 py-1 rounded-full flex items-center space-x-1 ${
-    item.status === "Approved"
-      ? "bg-green-200 text-green-700 font-medium"
-      : item.status === "Rejected"
-      ? "bg-red-100 text-red-700"
-      : "bg-yellow-100 text-yellow-700"
-  }`}
->
-  {item.status === "Approved" && <Check className="w-3 h-3" />}
-  {item.status === "Rejected" && <X className="w-3 h-3" />}
-  {item.status === "Pending" && <Clock className="w-3 h-3" />}
-  <span>{item.status}</span>
-</span>
-
+                {item.status === "Approved" && <Check className="w-3 h-3" />}
+                {item.status === "Rejected" && <X className="w-3 h-3" />}
+                {item.status === "Pending" && <Clock className="w-3 h-3" />}
+                <span>{item.status}</span>
+              </span>
             </div>
           ))}
         </div>
       )}
+
+      {/* ✅ Filter Popup */}
+      {/* {showFilter && (
+        <div className="fixed inset-0 bg-transparent bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-[90%] sm:w-96 shadow-xl relative">
+            <h2 className="text-lg font-semibold mb-4 text-gray-800">Filter by Date</h2>
+            <div className="flex flex-col space-y-3">
+              <label className="text-sm font-medium text-gray-600">Month</label>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                className="border rounded-md px-3 py-2"
+              >
+                <option value="">All Months</option>
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {new Date(0, i).toLocaleString("default", { month: "long" })}
+                  </option>
+                ))}
+              </select>
+
+              <label className="text-sm font-medium text-gray-600">Year</label>
+              <input
+                type="number"
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                placeholder="e.g. 2025"
+                className="border rounded-md px-3 py-2"
+              />
+
+              <div className="flex justify-end space-x-2 mt-4">
+                <button
+                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                  onClick={() => {
+                    setShowFilter(false);
+                    setFilterMonth("");
+                    setFilterYear("");
+                  }}
+                >
+                  Reset
+                </button>
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  onClick={() => setShowFilter(false)}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )} */}
+      {showFilter && (
+  <div className="absolute right-0 top-20 z-50">
+    <div className="relative bg-white p-6 rounded-lg w-[90%] sm:w-80 shadow-xl border border-gray-200">
+      {/* Close Button */}
+      <button
+        onClick={() => setShowFilter(false)}
+        className="absolute top-2 right-2 text-gray-500 hover:text-red-500 transition"
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      <h2 className="text-lg font-semibold mb-4 text-gray-800">Filter by Date</h2>
+
+      <div className="flex flex-col space-y-3">
+        {/* Month Selector */}
+        <label className="text-sm font-medium text-gray-600">Month</label>
+        <select
+          value={filterMonth}
+          onChange={(e) => setFilterMonth(e.target.value)}
+          className="border rounded-md px-3 py-2"
+        >
+          <option value="">All Months</option>
+          {Array.from({ length: 12 }, (_, i) => (
+            <option key={i + 1} value={i + 1}>
+              {new Date(0, i).toLocaleString("default", { month: "long" })}
+            </option>
+          ))}
+        </select>
+
+        {/* Year Input */}
+        <label className="text-sm font-medium text-gray-600">Year</label>
+        <input
+          type="number"
+          value={filterYear}
+          onChange={(e) => setFilterYear(e.target.value)}
+          placeholder="e.g. 2025"
+          className="border rounded-md px-3 py-2"
+        />
+
+        {/* Buttons */}
+        <div className="flex justify-end space-x-2 mt-4">
+          <button
+            className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+            onClick={() => {
+              setFilterMonth("");
+              setFilterYear("");
+              setShowFilter(false);
+            }}
+          >
+            Reset
+          </button>
+          <button
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            onClick={() => setShowFilter(false)}
+          >
+            Apply
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

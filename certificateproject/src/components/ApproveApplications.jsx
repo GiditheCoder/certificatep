@@ -235,6 +235,9 @@ const handleReject = async () => {
 
   {/* Applicant Name */}
   <h2 className="text-xl font-semibold text-gray-900 mb-6">
+     <p className="text-sm text-gray-500 mb-1 font-medium">
+       Name
+      </p>
     {application.fullNames}
   </h2>
 
@@ -296,22 +299,35 @@ const handleReject = async () => {
     {/* Certificate ID */}
     <div>
       <p className="text-sm text-gray-500 mb-1 font-medium">
-        Certificate ID
+       LGA
       </p>
       <p className="text-base font-medium text-gray-900">
-        {application.certificateId || "N/A"}
+        {application.lga || "N/A"}
       </p>
     </div>
   </div>
 
   {/* Document Section */}
   <div className="mb-8 w-full">
-    <p className="text-sm text-gray-500 mb-2 font-medium">Document</p>
+    <p className="text-sm text-gray-500 mb-2 font-medium">Native Political Ward</p>
     <p className="text-base font-medium text-gray-900">
-      {application.document || "N/A"}
+      {application.nativePoliticalWard || "N/A"}
     </p>
   </div>
 
+ <div className="mb-8 w-full">
+    <p className="text-sm text-gray-500 mb-2 font-medium">Native Town</p>
+    <p className="text-base font-medium text-gray-900">
+      {application.nativeTown || "N/A"}
+    </p>
+  </div>
+
+   <div className="mb-8 w-full">
+    <p className="text-sm text-gray-500 mb-2 font-medium">Community Head</p>
+    <p className="text-base font-medium text-gray-900">
+      {application.communityHead || "N/A"}
+    </p>
+  </div>
  
    {/* Action Buttons with loading */}
           <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-end sm:space-x-3 space-y-3 sm:space-y-0 w-full pt-6 border-t border-gray-200">
