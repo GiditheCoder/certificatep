@@ -220,6 +220,18 @@ const Dashboard = () => {
           Manage your certificate applications and track their progress
         </p>
 
+        {user?.state !== "verified" && (
+  <div className="flex justify-center md:justify-start mt-4">
+    <button
+      onClick={() => navigate("/request-email-verify")}
+      className="flex items-center gap-2 bg-red-500 text-white font-semibold px-5 py-2 rounded-md hover:bg-yellow-600 transition-colors"
+    >
+      <ShieldCheck className="h-5 w-5" />
+      Verify Your Account
+    </button>
+  </div>
+)}
+
         {/* ✅ Loading spinner */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
