@@ -21,7 +21,7 @@ const ApprovedCertificate = () => {
     navigate("/official");
   };
 
-   const downloadPDF = async () => {
+  const downloadPDF = async () => {
     if (!certRef.current) return console.warn("Certificate element not found");
 
     try {
@@ -131,11 +131,20 @@ const ApprovedCertificate = () => {
       <main className="flex flex-col items-center flex-grow mt-24 px-2 sm:px-4">
         <div
           ref={certRef}
-          className="w-full max-w-[850px] bg-white border border-gray-200 shadow-md rounded-lg p-4 sm:p-8 text-center relative"
+          className="w-full max-w-[850px] bg-white border border-gray-200 shadow-md rounded-lg p-4 sm:p-8 text-center relative overflow-hidden"
         >
+          {/* WATERMARK - Background Logo */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+            <img
+              src={StateLogo}
+              alt="Watermark"
+              className="w-64 h-64 sm:w-96 sm:h-96 opacity-5 object-contain"
+            />
+          </div>
+
           {/* Applicant Image (Circular + Centered) */}
           {image && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
               <img
                 src={image.startsWith("http") ? image : `${window.location.origin}/${image}`}
                 alt="Applicant"
@@ -146,18 +155,18 @@ const ApprovedCertificate = () => {
           )}
 
           {/* Header Text */}
-          <div className="mt-28 sm:mt-32 text-center">
+          <div className="mt-28 sm:mt-32 text-center relative z-10">
             <p className="text-xs sm:text-sm font-semibold text-gray-600">OGUN STATE GOVERNMENT</p>
             <p className="text-[10px] sm:text-xs text-gray-500">Local Government Authority</p>
             <img src={StateLogo} alt="Seal" className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mt-2" />
           </div>
 
-          <h2 className="text-base sm:text-xl font-bold text-gray-900 underline mb-6">
+          <h2 className="text-base sm:text-xl font-bold text-gray-900 underline mb-6 relative z-10">
             CERTIFICATE OF ORIGIN
           </h2>
 
           {/* Certificate Text */}
-          <div className="text-left leading-relaxed text-gray-800 text-xs sm:text-sm md:text-base space-y-3 sm:space-y-4">
+          <div className="text-left leading-relaxed text-gray-800 text-xs sm:text-sm md:text-base space-y-3 sm:space-y-4 relative z-10">
             <p>
               This is to certify that from enquiry made,{" "}
               <span className="font-semibold underline">{name || "Full Name"}</span> of{" "}
@@ -195,20 +204,20 @@ const ApprovedCertificate = () => {
               </span>.
             </p>
           </div>
-{/* Signature Section */}
-<div className="flex justify-between items-end mt-16 px-4 sm:px-12 gap-6 w-full max-w-[600px] mx-auto">
-  <div className="text-center flex-1">
-    <div className="border-t border-gray-400 w-28 sm:w-32 mx-auto"></div>
-    <p className="text-xs mt-2 text-gray-700 font-medium">Secretary</p>
-  </div>
-  <div className="text-center flex-1">
-    <div className="border-t border-gray-400 w-28 sm:w-32 mx-auto"></div>
-    <p className="text-xs mt-2 text-gray-700 font-medium">Chairman</p>
-  </div>
-</div>
 
+          {/* Signature Section */}
+          <div className="flex justify-between items-end mt-16 px-4 sm:px-12 gap-6 w-full max-w-[600px] mx-auto relative z-10">
+            <div className="text-center flex-1">
+              <div className="border-t border-gray-400 w-28 sm:w-32 mx-auto"></div>
+              <p className="text-xs mt-2 text-gray-700 font-medium">Secretary</p>
+            </div>
+            <div className="text-center flex-1">
+              <div className="border-t border-gray-400 w-28 sm:w-32 mx-auto"></div>
+              <p className="text-xs mt-2 text-gray-700 font-medium">Chairman</p>
+            </div>
+          </div>
 
-          <p className="text-xs text-gray-500 mt-8 break-words">
+          <p className="text-xs text-gray-500 mt-8 break-words relative z-10">
             Certificate ID: {certificateId || "N/A"}
           </p>
         </div>
@@ -228,5 +237,3 @@ const ApprovedCertificate = () => {
 };
 
 export default ApprovedCertificate;
-
-

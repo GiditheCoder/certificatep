@@ -22,6 +22,7 @@ import { UserProvider } from './context/UserContext.jsx'
 import ApproveApplications from './components/ApproveApplications.jsx'
 import ApprovedCertificate from "./components/ApprovedCertificate";
 import VerifyCertificate from './components/VerifyCertificate.jsx'
+import RequestVerificationCode from './components/RequestVerificationCode.jsx'
 import './index.css'
 
 const App = () => {
