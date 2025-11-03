@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { ShieldCheck, Copy } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -13,131 +13,64 @@ const VerifyCertificate = () => {
 
   const [loading, setLoading] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-   
+  const [certificateRef, setCertificateRef] = useState(""); // 🔹 Store ref from verification response
 
   const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
 
-
-  // 🔹 Request verification code
- const handleRequestCode = async () => {
-  if (!certificateId) {
-    toast.error("Missing certificate ID — please go back and try again.");
-    return;
-  }
-
-  const token = localStorage.getItem("token");
-  if (!token) {
-    toast.error("Session expired. Please log in again.");
-    navigate("/login");
-    return;
-  }
-
-  try {
-    setLoading(true);
-    const response = await axios.post(
-      `${baseURL}/api/v1/certificate/request-verification/${certificateId}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    console.log("Verification response:", response.data);
-
-    if (response.data?.success && response.data?.data?.paymentLink) {
-      toast.info("Redirecting to payment page...");
-      setTimeout(() => {
-        window.location.href = response.data.data.paymentLink;
-      }, 1500);
-      return;
-    }
-
-    const code = response.data?.data?.verificationCode;
-
-    if (code) {
-      // ✅ Log the generated verification code here
-      console.log("✅ Generated verification code:", code);
-
-      setVerificationCode(code);
-      toast.success("Verification code generated successfully!");
-      setStep("verify");
-    } else {
-      toast.info("Verification code sent to your registered email.");
-      setStep("verify");
-    }
-  } catch (error) {
-    console.error("Request verification failed:", error);
-    const message = error.response?.data?.message;
-
-    if (message?.toLowerCase().includes("already been generated")) {
-      toast.info(
-        "You already have an active verification code. You can get it below or delete it."
-      );
-      setStep("verify");
-    } else {
-      toast.error(message || "Failed to request verification code.");
-    }
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // 🔹 Get verification code (GET axios)
-  const handleGetCode = async () => {
+  // 🔹 Request verification code (sends code to user's email)
+  const handleRequestCode = async () => {
     if (!certificateId) {
       toast.error("Missing certificate ID — please go back and try again.");
       return;
     }
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Session expired. Please log in again.");
+      navigate("/login");
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${baseURL}/api/v1/certificate/verify/${certificateId}`
+      const response = await axios.post(
+        `${baseURL}/api/v1/certificate/request-verification/${certificateId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      console.log("Get verification response:", response.data);
 
-      const code = response.data?.data?.verificationCode;
-      if (code) {
-        setVerificationCode(code);
-        toast.success("Verification code retrieved successfully!");
-        setStep("verify");
-      } else {
-        toast.info("No active verification code found. Request a new one.");
+      console.log("Verification response:", response.data);
+
+      if (response.data?.success && response.data?.data?.paymentLink) {
+        toast.info("Redirecting to payment page...");
+        setTimeout(() => {
+          window.location.href = response.data.data.paymentLink;
+        }, 1500);
+        return;
       }
+
+      toast.success("Verification code has been sent to your email!");
     } catch (error) {
-      console.error("Failed to get code:", error);
-      toast.error("Unable to fetch verification code.");
+      console.error("Request verification failed:", error);
+      const message = error.response?.data?.message;
+
+      if (message?.toLowerCase().includes("already been generated")) {
+        toast.info(
+          "You already have an active verification code. Please check your email."
+        );
+      } else {
+        toast.error(message || "Failed to request verification code.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-
-
-  
-
-  // 🔹 Nullify code
-  const handleNullifyCode = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.delete(
-        `${baseURL}/api/v1/certificate/nullify-verification/${certificateId}`
-      );
-      console.log("Nullify response:", response.data);
-      toast.success("Verification code deleted successfully!");
-      setVerificationCode("");
-      setStep("request");
-    } catch (error) {
-      toast.error("Failed to delete verification code.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 🔹 Verify certificate
+  // 🔹 Verify certificate using the code from email
   const handleVerifyCertificate = async () => {
     if (!verificationCode) {
       toast.error("Please enter your verification code.");
@@ -153,7 +86,9 @@ const VerifyCertificate = () => {
       console.log("Verify response:", response.data);
 
       if (response.data?.success) {
-        toast.success("Certificate verified successfully!");
+        const ref = response.data.data?.ref;
+        setCertificateRef(ref); // ✅ Save the ref for nullification
+        toast.success(`✅ Certificate verified! Ref: ${ref}`);
       } else {
         toast.warn("Invalid or expired verification code.");
       }
@@ -167,10 +102,50 @@ const VerifyCertificate = () => {
     }
   };
 
-  // 🔹 Copy to clipboard
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(verificationCode);
-    toast.success("Verification code copied!");
+  // 🔹 Nullify verification code using the certificate REF from verify response
+  const handleNullifyCode = async () => {
+    if (!certificateRef) {
+      toast.error("No certificate ref found. Please verify first.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Session expired. Please log in again.");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log("🔹 Nullifying verification code for ref:", certificateRef);
+
+      const response = await axios.delete(
+        `${baseURL}/api/v1/certificate/nullify-verification/${certificateRef}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("✅ Nullify response:", response.data);
+
+      if (response.data?.success) {
+        toast.success("Verification code nullified successfully!");
+        setCertificateRef("");
+        setVerificationCode("");
+      } else {
+        toast.warn(response.data?.message || "Unable to nullify verification code.");
+      }
+    } catch (error) {
+      console.error("❌ Nullify failed:", error.response?.data || error.message);
+      toast.error(
+        error.response?.data?.message || "Failed to nullify verification code."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -181,11 +156,11 @@ const VerifyCertificate = () => {
           Verify Certificate
         </h2>
 
-        {/* 🔹 Request button always visible */}
         <p className="text-gray-500 mb-4">
-          Click below to request a verification code for your certificate.
+          Request a verification code for your certificate.
         </p>
 
+        {/* 🔹 Request verification code */}
         <button
           onClick={handleRequestCode}
           disabled={loading}
@@ -196,69 +171,46 @@ const VerifyCertificate = () => {
           {loading ? "Requesting..." : "Request Verification Code"}
         </button>
 
-        {/* 🔹 Always show Get & Delete buttons */}
-        <div className="mt-4 flex gap-2 justify-between">
-          <button
-            onClick={handleGetCode}
-            disabled={loading}
-            className={`flex-1 bg-green-700 text-white py-3 rounded font-semibold hover:bg-green-800 transition ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
-          >
-            {loading ? "Getting..." : "Get Verification Code"}
-          </button>
-
-          <button
-            onClick={handleNullifyCode}
-            disabled={loading}
-            className={`flex-1 bg-red-600 text-white py-3 rounded font-semibold hover:bg-red-700 transition ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
-          >
-            {loading ? "Deleting..." : "Delete Verification Code"}
-          </button>
-        </div>
-
-        {/* 🔹 Display code if exists */}
-        {verificationCode && (
-          <div className="mt-6 bg-green-50 border border-green-300 rounded-md p-3 text-green-700 relative">
-            <p className="font-semibold">Your Verification Code:</p>
-            <p className="text-lg font-mono">{verificationCode}</p>
-
-            <button
-              onClick={handleCopyCode}
-              className="absolute top-2 right-2 text-green-600 hover:text-green-800"
-              title="Copy to clipboard"
-            >
-              <Copy size={18} />
-            </button>
-          </div>
-        )}
-
-        {/* 🔹 Verify certificate input */}
-        <div className="mt-4">
+        {/* 🔹 Input for verification code */}
+        <div className="mt-6">
           <input
             type="text"
             value={verificationCode}
             onChange={(e) => setVerificationCode(e.target.value)}
-            placeholder="Enter verification code"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 mb-3"
+            placeholder="Enter verification code from email"
+            className="w-full border font-semibold border-gray-300 rounded-md px-3 py-2 mb-3"
           />
 
+          {/* 🔹 Verify certificate */}
           <button
             onClick={handleVerifyCertificate}
             disabled={loading}
-            className={`w-full bg-gray-800 text-white py-3 rounded font-semibold hover:bg-gray-900 transition ${
+            className={`w-full bg-green-800 text-white py-3 rounded font-semibold hover:bg-green-900 transition ${
               loading ? "opacity-70 cursor-not-allowed" : ""
             }`}
           >
             {loading ? "Verifying..." : "Verify Certificate"}
           </button>
+
+          {/* 🔹 Nullify using data.ref (auto-filled after verification) */}
+          <button
+            onClick={handleNullifyCode}
+            disabled={loading || !certificateRef}
+            className={`w-full bg-red-600 text-white py-3 rounded font-semibold hover:bg-red-700 mt-3 transition ${
+              loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
+          >
+            {loading
+              ? "Nullifying..."
+              : certificateRef
+              ? `Nullify Certificate (${certificateRef})`
+              : "Nullify Certificate"}
+          </button>
         </div>
 
         <button
           onClick={() => navigate(-1)}
-          className="mt-4 text-gray-500 hover:text-[#11860F] text-sm"
+          className="mt-4 text-gray-500 font-medium hover:text-[#11860F] text-sm"
         >
           ← Go Back
         </button>
@@ -276,5 +228,3 @@ const VerifyCertificate = () => {
 };
 
 export default VerifyCertificate;
-
-
