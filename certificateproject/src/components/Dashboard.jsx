@@ -426,7 +426,6 @@
 
 import React, { useEffect, useState, useContext } from "react";
 import {
-  Bell,
   LogOutIcon,
   ShieldCheck,
   FileText,
@@ -542,7 +541,7 @@ const Dashboard = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-5">
-          <Bell className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]" />
+       
           <LogOutIcon
             onClick={handleLogout}
             className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]"
@@ -580,7 +579,7 @@ const Dashboard = () => {
 
         {menuOpen && (
           <div className="absolute top-full right-4 bg-white border border-gray-200 rounded-lg shadow-lg mt-2 p-4 flex flex-col items-center gap-4 w-40 z-50 md:hidden">
-            <Bell className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]" />
+           
             <LogOutIcon
               onClick={handleLogout}
               className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]"
@@ -723,7 +722,7 @@ const Dashboard = () => {
 
             <div>
               <p className="font-semibold text-gray-900">
-                {app.lga || "Certificate of Origin"}
+                {app.fullNames || "Certificate of Origin"}
               </p>
               <p className="text-gray-600 text-sm">
                 Applied: {new Date(app.createdAt).toLocaleDateString()}
@@ -821,7 +820,7 @@ const Dashboard = () => {
             <CheckCircle2 className="text-green-600" />
             <div>
               <p className="font-semibold text-gray-900">
-                {app.lga || "Certificate of Origin"}
+                {app.fullNames || "Certificate of Origin"}
               </p>
               <p className="text-gray-600 text-sm">
                 Approved: {new Date(app.updatedAt).toLocaleDateString()}

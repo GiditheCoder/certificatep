@@ -63,14 +63,7 @@ const Successful = () => {
           >
             Go to Dashboard
           </button>
-          <button className="flex-1 bg-white hover:bg-gray-50 text-green-600 font-semibold py-2.5 sm:py-3 px-6 rounded-lg border-2 border-green-600 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base">
-            <img
-              src={Document}
-              alt="Document"
-              className="w-4 h-5 sm:w-5 sm:h-6"
-            />
-            Download Receipt
-          </button>
+      
         </div>
       </div>
     </div>

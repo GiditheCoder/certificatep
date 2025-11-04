@@ -314,6 +314,44 @@ const handleReject = async () => {
       {application.nativePoliticalWard || "N/A"}
     </p>
   </div>
+  {/* fatherName */}
+   <div className="mb-8 w-full">
+    <p className="text-sm text-gray-500 mb-2 font-medium">Father's Name</p>
+    <p className="text-base font-medium text-gray-900">
+      {application.fatherNames || "N/A"}
+    </p>
+  </div>
+  {/* motherName */}
+   <div className="mb-8 w-full">
+    <p className="text-sm text-gray-500 mb-2 font-medium">Mother's Name</p>
+    <p className="text-base font-medium text-gray-900">
+      {application.motherNames || "N/A"}
+    </p>
+  </div>
+
+   <div className="mb-8 w-full">
+    <p className="text-sm text-gray-500 mb-2 font-medium">Address</p>
+    <p className="text-base font-medium text-gray-900">
+      {application.currentAddress || "N/A"}
+    </p>
+  </div>
+
+   <div className="mb-8 w-full">
+    <p className="text-sm text-gray-500 mb-2 font-medium">Village</p>
+    <p className="text-base font-medium text-gray-900">
+      {application.village || "N/A"}
+    </p>
+  </div>
+
+  {/* nin */}
+  <div className="mb-8 w-full">
+    <p className="text-sm text-gray-500 mb-2 font-medium">Nin</p>
+    <p className="text-base font-medium text-gray-900">
+      {application.nin || "N/A"}
+    </p>
+  </div>
+
+
 
  <div className="mb-8 w-full">
     <p className="text-sm text-gray-500 mb-2 font-medium">Native Town</p>
@@ -328,6 +366,8 @@ const handleReject = async () => {
       {application.communityHead || "N/A"}
     </p>
   </div>
+
+
  
    {/* Action Buttons with loading */}
           <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-end sm:space-x-3 space-y-3 sm:space-y-0 w-full pt-6 border-t border-gray-200">
