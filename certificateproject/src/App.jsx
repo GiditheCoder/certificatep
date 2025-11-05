@@ -23,6 +23,7 @@ import ApproveApplications from './components/ApproveApplications.jsx'
 import ApprovedCertificate from "./components/ApprovedCertificate";
 import VerifyCertificate from './components/VerifyCertificate.jsx'
 import RequestVerificationCode from './components/RequestVerificationCode.jsx'
+import CertificateConfirmation from './components/CertificateConfirmation.jsx'
 import './index.css'
 
 const App = () => {
@@ -66,6 +67,8 @@ const App = () => {
             <Route path='/approveapplications' element={<ApproveApplications/>} />
             <Route path="/certificate" element={<ApprovedCertificate />} />
             <Route path="/verify-certificate" element={<VerifyCertificate />} />
+            <Route path="/certificate-confirmation/:ref" element={<CertificateConfirmation />} />
+
       </Routes>
        
     </Router>

@@ -12,15 +12,21 @@ const VerifyCertificate = () => {
   console.log("Certificate ID from state:", certificateId);
 
   const [loading, setLoading] = useState(false);
+   const [email, setEmail] = useState(""); // ✅ Added email state
   const [verificationCode, setVerificationCode] = useState("");
   const [certificateRef, setCertificateRef] = useState(""); // 🔹 Store ref from verification response
 
   const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
 
-  // 🔹 Request verification code (sends code to user's email)
+  // ✅ Request verification code (sends code to user's email)
   const handleRequestCode = async () => {
     if (!certificateId) {
       toast.error("Missing certificate ID — please go back and try again.");
+      return;
+    }
+
+    if (!email) {
+      toast.error("Please enter your email to receive the verification code.");
       return;
     }
 
@@ -35,7 +41,7 @@ const VerifyCertificate = () => {
       setLoading(true);
       const response = await axios.post(
         `${baseURL}/api/v1/certificate/request-verification/${certificateId}`,
-        {},
+        { email }, // ✅ send email in request body
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -70,83 +76,86 @@ const VerifyCertificate = () => {
     }
   };
 
-  // 🔹 Verify certificate using the code from email
-  const handleVerifyCertificate = async () => {
-    if (!verificationCode) {
-      toast.error("Please enter your verification code.");
-      return;
-    }
+  // 🔹 Verify certificate → auto-nullify → navigate to /certificate/:ref
+const handleVerifyCertificate = async () => {
+  if (!verificationCode) {
+    toast.error("Please enter your verification code.");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `${baseURL}/api/v1/certificate/verify/${verificationCode}`
-      );
+  try {
+    setLoading(true);
 
-      console.log("Verify response:", response.data);
+    // Step 1: Verify certificate
+    const verifyResponse = await axios.get(
+      `${baseURL}/api/v1/certificate/verify/${verificationCode}`
+    );
 
-      if (response.data?.success) {
-        const ref = response.data.data?.ref;
-        setCertificateRef(ref); // ✅ Save the ref for nullification
-        toast.success(`✅ Certificate verified! Ref: ${ref}`);
-      } else {
-        toast.warn("Invalid or expired verification code.");
-      }
-    } catch (error) {
-      console.error("Verification failed:", error);
-      toast.error(
-        error.response?.data?.message || "Error verifying certificate."
-      );
-    } finally {
+    console.log("Verify response:", verifyResponse.data);
+
+    if (!verifyResponse.data?.success) {
+      toast.warn("Invalid or expired verification code.");
       setLoading(false);
-    }
-  };
-
-  // 🔹 Nullify verification code using the certificate REF from verify response
-  const handleNullifyCode = async () => {
-    if (!certificateRef) {
-      toast.error("No certificate ref found. Please verify first.");
       return;
     }
 
+    const ref = verifyResponse.data.data?.ref;
+    setCertificateRef(ref);
+
+    toast.success(`✅ Certificate verified successfully! Ref: ${ref}`);
+
+    // Step 2: Automatically nullify
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("Session expired. Please log in again.");
-      navigate("/login");
       return;
     }
 
-    try {
-      setLoading(true);
-      console.log("🔹 Nullifying verification code for ref:", certificateRef);
-
-      const response = await axios.delete(
-        `${baseURL}/api/v1/certificate/nullify-verification/${certificateRef}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log("✅ Nullify response:", response.data);
-
-      if (response.data?.success) {
-        toast.success("Verification code nullified successfully!");
-        setCertificateRef("");
-        setVerificationCode("");
-      } else {
-        toast.warn(response.data?.message || "Unable to nullify verification code.");
+    console.log("🔹 Nullifying verification code for ref:", ref);
+    const nullifyResponse = await axios.delete(
+      `${baseURL}/api/v1/certificate/nullify-verification/${ref}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
-    } catch (error) {
-      console.error("❌ Nullify failed:", error.response?.data || error.message);
-      toast.error(
-        error.response?.data?.message || "Failed to nullify verification code."
+    );
+
+    console.log("✅ Nullify response:", nullifyResponse.data);
+
+    if (nullifyResponse.data?.success) {
+      toast.info("Verification code nullified automatically!");
+    } else {
+      toast.warn(
+        nullifyResponse.data?.message ||
+          "Certificate verified, but nullification failed."
       );
-    } finally {
-      setLoading(false);
     }
-  };
+
+     // ✅ Step 3: Redirect to confirmation page
+    setTimeout(() => {
+      navigate(`/certificate-confirmation/${ref}`, {
+        state: {
+          ref,
+          message:
+            "This is to certify that this certificate is from the Ogun State Local Government.",
+        },
+      });
+    }, 1200);
+
+ 
+  } catch (error) {
+    console.error("Verification/nullify failed:", error);
+    toast.error(
+      error.response?.data?.message ||
+        "Error verifying and nullifying certificate."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-6">
@@ -159,6 +168,15 @@ const VerifyCertificate = () => {
         <p className="text-gray-500 mb-4">
           Request a verification code for your certificate.
         </p>
+
+        <input
+  type="email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  placeholder="Enter your email"
+  className="w-full border border-gray-300 rounded-md px-3 py-2 mb-3"
+/>
+
 
         {/* 🔹 Request verification code */}
         <button
@@ -192,20 +210,7 @@ const VerifyCertificate = () => {
             {loading ? "Verifying..." : "Verify Certificate"}
           </button>
 
-          {/* 🔹 Nullify using data.ref (auto-filled after verification) */}
-          <button
-            onClick={handleNullifyCode}
-            disabled={loading || !certificateRef}
-            className={`w-full bg-red-600 text-white py-3 rounded font-semibold hover:bg-red-700 mt-3 transition ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
-          >
-            {loading
-              ? "Nullifying..."
-              : certificateRef
-              ? `Nullify Certificate (${certificateRef})`
-              : "Nullify Certificate"}
-          </button>
+     
         </div>
 
         <button
@@ -228,3 +233,83 @@ const VerifyCertificate = () => {
 };
 
 export default VerifyCertificate;
+
+
+
+  // 🔹 Verify certificate using the code from email
+  // const handleVerifyCertificate = async () => {
+  //   if (!verificationCode) {
+  //     toast.error("Please enter your verification code.");
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get(
+  //       `${baseURL}/api/v1/certificate/verify/${verificationCode}`
+  //     );
+
+  //     console.log("Verify response:", response.data);
+
+  //     if (response.data?.success) {
+  //       const ref = response.data.data?.ref;
+  //       setCertificateRef(ref); // ✅ Save the ref for nullification
+  //       toast.success(`✅ Certificate verified! Ref: ${ref}`);
+  //     } else {
+  //       toast.warn("Invalid or expired verification code.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Verification failed:", error);
+  //     toast.error(
+  //       error.response?.data?.message || "Error verifying certificate."
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+ 
+  // const handleNullifyCode = async () => {
+  //   if (!certificateRef) {
+  //     toast.error("No certificate ref found. Please verify first.");
+  //     return;
+  //   }
+
+  //   const token = localStorage.getItem("token");
+  //   if (!token) {
+  //     toast.error("Session expired. Please log in again.");
+  //     navigate("/login");
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+  //     console.log("🔹 Nullifying verification code for ref:", certificateRef);
+
+  //     const response = await axios.delete(
+  //       `${baseURL}/api/v1/certificate/nullify-verification/${certificateRef}`,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+
+  //     console.log("✅ Nullify response:", response.data);
+
+  //     if (response.data?.success) {
+  //       toast.success("Verification code nullified successfully!");
+  //       setCertificateRef("");
+  //       setVerificationCode("");
+  //     } else {
+  //       toast.warn(response.data?.message || "Unable to nullify verification code.");
+  //     }
+  //   } catch (error) {
+  //     console.error("❌ Nullify failed:", error.response?.data || error.message);
+  //     toast.error(
+  //       error.response?.data?.message || "Failed to nullify verification code."
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };

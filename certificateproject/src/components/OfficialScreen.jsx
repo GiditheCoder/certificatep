@@ -319,56 +319,6 @@ const OfficialScreen = () => {
       )}
 
       {/* ✅ Filter Popup */}
-      {/* {showFilter && (
-        <div className="fixed inset-0 bg-transparent bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg w-[90%] sm:w-96 shadow-xl relative">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Filter by Date</h2>
-            <div className="flex flex-col space-y-3">
-              <label className="text-sm font-medium text-gray-600">Month</label>
-              <select
-                value={filterMonth}
-                onChange={(e) => setFilterMonth(e.target.value)}
-                className="border rounded-md px-3 py-2"
-              >
-                <option value="">All Months</option>
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("default", { month: "long" })}
-                  </option>
-                ))}
-              </select>
-
-              <label className="text-sm font-medium text-gray-600">Year</label>
-              <input
-                type="number"
-                value={filterYear}
-                onChange={(e) => setFilterYear(e.target.value)}
-                placeholder="e.g. 2025"
-                className="border rounded-md px-3 py-2"
-              />
-
-              <div className="flex justify-end space-x-2 mt-4">
-                <button
-                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
-                  onClick={() => {
-                    setShowFilter(false);
-                    setFilterMonth("");
-                    setFilterYear("");
-                  }}
-                >
-                  Reset
-                </button>
-                <button
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                  onClick={() => setShowFilter(false)}
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )} */}
       {showFilter && (
   <div className="absolute right-0 top-20 z-50">
     <div className="relative bg-white p-6 rounded-lg w-[90%] sm:w-80 shadow-xl border border-gray-200">
