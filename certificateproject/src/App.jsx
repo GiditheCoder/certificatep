@@ -66,7 +66,7 @@ const App = () => {
              <Route path='/officialresetpassword' element={<OfficialResetPassword/>} />
             <Route path='/approveapplications' element={<ApproveApplications/>} />
             <Route path="/certificate" element={<ApprovedCertificate />} />
-            <Route path="/verify-certificate" element={<VerifyCertificate />} />
+            <Route path="/certificate-verify" element={<VerifyCertificate />} />
             <Route path="/certificate-confirmation/:ref" element={<CertificateConfirmation />} />
 
       </Routes>

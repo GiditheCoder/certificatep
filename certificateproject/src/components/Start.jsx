@@ -119,7 +119,11 @@ const Start = () => {
             </button>
 
             <button
-              onClick={() => {}}
+              onClick={() =>
+    navigate("/certificate-verify", {
+      state: { fromStart: true }, // optional info to detect it came from Start page
+    })
+  }
               className="inline-flex items-center justify-center bg-[#11860F] text-white font-semibold rounded-lg shadow hover:bg-[#0c670b] transition-all
                 text-xs sm:text-sm md:text-base
                 px-3 sm:px-5 md:px-6

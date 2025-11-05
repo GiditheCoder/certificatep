@@ -429,7 +429,7 @@ const Dashboard = () => {
             <button
               className="flex items-center gap-2 bg-[#11860F] text-white px-4 py-2 rounded-md hover:bg-[#0b5b09] transition"
               onClick={() =>
-                navigate("/verify-certificate", {
+                navigate("/certificate-verify", {
                   state: { certificateId: app._id },
                 })
               }
