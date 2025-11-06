@@ -234,7 +234,9 @@
 
 // export default VerifyCertificate;
 
-import React, { useState } from "react";
+
+
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ShieldCheck } from "lucide-react";
@@ -249,12 +251,64 @@ const VerifyCertificate = () => {
 
   console.log("Certificate ID from state:", certificateId, "From start:", fromStart);
 
+
+
+
+
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [certificateRef, setCertificateRef] = useState("");
 
   const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
+
+
+ useEffect(() => {
+  const fetchVerificationCode = async () => {
+    if (!certificateId) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      setLoading(true);
+      const response = await axios.get(`${baseURL}/api/v1/certificates`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("📦 Full certificates response:", response.data);
+      console.log("🔍 Searching for certificate with application ID:", certificateId);
+
+      // ✅ Correct path to certificates array
+      const certList = response.data?.data?.certificates;
+
+      if (response.data?.success && Array.isArray(certList)) {
+        const cert = certList.find(
+          (c) => c.application === certificateId
+        );
+
+        console.log("🧾 Matched certificate object:", cert);
+
+        if (cert && cert.verificationCode) {
+          console.log("✅ Verification Code fetched:", cert.verificationCode);
+          setVerificationCode(cert.verificationCode);
+          toast.success("Verification code retrieved successfully!");
+        } else {
+          console.log("ℹ️ No verification code found for this certificate.");
+        }
+      } else {
+        console.log("⚠️ Invalid response or no certificates array found.");
+      }
+    } catch (error) {
+      console.error("❌ Error fetching verification code:", error);
+      toast.error("Failed to fetch verification code.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchVerificationCode();
+}, [certificateId]);
+
 
   // ✅ Request verification code
   const handleRequestCode = async () => {
@@ -373,7 +427,7 @@ const VerifyCertificate = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 mb-3"
+              className="w-full font-semibold border border-gray-300 rounded-md px-3 py-2 mb-3"
             />
 
             <button
