@@ -101,6 +101,7 @@ const Dashboard = () => {
 }, [pendingApps]);
 
   const approvedApps = applications.filter((a) => a.isApproved);
+  console.log("✅ Approved Applications:", approvedApps);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -323,63 +324,6 @@ const Dashboard = () => {
 
 
 
-                {/* {activeTab === "approved" && (
-                  <div className="space-y-4">
-                    {approvedApps.length > 0 ? (
-                      approvedApps.map((app) => (
-                        <div
-                          key={app._id}
-                          className="border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between"
-                        >
-                          <div className="flex items-center gap-3">
-                            <CheckCircle2 className="text-green-600" />
-                            <div>
-                              <p className="font-semibold text-gray-900">
-                                {app.lga || "Certificate of Origin"}
-                              </p>
-                              <p className="text-gray-600 text-sm">
-                                Approved:{" "}
-                                {new Date(app.updatedAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            className="mt-3 sm:mt-0 flex items-center gap-2 bg-[#11860F] text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
-                            onClick={() =>
-                              navigate("/certificate", {
-                                state: {
-                                  name: `${user?.firstName || ""} ${
-                                    user?.lastName || ""
-                                  }`,
-                                  address:
-                                    app.currentAddress ||
-                                    user?.address ||
-                                    "Unknown Address",
-                                  nativeTown: user?.town || "Unknown",
-                                  approvedDate: app.updatedAt,
-                                  lga: app.lga || "Unknown LGA",
-                                  certificateId: app._id,
-                                  image: app.passport,
-                                },
-                              })
-                            }
-                          >
-                            <img
-                              src={download}
-                              alt="Download"
-                              className="w-4 h-4"
-                            />
-                            Download
-                          </button>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-center py-6">
-                        No approved certificates yet.
-                      </p>
-                    )}
-                  </div>
-                )} */}
 
                 {activeTab === "approved" && (
   <div className="space-y-4">
@@ -416,6 +360,7 @@ const Dashboard = () => {
                     lga: app.lga || "Unknown LGA",
                     certificateId: app._id,
                     image: app.passport,
+                    stateOfOrigin: app?.stateOfOrigin || "Unknown",
                   },
                 })
               }

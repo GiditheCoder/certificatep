@@ -11,7 +11,8 @@ const ApprovedCertificate = () => {
   const certRef = useRef();
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { name, address, lga, nativeTown, image, approvedDate, certificateId } = state || {};
+  const { name, address, lga, nativeTown, stateOfOrigin,  image, approvedDate, certificateId } = state || {};
+  console.log("Certificate State:", state);
   const Admin = JSON.parse(localStorage.getItem("user"));
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -144,11 +145,11 @@ const ApprovedCertificate = () => {
 
           {/* Applicant Image (Circular + Centered) */}
           {image && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+            <div className="absolute top-4 right-1 -translate-x-1/2 z-10">
               <img
                 src={image.startsWith("http") ? image : `${window.location.origin}/${image}`}
                 alt="Applicant"
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-gray-300 shadow-sm"
+                className="w-20 h-20 sm:w-24 sm:h-24  object-cover border-2 border-gray-300 shadow-sm"
                 onError={(e) => (e.target.style.display = "none")}
               />
             </div>
@@ -161,9 +162,17 @@ const ApprovedCertificate = () => {
             <img src={StateLogo} alt="Seal" className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mt-2" />
           </div>
 
-          <h2 className="text-base sm:text-xl font-bold text-gray-900 underline mb-6 relative z-10">
+
+{/* IN THIS AREA , if a user stateOfOrigin is from other states i.e lags etc , change this to Certiificate of Residency */}
+          {/* <h2 className="text-base sm:text-xl font-bold text-gray-900 underline mb-6 relative z-10">
             CERTIFICATE OF ORIGIN
-          </h2>
+          </h2> */}
+          <h2 className="text-base sm:text-xl font-bold text-gray-900 underline mb-6 relative z-10">
+  {stateOfOrigin?.toLowerCase() === "ogun"
+    ? "CERTIFICATE OF ORIGIN"
+    : "CERTIFICATE OF RESIDENCY"}
+</h2>
+
 
           {/* Certificate Text */}
           <div className="text-left leading-relaxed text-gray-800 text-xs sm:text-sm md:text-base space-y-3 sm:space-y-4 relative z-10">
@@ -171,8 +180,9 @@ const ApprovedCertificate = () => {
               This is to certify that from enquiry made,{" "}
               <span className="font-semibold underline">{name || "Full Name"}</span> of{" "}
               <span className="font-semibold underline">{address || "Full Address"}</span> is a native
-              of <span className="font-semibold underline">{lga || "Local Government Area"}</span> of
-              Ogun State, Nigeria.
+             of <span className="font-semibold underline">{lga || "Local Government Area"}</span> of{" "}
+<span className="font-semibold underline">{stateOfOrigin || "State"}</span> State, Nigeria.
+
             </p>
 
             <p>

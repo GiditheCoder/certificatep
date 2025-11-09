@@ -32,6 +32,7 @@ const OfficialScreen = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem("token");
+        console.log("Retrieved token:", token); // Debugging line
         const config = { headers: { Authorization: `Bearer ${token}` } };
 
         const [pendingRes, approvedRes, rejectedRes] = await axios.all([
@@ -47,6 +48,9 @@ const OfficialScreen = () => {
           res?.data?.applications ??
           res?.data ??
           [];
+
+          const approvedData = normalize(approvedRes);
+      console.log("✅ Approved Applications:", approvedData); // 👈 Add this line
 
         setPending(normalize(pendingRes));
         setApproved(normalize(approvedRes));
@@ -273,6 +277,7 @@ const OfficialScreen = () => {
                       approvedDate: new Date(item.updatedAt).toLocaleDateString(),
                       certificateId: item._id,
                       lga: item.lga,
+                      stateOfOrigin: item.stateOfOrigin,
                     },
                   });
                 }

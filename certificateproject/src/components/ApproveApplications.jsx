@@ -351,6 +351,14 @@ const handleReject = async () => {
     </p>
   </div>
 
+    {/* state */}
+   <div className="mb-8 w-full">
+    <p className="text-sm text-gray-500 mb-2 font-medium">State</p>
+    <p className="text-base font-medium text-gray-900">
+      {application.stateOfOrigin || "N/A"}
+    </p>
+  </div>
+
 
 
  <div className="mb-8 w-full">
