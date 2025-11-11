@@ -361,6 +361,8 @@ const Dashboard = () => {
                     certificateId: app._id,
                     image: app.passport,
                     stateOfOrigin: app?.stateOfOrigin || "Unknown",
+                      from: "/dashboard",
+                      lgaOfResident: app.lgaOfResident || "Unknown",
                   },
                 })
               }

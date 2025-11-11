@@ -359,6 +359,15 @@ const handleReject = async () => {
     </p>
   </div>
 
+<div className="mb-8 w-full">
+    <p className="text-sm text-gray-500 mb-2 font-medium">Lga Residence </p>
+    <p className="text-base font-medium text-gray-900">
+      {application.lgaOfResident || "N/A"}
+    </p>
+  </div>
+
+
+
 
 
  <div className="mb-8 w-full">

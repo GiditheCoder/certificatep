@@ -24,6 +24,10 @@ const Application = () => {
   const [isValidatingFace, setIsValidatingFace] = useState(false);
   const [states, setStates] = useState([]);
 const [lgas, setLgas] = useState([]);
+const [ogunLgas, setOgunLgas] = useState([]);
+const [previewUrl, setPreviewUrl] = useState(null);
+
+
 
 
   const [formData, setFormData] = useState({
@@ -41,6 +45,7 @@ const [lgas, setLgas] = useState([]);
     stateOfOrigin: "",
     passport: null,
     isResidentOfOgun: "",
+    lgaOfResident: "", // ✅ NEW FIELD
   });
 
 
@@ -212,6 +217,35 @@ useEffect(() => {
 }, [formData.stateOfOrigin]);
 
 
+// to fetch ony ogun states
+useEffect(() => {
+  const fetchOgunLgas = async () => {
+    if (formData.isResidentOfOgun !== true) return; // Only fetch if Yes
+
+    try {
+      const encodedState = encodeURIComponent("Ogun");
+      const res = await axios.get(
+        `https://lgacertificate-011d407b356b.herokuapp.com/api/v1/lgas?state=${encodedState}`
+      );
+
+      const ogunLgaArray = res.data?.data?.lgas;
+
+      console.log("🌍 Ogun LGAs API response:", ogunLgaArray); // 👈 ADD THIS
+
+      if (res.data.success && Array.isArray(ogunLgaArray)) {
+        setOgunLgas(ogunLgaArray);
+      } else {
+        toast.error("Failed to load Ogun LGAs");
+      }
+    } catch (error) {
+      console.error("❌ Error fetching Ogun LGAs:", error);
+      toast.error("Could not fetch Ogun LGAs. Please try again.");
+    }
+  };
+
+  fetchOgunLgas();
+}, [formData.isResidentOfOgun]);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -223,115 +257,79 @@ useEffect(() => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Face detection function
-  const detectFace = async (base64Image) => {
-    if (!modelsLoaded) {
-      console.log("Models not loaded, skipping face detection");
-      return { valid: true, message: "Face detection unavailable" };
+// Face detection using file URL, not base64
+const detectFace = async (imageUrl) => {
+  if (!modelsLoaded) {
+    console.log("Models not loaded, skipping face detection");
+    return { valid: true, message: "Face detection unavailable" };
+  }
+
+  try {
+    setIsValidatingFace(true);
+
+    const img = new Image();
+    img.src = imageUrl;
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+
+    // Run detection
+    const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions());
+    const faceCount = detections.length;
+
+    if (faceCount === 0) {
+      return { valid: false, message: "No face detected. Please upload a clear passport photo." };
+    }
+    if (faceCount > 1) {
+      return { valid: false, message: "Multiple faces detected. Please upload a photo with only one person." };
     }
 
-    try {
-      setIsValidatingFace(true);
-
-      // Create temporary image element
-      const img = new Image();
-      img.src = base64Image;
-
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-      });
-
-      // Detect faces
-      const detections = await faceapi
-        .detectAllFaces(img, new faceapi.TinyFaceDetectorOptions());
-
-      const faceCount = detections.length;
-
-      if (faceCount === 0) {
-        return {
-          valid: false,
-          message: "No face detected. Please upload a clear passport photo."
-        };
-      }
-
-      if (faceCount > 1) {
-        return {
-          valid: false,
-          message: "Multiple faces detected. Please upload a photo with only one person."
-        };
-      }
-
-      const avgConfidence = detections[0].score;
-
-      if (avgConfidence < 0.5) {
-        return {
-          valid: false,
-          message: "Face detection confidence too low. Please upload a clearer photo."
-        };
-      }
-
-      return {
-        valid: true,
-        message: `Face detected successfully! (Confidence: ${(avgConfidence * 100).toFixed(1)}%)`
-      };
-    } catch (error) {
-      console.error("Face detection error:", error);
-      return {
-        valid: true,
-        message: "Face validation error, proceeding anyway"
-      };
-    } finally {
-        setTimeout(() => {
-    setIsValidatingFace(false);
-  }, 1000);
-    }
-  };
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const maxSize = 3 * 1024 * 1024;
-    if (file.size > maxSize) {
-      setErrors(prev => ({ ...prev, passport: "File too large. Maximum size is 3MB." }));
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return;
+    const confidence = detections[0].score;
+    if (confidence < 0.5) {
+      return { valid: false, message: "Face confidence too low. Please use a clearer photo." };
     }
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64Image = reader.result;
+    return { valid: true, message: `Face detected successfully (${(confidence * 100).toFixed(1)}%)` };
+  } catch (error) {
+    console.error("Face detection error:", error);
+    return { valid: true, message: "Face validation failed but proceeding" };
+  } finally {
+    setTimeout(() => setIsValidatingFace(false), 1000);
+  }
+};
 
-      const img = new Image();
-      img.src = base64Image;
+const handleFileChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-      img.onload = async () => {
-        // Validate face
-        const faceResult = await detectFace(base64Image);
-        
-        if (!faceResult.valid) {
-          setErrors(prev => ({ ...prev, passport: faceResult.message }));
-          toast.error(faceResult.message);
-          if (fileInputRef.current) fileInputRef.current.value = "";
-          setFormData(prev => ({ ...prev, passport: null }));
-          return;
-        }
+  const maxSize = 3 * 1024 * 1024;
+  if (file.size > maxSize) {
+    setErrors((prev) => ({ ...prev, passport: "File too large. Max size is 3MB." }));
+    e.target.value = "";
+    return;
+  }
 
-        setErrors(prev => ({ ...prev, passport: "" }));
-        setFormData(prev => ({ ...prev, passport: base64Image }));
-        toast.success(faceResult.message);
-      };
+  // Create a temporary URL for preview
+  const imageUrl = URL.createObjectURL(file);
 
-      img.onerror = () => {
-        setErrors(prev => ({ ...prev, passport: "Invalid image file." }));
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        setFormData(prev => ({ ...prev, passport: null }));
-      };
-    };
+  const faceResult = await detectFace(imageUrl);
 
-    reader.readAsDataURL(file);
-  };
+  if (!faceResult.valid) {
+    toast.error(faceResult.message);
+    setErrors((prev) => ({ ...prev, passport: faceResult.message }));
+    e.target.value = "";
+    URL.revokeObjectURL(imageUrl);
+    return;
+  }
+
+  toast.success(faceResult.message);
+  setFormData((prev) => ({ ...prev, passport: file }));
+  setPreviewUrl(imageUrl); // ✅ store preview separately
+  setErrors((prev) => ({ ...prev, passport: "" }));
+};
+
+
 
   const handleDashboard = () => {
     navigate("/dashboard");
@@ -343,88 +341,6 @@ useEffect(() => {
     navigate("/login");
   };
 
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     const newErrors = {};
-
-//     if (!formData.fullNames?.trim()) newErrors.fullNames = "Required";
-//     if (!formData.fatherNames?.trim()) newErrors.fatherNames = "Required";
-//     if (!formData.motherNames?.trim()) newErrors.motherNames = "Required";
-//     if (!formData.nativeTown?.trim()) newErrors.nativeTown = "Required";
-//     if (!formData.nativePoliticalWard?.trim())
-//       newErrors.nativePoliticalWard = "Required";
-//     if (!formData.village?.trim()) newErrors.village = "Required";
-//     if (!formData.communityHead?.trim()) newErrors.communityHead = "Required";
-//     if (!formData.communityHeadContact?.toString().trim()) {
-//       newErrors.communityHeadContact = "Required";
-//     } else if (!/^[\d+\s-]+$/.test(formData.communityHeadContact)) {
-//       newErrors.communityHeadContact = "Invalid contact format";
-//     }
-//     if (!formData.currentAddress?.trim()) newErrors.currentAddress = "Required";
-//     if (!formData.lga?.trim()) newErrors.lga = "Required";
-//     if (!formData.nin?.trim()) {
-//       newErrors.nin = "Required";
-//     } else if (!/^\d{11}$/.test(formData.nin)) {
-//       newErrors.nin = "NIN must be exactly 11 digits";
-//     }
-//     if (!formData.passport) newErrors.passport = "Required";
-//     if (!formData.stateOfOrigin.trim()) newErrors.stateOfOrigin = "Please select your State of Origin"; // ✅ Added validation
-//    if (!formData.stateOfOrigin.trim()) newErrors.stateOfOrigin = "Please select your State of Origin";
-//   // ✅ Only require isResidentOfOgun if not from Ogun
-// if (
-//   formData.stateOfOrigin &&
-//   formData.stateOfOrigin.toLowerCase() !== "ogun" &&
-//   !formData.isResidentOfOgun
-// ) {
-//   newErrors.isResidentOfOgun = "Please confirm if you are a resident of Ogun State";
-// }
-
-
-
-//     if (Object.keys(newErrors).length > 0) {
-//       setErrors(newErrors);
-//       return;
-//     }
-
-//     setLoading(true);
-//     try {
-//       const token = localStorage.getItem("token");
-//       if (!token) {
-//         toast.error("⚠️ Please log in again.", { position: "top-center" });
-//         navigate("/login");
-//         return;
-//       }
-
-//       const res = await axios.post(
-//         "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
-//         formData,
-//         {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//             "Content-Type": "application/json",
-//           },
-//         }
-//       );
-
-//       console.log("✅ Response:", res.data);
-
-//       if (res.data.success && res.data.data?.paymentLink) {
-//         toast.success("✅ Application submitted! Redirecting to payment...");
-//         window.location.href = res.data.data.paymentLink;
-//       } else {
-//         alert(res.data.message || "Something went wrong.");
-//       }
-//     } catch (error) {
-//       if (error.response) {
-//         console.error("Backend message:", error.response.data);
-//         toast.error(error.response.data.message || "Something went wrong.");
-//       } else {
-//         toast.error("Network error. Please try again.");
-//       }
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -471,6 +387,7 @@ const handleSubmit = async (e) => {
   }
 
   setLoading(true);
+
   try {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -479,23 +396,36 @@ const handleSubmit = async (e) => {
       return;
     }
 
-    // ✅ Prepare payload correctly
-    let payload = { ...formData };
-    if (formData.stateOfOrigin?.toLowerCase() === "ogun") {
-      // Remove field entirely if state is Ogun
-      delete payload.isResidentOfOgun;
-    } else {
-      // Ensure boolean for non-Ogun states
-      payload.isResidentOfOgun = Boolean(formData.isResidentOfOgun);
+    // ✅ Handle Ogun State logic before submission
+    let cleanedFormData = { ...formData };
+    if (
+      cleanedFormData.stateOfOrigin &&
+      cleanedFormData.stateOfOrigin.toLowerCase() === "ogun"
+    ) {
+      cleanedFormData.isResidentOfOgun = null;
+      cleanedFormData.lgaOfResident = null;
     }
 
+    // ✅ Build multipart form data
+    const multipart = new FormData();
+    for (const key in cleanedFormData) {
+      if (
+        cleanedFormData[key] !== null &&
+        cleanedFormData[key] !== undefined &&
+        cleanedFormData[key] !== ""
+      ) {
+        multipart.append(key, cleanedFormData[key]);
+      }
+    }
+
+    // Send the request
     const res = await axios.post(
       "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
-      payload,
+      multipart,
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
         },
       }
     );
@@ -506,11 +436,11 @@ const handleSubmit = async (e) => {
       toast.success("✅ Application submitted! Redirecting to payment...");
       window.location.href = res.data.data.paymentLink;
     } else {
-      alert(res.data.message || "Something went wrong.");
+      toast.error(res.data.message || "Something went wrong.");
     }
   } catch (error) {
+    console.error("❌ Submission error:", error);
     if (error.response) {
-      console.error("Backend message:", error.response.data);
       toast.error(error.response.data.message || "Something went wrong.");
     } else {
       toast.error("Network error. Please try again.");
@@ -596,6 +526,13 @@ const handleSubmit = async (e) => {
               Fill in your personal details below to apply
             </p>
           </div>
+
+          {user && (
+  <div className="bg-green-50 text-green-800 text-sm font-medium px-4 py-2 rounded-md mb-4 border border-green-200">
+    You are filling this application as: <span className="font-semibold">{user.email}</span>
+  </div>
+)}
+
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {[
@@ -691,92 +628,101 @@ const handleSubmit = async (e) => {
 </select>
 
 
-{/* ✅ Show this only if user is not from Ogun */}
+
+{/* state of origin */}
 {formData.stateOfOrigin && formData.stateOfOrigin.toLowerCase() !== "ogun" && (
   <div className="mt-4">
-    {/* <label className="block text-sm font-medium text-gray-700 mb-1">
-      Are you currently a resident of Ogun State?
-    </label> */}
-  {/* <select
-  name="isResidentOfOgun"
-  value={formData.isResidentOfOgun === true ? "true" : formData.isResidentOfOgun === false ? "false" : ""}
-  onChange={(e) =>
-    setFormData((prev) => ({
-      ...prev,
-      isResidentOfOgun: e.target.value === "true" ? true : false,
-    }))
-  }
+    <div className="mb-4">
+      <label className="block text-sm text-gray-700 font-medium mb-1">
+        Are you Currently a resident of Ogun State?
+      </label>
+      <select
+        name="isResidentOfOgun"
+        value={
+          formData.isResidentOfOgun === true
+            ? "true"
+            : formData.isResidentOfOgun === false
+            ? "false"
+            : ""
+        }
+        onChange={(e) => {
+          const value = e.target.value === "true";
+          setFormData((prev) => ({
+            ...prev,
+            isResidentOfOgun: value,
+            // Reset LGA if "No"
+            lgaOfResident: value ? prev.lgaOfResident : "",
+          }));
 
+          if (!value) {
+            setErrors((prev) => ({
+              ...prev,
+              isResidentOfOgun:
+                "You have to be a Resident to make an application",
+              lgaOfResident: "",
+            }));
+          } else {
+            setErrors((prev) => ({
+              ...prev,
+              isResidentOfOgun: "",
+            }));
+          }
+        }}
+        className={`w-full px-4 py-2 rounded-lg border focus:ring-2 font-medium focus:border-transparent ${
+          errors.isResidentOfOgun
+            ? "border-red-600 focus:ring-red-600"
+            : "border-gray-300 focus:ring-green-600"
+        }`}
+      >
+        <option value="">Select an option</option>
+        <option value="true">Yes</option>
+        <option value="false">No</option>
+      </select>
 
+      {errors.isResidentOfOgun && (
+        <p className="text-xs font-medium text-red-600 mt-1">
+          {errors.isResidentOfOgun}
+        </p>
+      )}
+    </div>
 
-  className={`w-full px-4 py-2 rounded-lg border focus:ring-2 font-medium focus:border-transparent ${
-    errors.isResidentOfOgun
-      ? "border-red-600 focus:ring-red-600"
-      : "border-gray-300 focus:ring-green-600"
-  }`}
->
-  <option value="">Select an option</option>
-  <option value="true">Yes</option>
-  <option value="false">No</option>
-</select> */}
-<div className="mb-4">
-  <label className="block text-sm text-gray-700 font-medium mb-1">
-    Are you Currently a resident of Ogun State?
-  </label>
-  <select
-    name="isResidentOfOgun"
-    value={
-      formData.isResidentOfOgun === true
-        ? "true"
-        : formData.isResidentOfOgun === false
-        ? "false"
-        : ""
-    }
-    onChange={(e) => {
-      const value = e.target.value === "true";
-      setFormData((prev) => ({
-        ...prev,
-        isResidentOfOgun: value,
-      }));
-
-      // If "No" is selected → show error message
-      if (!value) {
-        setErrors((prev) => ({
-          ...prev,
-          isResidentOfOgun: "You have to be a Resident to make an application",
-        }));
-      } else {
-        setErrors((prev) => ({
-          ...prev,
-          isResidentOfOgun: "",
-        }));
-      }
-    }}
-    className={`w-full px-4 py-2 rounded-lg border focus:ring-2 font-medium focus:border-transparent ${
-      errors.isResidentOfOgun
-        ? "border-red-600 focus:ring-red-600"
-        : "border-gray-300 focus:ring-green-600"
-    }`}
-  >
-    <option value="">Select an option</option>
-    <option value="true">Yes</option>
-    <option value="false">No</option>
-  </select>
-    {errors.isResidentOfOgun && (
-      <p className="text-xs font-medium text-red-600 mt-1">{errors.isResidentOfOgun}</p>
+    {/* ✅ Show this extra section only if "Yes" is selected */}
+    {formData.isResidentOfOgun === true && (
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Select LGA of Residence (Ogun State Only)
+        </label>
+        <select
+          name="lgaOfResident"
+          value={formData.lgaOfResident}
+          onChange={handleInputChange}
+          className={`w-full px-4 py-2 rounded-lg border focus:ring-2 font-medium focus:border-transparent ${
+            errors.lgaOfResident
+              ? "border-red-600 focus:ring-red-600"
+              : "border-gray-300 focus:ring-green-600"
+          }`}
+        >
+          <option value="">Select your LGA of residence</option>
+          {ogunLgas.map((lga, index) => (
+            <option key={index} value={lga}>
+              {lga}
+            </option>
+          ))}
+        </select>
+        {errors.lgaOfResident && (
+          <p className="text-xs text-red-600 mt-1">
+            {errors.lgaOfResident}
+          </p>
+        )}
+      </div>
     )}
-</div>
-
-  
   </div>
 )}
 
 
 
 
-
-
-            {/* Passport Upload with Face Detection */}
+   {/* Passport Upload with Face Detection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Passport Photograph {modelsLoaded && <span className="text-green-600 text-xs">(AI Face Detection Enabled)</span>}
@@ -797,20 +743,7 @@ const handleSubmit = async (e) => {
                     : "border-gray-300 focus:ring-green-600"
                 }`}
               />
-              {/* {isValidatingFace && (
-                <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
-                  <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                  </svg>
-                  Validating face...
-                </p>
-              )}
-              {errors.passport && (
-                <p className="text-xs text-red-600 mt-1">{errors.passport}</p>
-              )} */}
-
-              {/* Fullscreen AI Validation Loader */}
+            
 {isValidatingFace && (
   <div className="fixed inset-0 bg-transparent bg-opacity-40 flex flex-col items-center justify-center z-50">
     <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center">
@@ -845,7 +778,7 @@ const handleSubmit = async (e) => {
 
 
 
-              {formData.passport && (
+              {/* {formData.passport && (
                 <div className="relative inline-block mt-3">
                   <img
                     ref={imageRef}
@@ -866,7 +799,33 @@ const handleSubmit = async (e) => {
                     <img src={CloseLogo} alt="Remove" className="w-3 h-3" />
                   </button>
                 </div>
-              )}
+              )} */}
+
+              {previewUrl && (
+  <div className="relative inline-block mt-3">
+    <img
+      ref={imageRef}
+      src={previewUrl} // ✅ use preview URL
+      alt="Preview"
+      className="w-24 h-24 object-cover rounded-lg border"
+    />
+    <canvas ref={canvasRef} className="hidden" />
+    <button
+      type="button"
+      onClick={() => {
+        setFormData((prev) => ({ ...prev, passport: null }));
+        setPreviewUrl(null); // ✅ clear preview
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }}
+      className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+    >
+      <img src={CloseLogo} alt="Remove" className="w-3 h-3" />
+    </button>
+  </div>
+)}
+
+
+              
               <p className="text-xs text-gray-500 font-medium mt-1">
                 Maximum file size: 3MB. Photo must contain exactly one face.
               </p>
@@ -927,3 +886,188 @@ const handleSubmit = async (e) => {
 };
 
   export default Application;
+
+
+
+
+
+  
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     const newErrors = {};
+
+//     if (!formData.fullNames?.trim()) newErrors.fullNames = "Required";
+//     if (!formData.fatherNames?.trim()) newErrors.fatherNames = "Required";
+//     if (!formData.motherNames?.trim()) newErrors.motherNames = "Required";
+//     if (!formData.nativeTown?.trim()) newErrors.nativeTown = "Required";
+//     if (!formData.nativePoliticalWard?.trim())
+//       newErrors.nativePoliticalWard = "Required";
+//     if (!formData.village?.trim()) newErrors.village = "Required";
+//     if (!formData.communityHead?.trim()) newErrors.communityHead = "Required";
+//     if (!formData.communityHeadContact?.toString().trim()) {
+//       newErrors.communityHeadContact = "Required";
+//     } else if (!/^[\d+\s-]+$/.test(formData.communityHeadContact)) {
+//       newErrors.communityHeadContact = "Invalid contact format";
+//     }
+//     if (!formData.currentAddress?.trim()) newErrors.currentAddress = "Required";
+//     if (!formData.lga?.trim()) newErrors.lga = "Required";
+//     if (!formData.nin?.trim()) {
+//       newErrors.nin = "Required";
+//     } else if (!/^\d{11}$/.test(formData.nin)) {
+//       newErrors.nin = "NIN must be exactly 11 digits";
+//     }
+//     if (!formData.passport) newErrors.passport = "Required";
+//     if (!formData.stateOfOrigin.trim()) newErrors.stateOfOrigin = "Please select your State of Origin"; // ✅ Added validation
+//    if (!formData.stateOfOrigin.trim()) newErrors.stateOfOrigin = "Please select your State of Origin";
+//   // ✅ Only require isResidentOfOgun if not from Ogun
+// if (
+//   formData.stateOfOrigin &&
+//   formData.stateOfOrigin.toLowerCase() !== "ogun" &&
+//   !formData.isResidentOfOgun
+// ) {
+//   newErrors.isResidentOfOgun = "Please confirm if you are a resident of Ogun State";
+// }
+
+
+
+//     if (Object.keys(newErrors).length > 0) {
+//       setErrors(newErrors);
+//       return;
+//     }
+
+//     setLoading(true);
+//     try {
+//       const token = localStorage.getItem("token");
+//       if (!token) {
+//         toast.error("⚠️ Please log in again.", { position: "top-center" });
+//         navigate("/login");
+//         return;
+//       }
+
+//       const res = await axios.post(
+//         "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
+//         formData,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//             "Content-Type": "application/json",
+//           },
+//         }
+//       );
+
+//       console.log("✅ Response:", res.data);
+
+//       if (res.data.success && res.data.data?.paymentLink) {
+//         toast.success("✅ Application submitted! Redirecting to payment...");
+//         window.location.href = res.data.data.paymentLink;
+//       } else {
+//         alert(res.data.message || "Something went wrong.");
+//       }
+//     } catch (error) {
+//       if (error.response) {
+//         console.error("Backend message:", error.response.data);
+//         toast.error(error.response.data.message || "Something went wrong.");
+//       } else {
+//         toast.error("Network error. Please try again.");
+//       }
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+// const handleSubmit = async (e) => {
+//   e.preventDefault();
+//   const newErrors = {};
+
+//   if (!formData.fullNames?.trim()) newErrors.fullNames = "Required";
+//   if (!formData.fatherNames?.trim()) newErrors.fatherNames = "Required";
+//   if (!formData.motherNames?.trim()) newErrors.motherNames = "Required";
+//   if (!formData.nativeTown?.trim()) newErrors.nativeTown = "Required";
+//   if (!formData.nativePoliticalWard?.trim())
+//     newErrors.nativePoliticalWard = "Required";
+//   if (!formData.village?.trim()) newErrors.village = "Required";
+//   if (!formData.communityHead?.trim()) newErrors.communityHead = "Required";
+//   if (!formData.communityHeadContact?.toString().trim()) {
+//     newErrors.communityHeadContact = "Required";
+//   } else if (!/^[\d+\s-]+$/.test(formData.communityHeadContact)) {
+//     newErrors.communityHeadContact = "Invalid contact format";
+//   }
+//   if (!formData.currentAddress?.trim()) newErrors.currentAddress = "Required";
+//   if (!formData.lga?.trim()) newErrors.lga = "Required";
+//   if (!formData.nin?.trim()) {
+//     newErrors.nin = "Required";
+//   } else if (!/^\d{11}$/.test(formData.nin)) {
+//     newErrors.nin = "NIN must be exactly 11 digits";
+//   }
+//   if (!formData.passport) newErrors.passport = "Required";
+//   if (!formData.stateOfOrigin?.trim())
+//     newErrors.stateOfOrigin = "Please select your State of Origin";
+
+//   // ✅ Only require isResidentOfOgun if NOT from Ogun
+//   if (
+//     formData.stateOfOrigin &&
+//     formData.stateOfOrigin.toLowerCase() !== "ogun" &&
+//     (formData.isResidentOfOgun === undefined || formData.isResidentOfOgun === "")
+//   ) {
+//     newErrors.isResidentOfOgun =
+//       "Please confirm if you are a resident of Ogun State";
+//   }
+
+//   // Stop submission if validation fails
+//   if (Object.keys(newErrors).length > 0) {
+//     setErrors(newErrors);
+//     return;
+//   }
+
+//   setLoading(true);
+//   try {
+//     const token = localStorage.getItem("token");
+//     if (!token) {
+//       toast.error("⚠️ Please log in again.", { position: "top-center" });
+//       navigate("/login");
+//       return;
+//     }
+
+//     // ✅ Prepare payload correctly
+//     let payload = { ...formData };
+//     if (formData.stateOfOrigin?.toLowerCase() === "ogun") {
+//       // Remove field entirely if state is Ogun
+//       delete payload.isResidentOfOgun;
+//     } else {
+//       // Ensure boolean for non-Ogun states
+//       payload.isResidentOfOgun = Boolean(formData.isResidentOfOgun);
+//     }
+
+//     const res = await axios.post(
+//       "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
+//       payload,
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+
+//     console.log("✅ Response:", res.data);
+
+//     if (res.data.success && res.data.data?.paymentLink) {
+//       toast.success("✅ Application submitted! Redirecting to payment...");
+//       window.location.href = res.data.data.paymentLink;
+//     } else {
+//       alert(res.data.message || "Something went wrong.");
+//     }
+//   } catch (error) {
+//     if (error.response) {
+//       console.error("Backend message:", error.response.data);
+//       toast.error(error.response.data.message || "Something went wrong.");
+//     } else {
+//       toast.error("Network error. Please try again.");
+//     }
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+
+

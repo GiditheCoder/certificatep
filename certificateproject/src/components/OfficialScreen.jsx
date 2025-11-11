@@ -27,6 +27,8 @@ const OfficialScreen = () => {
   const navigate = useNavigate();
   const Admin = JSON.parse(localStorage.getItem("user"));
 
+  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -51,6 +53,7 @@ const OfficialScreen = () => {
 
           const approvedData = normalize(approvedRes);
       console.log("✅ Approved Applications:", approvedData); // 👈 Add this line
+      console.log("✅ Pending Applications:", normalize(pendingRes)); // 👈 Add this line
 
         setPending(normalize(pendingRes));
         setApproved(normalize(approvedRes));
@@ -278,6 +281,9 @@ const OfficialScreen = () => {
                       certificateId: item._id,
                       lga: item.lga,
                       stateOfOrigin: item.stateOfOrigin,
+                       from: "/officialscreen", 
+                       lgaOfResident: item.lgaOfResident,
+                      email: Admin?.email,
                     },
                   });
                 }
