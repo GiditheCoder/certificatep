@@ -574,7 +574,10 @@ const ApprovedCertificate = () => {
             Certificate ID: {certificateId || "N/A"}
           </p>
 
-          {/* Buttons */}
+         
+         
+        </div>
+ {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 mt-6 w-full sm:w-auto justify-center px-4">
             <button
               onClick={downloadPDF}
@@ -583,9 +586,6 @@ const ApprovedCertificate = () => {
               Download Certificate
             </button>
           </div>
-
-         
-        </div>
 
          {/* Back */}
           <div className="mt-4 mb-4">
