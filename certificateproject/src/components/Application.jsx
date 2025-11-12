@@ -465,7 +465,7 @@ const handleSubmit = async (e) => {
         </div>
 
         <div className="hidden md:flex items-center gap-5">
-          <Bell className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]" />
+        
           <LogOutIcon onClick={handleLogout} className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]" />
           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-700 font-semibold uppercase">
             {user
@@ -486,7 +486,7 @@ const handleSubmit = async (e) => {
 
         {menuOpen && (
           <div className="absolute top-full right-4 bg-white border border-gray-200 rounded-lg shadow-lg mt-2 p-4 flex flex-col items-center gap-4 w-40 z-50 md:hidden animate-fadeIn">
-            <Bell className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]" />
+          
             <LogOutIcon onClick={handleLogout} className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]" />
             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-700 font-semibold uppercase">
               {user

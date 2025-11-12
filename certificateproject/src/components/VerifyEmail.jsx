@@ -124,7 +124,7 @@ const VerifyEmail = () => {
                 onChange={(e) => handleInputChange(e, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 maxLength={1}
-                className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-lg sm:text-xl border border-gray-400 rounded-md text-black focus:outline-none focus:border-green-600 transition-all"
+                className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-lg sm:text-xl border border-gray-400 rounded-md font-semibold text-black focus:outline-none focus:border-green-600 transition-all"
               />
             ))}
           </div>
