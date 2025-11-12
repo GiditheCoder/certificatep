@@ -3,8 +3,10 @@ import axios from "axios";
 import Bg from "../images/Bg.png";
 import { Eye, EyeOff } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const ResetPassword = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const [codeArray, setCodeArray] = useState(["", "", "", "", "", ""]);
   const [newPassword, setNewPassword] = useState("");
@@ -91,53 +93,70 @@ const ResetPassword = () => {
     }
   };
 
-  // 🔐 Handle password reset
+
   const handleResetPassword = async () => {
-    const otp = codeArray.join("");
-    const newErrors = {};
+  const otp = codeArray.join("");
+  const newErrors = {};
 
-    if (!email) newErrors.email = "Email is required.";
-    if (!otp || otp.length < 6) newErrors.otp = "OTP code must be 6 digits.";
-    if (!newPassword) newErrors.newPassword = "New password is required.";
-    else if (newPassword.length < 8)
-      newErrors.newPassword = "Password must be at least 8 characters.";
-    if (!confirmPassword)
-      newErrors.confirmPassword = "Please confirm your password.";
-    else if (newPassword !== confirmPassword)
-      newErrors.confirmPassword = "Passwords do not match.";
+  if (!email) newErrors.email = "Email is required.";
+  if (!otp || otp.length < 6) newErrors.otp = "OTP code must be 6 digits.";
+  if (!newPassword) newErrors.newPassword = "New password is required.";
+  else if (newPassword.length < 8)
+    newErrors.newPassword = "Password must be at least 8 characters.";
+  if (!confirmPassword)
+    newErrors.confirmPassword = "Please confirm your password.";
+  else if (newPassword !== confirmPassword)
+    newErrors.confirmPassword = "Passwords do not match.";
 
-    setErrors(newErrors);
-    setMessage("");
+  setErrors(newErrors);
+  setMessage("");
 
-    if (Object.keys(newErrors).length > 0) return;
+  if (Object.keys(newErrors).length > 0) return;
 
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        "https://lgacertificate-011d407b356b.herokuapp.com/api/reset-password",
-        {
-          email,
-          otp,
-          password: newPassword,
-          confirmPassword,
-        }
-      );
+  setLoading(true);
+  try {
+    const response = await axios.post(
+      "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/auth/reset-password",
+      {
+        email,
+        otp,
+        password: newPassword,
+        confirmPassword,
+      }
+    );
 
-      setMessage(response.data.message || "Password reset successful!");
-      setErrors({});
-      setCodeArray(["", "", "", "", "", ""]);
-      setNewPassword("");
-      setConfirmPassword("");
-      setTimeLeft(0);
-    } catch (error) {
-      console.error("Error resetting password:", error);
-      setMessage(
-        error.response?.data?.message || "Failed to reset password. Try again."
-      );
-    } finally {
-      setLoading(false);
+    // ✅ Reset UI
+    setMessage("🎉 Password reset successful! Redirecting to login...");
+    setErrors({});
+    setCodeArray(["", "", "", "", "", ""]);
+    setNewPassword("");
+    setConfirmPassword("");
+    setTimeLeft(0);
+
+    // ✅ Add simple animation (fade-in/out)
+    const msgEl = document.getElementById("reset-message");
+    if (msgEl) {
+      msgEl.classList.add("animate-pulse"); // Tailwind pulse animation
     }
-  };
+
+    // ✅ Redirect after 3 seconds
+    const timer = setTimeout(() => {
+      navigate("/login");
+    }, 1000);
+
+    // Clean up timer if component unmounts
+    return () => clearTimeout(timer);
+
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    setMessage(
+      error.response?.data?.message || "Failed to reset password. Try again."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div
@@ -173,7 +192,7 @@ const ResetPassword = () => {
               onChange={(e) => handleInputChange(e, index)}
               onKeyDown={(e) => handleKeyDown(e, index)}
               maxLength={1}
-              className={`w-10 h-10 sm:w-12 sm:h-12 text-black text-lg text-center rounded-md bg-transparent border 
+              className={`w-10 h-10 sm:w-12 sm:h-12 font-semibold text-black text-lg text-center rounded-md bg-transparent border 
                 focus:outline-none focus:border-green-600 transition 
                 ${errors.otp ? "border-red-500" : "border-[#3c3c51]"}`}
             />
@@ -210,7 +229,7 @@ const ResetPassword = () => {
             placeholder="New password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full px-4 py-4 border rounded-lg text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
+            className="w-full px-4 py-4 border rounded-lg font-semibold text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
           />
           <button
             type="button"
@@ -228,7 +247,7 @@ const ResetPassword = () => {
             placeholder="Confirm new password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-4 py-4 border rounded-lg text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
+            className="w-full px-4 py-4 border rounded-lg font-semibold text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
           />
           
           <button
@@ -243,16 +262,18 @@ const ResetPassword = () => {
 
         {/* API Message */}
         {message && (
-          <p
-            className={`text-center text-sm ${
-              message.toLowerCase().includes("success")
-                ? "text-green-600"
-                : "text-red-600"
-            }`}
-          >
-            {message}
-          </p>
-        )}
+  <p
+    id="reset-message"
+    className={`text-center font-semibold text-sm transition-all duration-700 ${
+      message.toLowerCase().includes("success")
+        ? "text-green-600"
+        : "text-red-600"
+    }`}
+  >
+    {message}
+  </p>
+)}
+
 
         {/* Submit Button */}
         <button

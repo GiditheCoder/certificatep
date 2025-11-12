@@ -199,15 +199,15 @@ const OfficialLogin = () => {
       Forgot password
     </button>
 
-    <span className="hidden sm:inline text-gray-400">/</span>
+    {/* <span className="hidden sm:inline text-gray-400">/</span> */}
 
-    <button
+    {/* <button
       type="button"
       className="text-green-600 font-medium hover:underline"
       onClick={() => navigate("/officialchangepassword")}
     >
       Change password
-    </button>
+    </button> */}
   </div>
 </div>
 

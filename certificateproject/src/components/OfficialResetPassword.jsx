@@ -3,8 +3,10 @@ import axios from "axios";
 import Bg from "../images/Bg.png";
 import { Eye, EyeOff } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const OfficialResetPassword = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const [codeArray, setCodeArray] = useState(["", "", "", "", "", ""]);
   const [newPassword, setNewPassword] = useState("");
@@ -51,6 +53,7 @@ const OfficialResetPassword = () => {
       setMessage(res.data.message || "A new OTP has been sent to your email.");
       setCodeArray(["", "", "", "", "", ""]);
       setTimeLeft(600); // reset timer
+
     } catch (error) {
   console.error("Error resending OTP:", error.response?.data || error.message);
   setMessage(
@@ -122,6 +125,20 @@ const OfficialResetPassword = () => {
       setNewPassword("");
       setConfirmPassword("");
       setTimeLeft(0);
+
+       // ✅ Add simple animation (fade-in/out)
+    const msgEl = document.getElementById("reset-message");
+    if (msgEl) {
+      msgEl.classList.add("animate-pulse"); // Tailwind pulse animation
+    }
+
+        const timer = setTimeout(() => {
+      navigate("/login");
+    }, 1000);
+
+    // Clean up timer if component unmounts
+    return () => clearTimeout(timer);
+
     } catch (error) {
       console.error("Error resetting password:", error);
       setMessage(
@@ -164,7 +181,7 @@ const OfficialResetPassword = () => {
               onChange={(e) => handleInputChange(e, index)}
               onKeyDown={(e) => handleKeyDown(e, index)}
               maxLength={1}
-              className={`w-10 h-10 sm:w-12 sm:h-12 text-black text-lg text-center rounded-md bg-transparent border 
+              className={`w-10 h-10 sm:w-12 sm:h-12 text-black font-semibold text-lg text-center rounded-md bg-transparent border 
                 focus:outline-none focus:border-green-600 transition 
                 ${errors.otp ? "border-red-500" : "border-[#3c3c51]"}`}
             />
@@ -197,7 +214,7 @@ const OfficialResetPassword = () => {
             placeholder="New password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full font-medium px-4 py-4 border rounded-lg text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
+            className="w-full font-semibold px-4 py-4 border rounded-lg  text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
           />
           <button
             type="button"
@@ -215,7 +232,7 @@ const OfficialResetPassword = () => {
             placeholder="Confirm new password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full font-medium px-4 py-4 border rounded-lg text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
+            className="w-full font-semibold px-4 py-4 border rounded-lg text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
           />
           <button
             type="button"
@@ -226,16 +243,20 @@ const OfficialResetPassword = () => {
           </button>
         </div>
 
+      
         {/* API Message */}
         {message && (
-          <p
-            className={`text-center font-medium text-sm ${
-              message.toLowerCase().includes("success") ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {message}
-          </p>
-        )}
+  <p
+    id="reset-message"
+    className={`text-center font-semibold text-sm transition-all duration-700 ${
+      message.toLowerCase().includes("success")
+        ? "text-green-600"
+        : "text-red-600"
+    }`}
+  >
+    {message}
+  </p>
+)}
 
         {/* Submit Button */}
         <button

@@ -112,12 +112,6 @@ const handleReject = async () => {
 
 
 
-
-
-
-
-
-
   const handleBack = () => {
     navigate("/officialscreen");
   };
