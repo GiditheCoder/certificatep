@@ -9,172 +9,93 @@ const VerifyCertificate = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
   const certificateId = state?.certificateId;
-  const fromStart = state?.fromStart || false; // ✅ detect if from Start.jsx
-
-  console.log("Certificate ID from state:", certificateId, "From start:", fromStart);
-
-
-
-
+  const fromStart = state?.fromStart || false;
 
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
+  const [fetchedCode, setFetchedCode] = useState(""); // ✅ for displaying fetched code
+  const [inputCode, setInputCode] = useState("");     // ✅ for user input
   const [certificateRef, setCertificateRef] = useState("");
 
   const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
 
 
- useEffect(() => {
-  const fetchVerificationCode = async () => {
-    if (!certificateId) return;
-    const token = localStorage.getItem("token");
-    if (!token) return;
+const handleVerifyCertificate = async () => {
+  if (!inputCode) {
+    toast.error("Please enter your verification code.");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      const response = await axios.get(`${baseURL}/api/v1/certificates`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  try {
+    setLoading(true);
 
-      console.log("📦 Full certificates response:", response.data);
-      console.log("🔍 Searching for certificate with application ID:", certificateId);
-
-      // ✅ Correct path to certificates array
-      const certList = response.data?.data?.certificates;
-
-      if (response.data?.success && Array.isArray(certList)) {
-        const cert = certList.find(
-          (c) => c.application === certificateId
-        );
-
-        console.log("🧾 Matched certificate object:", cert);
-
-        if (cert && cert.verificationCode) {
-          console.log("✅ Verification Code fetched:", cert.verificationCode);
-          setVerificationCode(cert.verificationCode);
-          toast.success("Verification code retrieved successfully!");
-        } else {
-          console.log("ℹ️ No verification code found for this certificate.");
-        }
-      } else {
-        console.log("⚠️ Invalid response or no certificates array found.");
-      }
-    } catch (error) {
-      console.error("❌ Error fetching verification code:", error);
-      toast.error("Failed to fetch verification code.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchVerificationCode();
-}, [certificateId]);
+    // Step 1: Verify code
+    const verifyResponse = await axios.get(`${baseURL}/api/v1/certificate/verify/${inputCode}`);
+    console.log("Full verification response:", verifyResponse.data);
 
 
-  // ✅ Request verification code
-  const handleRequestCode = async () => {
-    if (!certificateId) {
-      toast.error("Missing certificate ID — please go back and try again.");
-      return;
-    }
-    if (!email) {
-      toast.error("Please enter your email to receive the verification code.");
+    if (!verifyResponse.data?.success) {
+      toast.warn("Invalid or expired verification code.");
       return;
     }
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Session expired. Please log in again.");
-      navigate("/login");
+    // const certificate = verifyResponse.data.data?.certificate;
+    const certificate = verifyResponse?.data?.data?.certificate;
+
+    console.log("Verified certificate data:", certificate);
+    if (!certificate || !certificate.application?._id) {
+      console.log(certificate.application?._id)
+      toast.error("Verification failed — application ID not found.");
       return;
     }
 
-    try {
-      setLoading(true);
-      const response = await axios.post(
-        `${baseURL}/api/v1/certificate/request-verification/${certificateId}`,
-        { email },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+    toast.success("✅ Certificate verified successfully!");
 
-      if (response.data?.success && response.data?.data?.paymentLink) {
-        toast.info("Redirecting to payment page...");
-        setTimeout(() => {
-          window.location.href = response.data.data.paymentLink;
-        }, 1500);
-        return;
+    // Navigate using application _id
+   const applicationId = certificate?.application?._id 
+
+if (!applicationId) {
+  toast.error("Application ID not found for navigation.");
+  return;
+}
+
+console.log("Navigating to certificate with application ID:", applicationId);
+console.log("certificate.application:", certificate.application);
+console.log("certificate.application._id:", certificate.application?._id);
+
+    // navigate(`/certificate/${applicationId} , { state: { fromVerification: true }}`);
+    navigate(`/certificate/${applicationId}`, { state: { fromVerification: true } });
+
+
+    // Nullify verification in background
+    setTimeout(async () => {
+      try {
+        await axios.delete(`${baseURL}/api/v1/certificate/nullify-verification/${certificate.certificateRef}`);
+        console.log(`Verification for ${certificate.certificateRef} nullified ✅`);
+      } catch (err) {
+        console.warn("Failed to nullify verification:", err);
       }
+    }, 500);
 
-      toast.success("Verification code has been sent to your email!");
-    } catch (error) {
-      const message = error.response?.data?.message;
-      if (message?.toLowerCase().includes("already been generated")) {
-        toast.info("You already have an active verification code. Please check your email.");
-      } else {
-        toast.error(message || "Failed to request verification code.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ Verify certificate → auto-nullify → navigate to confirmation
-  const handleVerifyCertificate = async () => {
-    if (!verificationCode) {
-      toast.error("Please enter your verification code.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      // Step 1: Verify certificate
-      const verifyResponse = await axios.get(`${baseURL}/api/v1/certificate/verify/${verificationCode}`);
-
-      if (!verifyResponse.data?.success) {
-        toast.warn("Invalid or expired verification code.");
-        setLoading(false);
-        return;
-      }
-
-      const ref = verifyResponse.data.data?.ref;
-      setCertificateRef(ref);
-      toast.success(`✅ Certificate verified successfully! Ref: ${ref}`);
-
-      // Step 2: Automatically nullify
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast.error("Session expired. Please log in again.");
-        return;
-      }
-
-      await axios.delete(`${baseURL}/api/v1/certificate/nullify-verification/${ref}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      toast.info("Verification code nullified automatically!");
-
-      // Step 3: Redirect to confirmation
-      setTimeout(() => {
-        navigate(`/certificate-confirmation/${ref}`, {
-          state: {
-            ref,
-            message: "This is to certify that this certificate is from the Ogun State Local Government.",
-          },
-        });
-      }, 1200);
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Error verifying and nullifying certificate.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (error) {
+    console.error("Error verifying certificate:", error);
+    toast.error("Error verifying certificate.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-6">
+
+         {fetchedCode && (
+          <div className="mb-4 text-left">
+            <span className="text-gray-600 font-semibold">
+              Your verification code: <strong>{fetchedCode}</strong>
+            </span>
+          </div>
+        )}
+
       <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md text-center">
         <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
           <ShieldCheck className="text-[#11860F]" />
@@ -183,35 +104,21 @@ const VerifyCertificate = () => {
 
         {!fromStart && (
           <>
-            <p className="text-gray-500 mb-4">Request a verification code for your certificate.</p>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full font-semibold border border-gray-300 rounded-md px-3 py-2 mb-3"
-            />
-
-            <button
-              onClick={handleRequestCode}
-              disabled={loading}
-              className={`w-full flex items-center justify-center gap-2 bg-[#11860F] text-white py-3 rounded font-semibold hover:bg-[#0d6b0b] transition ${
-                loading ? "opacity-70 cursor-not-allowed" : ""
-              }`}
-            >
-              {loading ? "Requesting..." : "Request Verification Code"}
-            </button>
+            {/* Optional: Request verification code UI if needed */}
           </>
         )}
 
-        {/* Always show code verification section */}
-        <div className="mt-6">
+        {/* Display fetched verification code outside input */}
+     
+
+        {/* User input for verification */}
+        <div className="mt-6 text-left">
           <input
             type="text"
-            value={verificationCode}
-            onChange={(e) => setVerificationCode(e.target.value)}
-            placeholder="Enter verification code from email"
-            className="w-full border font-semibold border-gray-300 rounded-md px-3 py-2 mb-3"
+            value={inputCode}
+            onChange={(e) => setInputCode(e.target.value)}
+            placeholder="Enter verification code here"
+            className="w-full border font-semibold border-gray-300 rounded-md px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-green-700"
           />
 
           <button
@@ -233,7 +140,11 @@ const VerifyCertificate = () => {
         </button>
       </div>
 
-      {loading && <p className="text-gray-500 mt-3 text-sm">Please wait, processing request...</p>}
+      {loading && (
+        <p className="text-gray-500 mt-3 text-sm">
+          Please wait, processing request...
+        </p>
+      )}
 
       <ToastContainer position="top-center" theme="colored" />
     </div>

@@ -42,6 +42,8 @@ const Dashboard = () => {
     const parsedUser = JSON.parse(storedUser);
     updateUser(parsedUser);
 
+     console.log("📧 Logged in user's email:", parsedUser?.email);
+
     const fetchApplications = async () => {
       try {
         setLoading(true);
@@ -349,41 +351,31 @@ const Dashboard = () => {
             {/* ✅ Download Certificate Button */}
             <button
               className="flex items-center gap-2 bg-[#11860F] text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
-              onClick={() =>
-                navigate("/certificate", {
-                  state: {
-                    name: `${user?.firstName || ""} ${user?.lastName || ""}`,
-                    address:
-                      app.currentAddress || user?.address || "Unknown Address",
-                    nativeTown: user?.town || "Unknown",
-                    approvedDate: app.updatedAt,
-                    lga: app.lga || "Unknown LGA",
-                    certificateId: app._id,
-                    image: app.passport,
-                    stateOfOrigin: app?.stateOfOrigin || "Unknown",
-                      from: "/dashboard",
-                      lgaOfResident: app.lgaOfResident || "Unknown",
-                  },
-                })
-              }
+      onClick={() => {
+    console.log("📄 Downloading certificate for application ID:", app._id);
+    console.log("Full certificate object:", app);
+    // navigate(`/certificate/${app._id}`);
+    navigate(`/certificate/${app._id}`, {
+  state: { email: user?.email },
+});
+  }}
+>
               
-            >
+            
               <img src={download} alt="Download" className="w-4 h-4" />
               Download
             </button>
 
-            {/* ✅ Verify Certificate Button */}
-            <button
-              className="flex items-center gap-2 bg-[#11860F] text-white px-4 py-2 rounded-md hover:bg-[#0b5b09] transition"
-              onClick={() =>
-                navigate("/certificate-verify", {
-                  state: { certificateId: app._id },
-                })
-              }
-            >
-              <ShieldCheck className="h-5 w-5" />
-              Verify
-            </button>
+            {/* ✅ Request Verification Code */}
+  <button
+    className="flex items-center gap-2 bg-green-800 text-white px-4 py-2 rounded-md hover:bg-green-900 transition"
+    onClick={() => navigate("/certificate-request", { state: { certificateId: app._id } })}
+  >
+    <ShieldCheck className="h-5 w-5" />
+    Send Code
+  </button>
+
+
           </div>
         </div>
       ))

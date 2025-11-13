@@ -26,6 +26,8 @@ const Application = () => {
 const [lgas, setLgas] = useState([]);
 const [ogunLgas, setOgunLgas] = useState([]);
 const [previewUrl, setPreviewUrl] = useState(null);
+const communityDocRef = useRef(null);
+
 
 
 
@@ -46,6 +48,7 @@ const [previewUrl, setPreviewUrl] = useState(null);
     passport: null,
     isResidentOfOgun: "",
     lgaOfResident: "", // ✅ NEW FIELD
+     docFromCommunityHead: null, // ✅ NEW OPTIONAL FIELD
   });
 
 
@@ -290,7 +293,7 @@ const detectFace = async (imageUrl) => {
       return { valid: false, message: "Face confidence too low. Please use a clearer photo." };
     }
 
-    return { valid: true, message: `Face detected successfully (${(confidence * 100).toFixed(1)}%)` };
+    return { valid: true, message: 'Face detected successfully ' };
   } catch (error) {
     console.error("Face detection error:", error);
     return { valid: true, message: "Face validation failed but proceeding" };
@@ -327,6 +330,22 @@ const handleFileChange = async (e) => {
   setFormData((prev) => ({ ...prev, passport: file }));
   setPreviewUrl(imageUrl); // ✅ store preview separately
   setErrors((prev) => ({ ...prev, passport: "" }));
+};
+
+
+const handleCommunityDocChange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const maxSize = 3 * 1024 * 1024; // 3MB
+  if (file.size > maxSize) {
+    toast.error("File too large. Max size is 3MB.");
+    e.target.value = "";
+    return;
+  }
+
+  setFormData((prev) => ({ ...prev, docFromCommunityHead: file }));
+  toast.success("✅ Document uploaded successfully!");
 };
 
 
@@ -502,7 +521,7 @@ const handleSubmit = async (e) => {
         <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mx-4 mt-4 rounded">
           <div className="flex items-center">
             <AlertCircle className="h-5 w-5 text-blue-400 mr-2" />
-            <p className="text-sm text-blue-700">Loading face detection AI...</p>
+            <p className="text-sm text-blue-700">Loading ...</p>
           </div>
         </div>
       )}
@@ -721,11 +740,96 @@ const handleSubmit = async (e) => {
 
 
 
+{/* Optional Document from Community Head */}
+<div className="mt-6">
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Document from Community Head{" "}
+    <span className="text-gray-400 text-xs">(Optional)</span>
+  </label>
+
+  <input
+     ref={communityDocRef}
+    type="file"
+    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+    onChange={handleCommunityDocChange}
+    className="block w-full text-sm text-gray-700 border font-medium rounded-lg cursor-pointer focus:outline-none 
+      file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 
+      file:bg-green-600 file:text-white hover:file:bg-green-700 
+      border-gray-300 focus:ring-2 focus:ring-green-600"
+  />
+
+  {formData.docFromCommunityHead && (
+    <div className="mt-3 flex items-center gap-3">
+      {/* Preview for image files */}
+      {formData.docFromCommunityHead.type.startsWith("image/") ? (
+        <div className="relative">
+          <img
+            src={URL.createObjectURL(formData.docFromCommunityHead)}
+            alt="Preview"
+            className="w-20 h-20 object-cover rounded-md border"
+          />
+          {/* Close (remove) button */}
+          <button
+            type="button"
+             onClick={() => {
+    // Clear the file from state
+    setFormData((prev) => ({ ...prev, docFromCommunityHead: null }));
+
+    // Also reset the input element value
+    if (communityDocRef.current) {
+      communityDocRef.current.value = ""; // clears the actual input field
+    }
+
+    // Optional: Revoke any temporary preview URLs if image
+    if (formData.docFromCommunityHead?.type.startsWith("image/")) {
+      URL.revokeObjectURL(formData.docFromCommunityHead.previewUrl);
+    }
+  }}
+            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+          >
+            ×
+          </button>
+        </div>
+      ) : (
+      <div className="relative flex items-center gap-2 border p-2 rounded-md bg-gray-50">
+  <div className="w-8 h-8 bg-gray-200 flex items-center justify-center rounded-md text-gray-600 font-semibold">
+    📄
+  </div>
+  <span className="text-xs text-green-600 font-medium truncate max-w-[120px]">
+    {formData.docFromCommunityHead?.name}
+  </span>
+
+  <button
+    type="button"
+    onClick={() => {
+      setFormData((prev) => ({ ...prev, docFromCommunityHead: null }));
+      if (communityDocRef.current) {
+        communityDocRef.current.value = "";
+      }
+    }}
+    className="ml-auto bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+  >
+    ×
+  </button>
+</div>
+
+      )}
+    </div>
+  )}
+
+  <p className="text-xs text-gray-500 font-medium mt-2">
+    Supported formats: PDF(Max: 3MB)
+  </p>
+</div>
+
+
+
+
 
    {/* Passport Upload with Face Detection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Passport Photograph {modelsLoaded && <span className="text-green-600 text-xs">(AI Face Detection Enabled)</span>}
+                Passport Photograph {modelsLoaded && <span className="text-green-600 text-xs">(Face Detection Enabled)</span>}
               </label>
               <input
                 type="file"
@@ -768,7 +872,7 @@ const handleSubmit = async (e) => {
         ></path>
       </svg>
       <p className="text-sm font-medium text-gray-700">
-        Analyzing image using AI...
+      
       </p>
       <p className="text-xs text-gray-500 mt-1">Please wait a few seconds</p>
     </div>
@@ -886,188 +990,4 @@ const handleSubmit = async (e) => {
 };
 
   export default Application;
-
-
-
-
-
-  
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     const newErrors = {};
-
-//     if (!formData.fullNames?.trim()) newErrors.fullNames = "Required";
-//     if (!formData.fatherNames?.trim()) newErrors.fatherNames = "Required";
-//     if (!formData.motherNames?.trim()) newErrors.motherNames = "Required";
-//     if (!formData.nativeTown?.trim()) newErrors.nativeTown = "Required";
-//     if (!formData.nativePoliticalWard?.trim())
-//       newErrors.nativePoliticalWard = "Required";
-//     if (!formData.village?.trim()) newErrors.village = "Required";
-//     if (!formData.communityHead?.trim()) newErrors.communityHead = "Required";
-//     if (!formData.communityHeadContact?.toString().trim()) {
-//       newErrors.communityHeadContact = "Required";
-//     } else if (!/^[\d+\s-]+$/.test(formData.communityHeadContact)) {
-//       newErrors.communityHeadContact = "Invalid contact format";
-//     }
-//     if (!formData.currentAddress?.trim()) newErrors.currentAddress = "Required";
-//     if (!formData.lga?.trim()) newErrors.lga = "Required";
-//     if (!formData.nin?.trim()) {
-//       newErrors.nin = "Required";
-//     } else if (!/^\d{11}$/.test(formData.nin)) {
-//       newErrors.nin = "NIN must be exactly 11 digits";
-//     }
-//     if (!formData.passport) newErrors.passport = "Required";
-//     if (!formData.stateOfOrigin.trim()) newErrors.stateOfOrigin = "Please select your State of Origin"; // ✅ Added validation
-//    if (!formData.stateOfOrigin.trim()) newErrors.stateOfOrigin = "Please select your State of Origin";
-//   // ✅ Only require isResidentOfOgun if not from Ogun
-// if (
-//   formData.stateOfOrigin &&
-//   formData.stateOfOrigin.toLowerCase() !== "ogun" &&
-//   !formData.isResidentOfOgun
-// ) {
-//   newErrors.isResidentOfOgun = "Please confirm if you are a resident of Ogun State";
-// }
-
-
-
-//     if (Object.keys(newErrors).length > 0) {
-//       setErrors(newErrors);
-//       return;
-//     }
-
-//     setLoading(true);
-//     try {
-//       const token = localStorage.getItem("token");
-//       if (!token) {
-//         toast.error("⚠️ Please log in again.", { position: "top-center" });
-//         navigate("/login");
-//         return;
-//       }
-
-//       const res = await axios.post(
-//         "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
-//         formData,
-//         {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//             "Content-Type": "application/json",
-//           },
-//         }
-//       );
-
-//       console.log("✅ Response:", res.data);
-
-//       if (res.data.success && res.data.data?.paymentLink) {
-//         toast.success("✅ Application submitted! Redirecting to payment...");
-//         window.location.href = res.data.data.paymentLink;
-//       } else {
-//         alert(res.data.message || "Something went wrong.");
-//       }
-//     } catch (error) {
-//       if (error.response) {
-//         console.error("Backend message:", error.response.data);
-//         toast.error(error.response.data.message || "Something went wrong.");
-//       } else {
-//         toast.error("Network error. Please try again.");
-//       }
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-// const handleSubmit = async (e) => {
-//   e.preventDefault();
-//   const newErrors = {};
-
-//   if (!formData.fullNames?.trim()) newErrors.fullNames = "Required";
-//   if (!formData.fatherNames?.trim()) newErrors.fatherNames = "Required";
-//   if (!formData.motherNames?.trim()) newErrors.motherNames = "Required";
-//   if (!formData.nativeTown?.trim()) newErrors.nativeTown = "Required";
-//   if (!formData.nativePoliticalWard?.trim())
-//     newErrors.nativePoliticalWard = "Required";
-//   if (!formData.village?.trim()) newErrors.village = "Required";
-//   if (!formData.communityHead?.trim()) newErrors.communityHead = "Required";
-//   if (!formData.communityHeadContact?.toString().trim()) {
-//     newErrors.communityHeadContact = "Required";
-//   } else if (!/^[\d+\s-]+$/.test(formData.communityHeadContact)) {
-//     newErrors.communityHeadContact = "Invalid contact format";
-//   }
-//   if (!formData.currentAddress?.trim()) newErrors.currentAddress = "Required";
-//   if (!formData.lga?.trim()) newErrors.lga = "Required";
-//   if (!formData.nin?.trim()) {
-//     newErrors.nin = "Required";
-//   } else if (!/^\d{11}$/.test(formData.nin)) {
-//     newErrors.nin = "NIN must be exactly 11 digits";
-//   }
-//   if (!formData.passport) newErrors.passport = "Required";
-//   if (!formData.stateOfOrigin?.trim())
-//     newErrors.stateOfOrigin = "Please select your State of Origin";
-
-//   // ✅ Only require isResidentOfOgun if NOT from Ogun
-//   if (
-//     formData.stateOfOrigin &&
-//     formData.stateOfOrigin.toLowerCase() !== "ogun" &&
-//     (formData.isResidentOfOgun === undefined || formData.isResidentOfOgun === "")
-//   ) {
-//     newErrors.isResidentOfOgun =
-//       "Please confirm if you are a resident of Ogun State";
-//   }
-
-//   // Stop submission if validation fails
-//   if (Object.keys(newErrors).length > 0) {
-//     setErrors(newErrors);
-//     return;
-//   }
-
-//   setLoading(true);
-//   try {
-//     const token = localStorage.getItem("token");
-//     if (!token) {
-//       toast.error("⚠️ Please log in again.", { position: "top-center" });
-//       navigate("/login");
-//       return;
-//     }
-
-//     // ✅ Prepare payload correctly
-//     let payload = { ...formData };
-//     if (formData.stateOfOrigin?.toLowerCase() === "ogun") {
-//       // Remove field entirely if state is Ogun
-//       delete payload.isResidentOfOgun;
-//     } else {
-//       // Ensure boolean for non-Ogun states
-//       payload.isResidentOfOgun = Boolean(formData.isResidentOfOgun);
-//     }
-
-//     const res = await axios.post(
-//       "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
-//       payload,
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//           "Content-Type": "application/json",
-//         },
-//       }
-//     );
-
-//     console.log("✅ Response:", res.data);
-
-//     if (res.data.success && res.data.data?.paymentLink) {
-//       toast.success("✅ Application submitted! Redirecting to payment...");
-//       window.location.href = res.data.data.paymentLink;
-//     } else {
-//       alert(res.data.message || "Something went wrong.");
-//     }
-//   } catch (error) {
-//     if (error.response) {
-//       console.error("Backend message:", error.response.data);
-//       toast.error(error.response.data.message || "Something went wrong.");
-//     } else {
-//       toast.error("Network error. Please try again.");
-//     }
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-
 

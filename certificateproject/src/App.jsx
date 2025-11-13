@@ -24,6 +24,8 @@ import ApprovedCertificate from "./components/ApprovedCertificate";
 import VerifyCertificate from './components/VerifyCertificate.jsx'
 import RequestVerificationCode from './components/RequestVerificationCode.jsx'
 import CertificateConfirmation from './components/CertificateConfirmation.jsx'
+import CertificateRequest from './components/CertificateRequest.jsx'
+import PublicCertificate from './components/PublicCertificate.jsx'
 import './index.css'
 
 const App = () => {
@@ -57,6 +59,7 @@ const App = () => {
        <Route path='/verify-email' element={<VerifyEmail />} />
        {/* Verify email after login */}
          <Route path='/request-email-verify' element={<RequestEmailVerification/>} />
+          <Route path="/certificate-request" element={<CertificateRequest />} />
          {/* Route to the admin screen */}
            <Route path='/officialscreen' element={<OfficialScreen/>} />
            {/* Route for Official Admin */}
@@ -65,9 +68,10 @@ const App = () => {
              <Route path='/officialresendotp' element={<OfficialResendOtp/>} />
              <Route path='/officialresetpassword' element={<OfficialResetPassword/>} />
             <Route path='/approveapplications' element={<ApproveApplications/>} />
-            <Route path="/certificate" element={<ApprovedCertificate />} />
+            <Route path="/certificate/:id" element={<ApprovedCertificate />} />
             <Route path="/certificate-verify" element={<VerifyCertificate />} />
             <Route path="/certificate-confirmation/:ref" element={<CertificateConfirmation />} />
+            <Route path="/public-certificate/:id" element={<PublicCertificate />} />
 
       </Routes>
        
