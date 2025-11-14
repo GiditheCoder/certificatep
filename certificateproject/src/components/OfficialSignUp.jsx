@@ -465,7 +465,7 @@ const handleSignatureSubmit = async (e) => {
                 onClick={() => setShowSignatureForm(true)}
                 className="bg-red-600 font-medium px-4 py-2 text-white rounded"
               >
-                No
+                No (Register)
               </button>
             </div>
           </div>
