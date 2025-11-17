@@ -32,6 +32,8 @@ const communityDocRef = useRef(null);
 
 
 
+
+
   const [formData, setFormData] = useState({
     fullNames: "",
     fatherNames: "",
@@ -51,6 +53,8 @@ const communityDocRef = useRef(null);
      docFromCommunityHead: null, // ✅ NEW OPTIONAL FIELD
   });
 
+  
+const isNonOgun = formData.stateOfOrigin.toLowerCase() !== "ogun";
 
 
   // // ✅ Detect successful payment redirect
@@ -365,7 +369,21 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   const newErrors = {};
 
-  if (!formData.fullNames?.trim()) newErrors.fullNames = "Required";
+  // if (!formData.fullNames?.trim()) newErrors.fullNames = "Required";
+  // if (!formData.fatherNames?.trim()) newErrors.fatherNames = "Required";
+  // if (!formData.motherNames?.trim()) newErrors.motherNames = "Required";
+  // if (!formData.nativeTown?.trim()) newErrors.nativeTown = "Required";
+  // if (!formData.nativePoliticalWard?.trim())
+  //   newErrors.nativePoliticalWard = "Required";
+  // if (!formData.village?.trim()) newErrors.village = "Required";
+  // if (!formData.communityHead?.trim()) newErrors.communityHead = "Required";
+  // if (!formData.communityHeadContact?.toString().trim()) {
+  //   newErrors.communityHeadContact = "Required";
+  // } else if (!/^[\d+\s-]+$/.test(formData.communityHeadContact)) {
+  //   newErrors.communityHeadContact = "Invalid contact format";
+  // }
+
+  if (!isNonOgun) {
   if (!formData.fatherNames?.trim()) newErrors.fatherNames = "Required";
   if (!formData.motherNames?.trim()) newErrors.motherNames = "Required";
   if (!formData.nativeTown?.trim()) newErrors.nativeTown = "Required";
@@ -378,17 +396,23 @@ const handleSubmit = async (e) => {
   } else if (!/^[\d+\s-]+$/.test(formData.communityHeadContact)) {
     newErrors.communityHeadContact = "Invalid contact format";
   }
+}
+
+
+
   if (!formData.currentAddress?.trim()) newErrors.currentAddress = "Required";
   if (!formData.lga?.trim()) newErrors.lga = "Required";
-  if (!formData.nin?.trim()) {
-    newErrors.nin = "Required";
-  } else if (!/^\d{11}$/.test(formData.nin)) {
-    newErrors.nin = "NIN must be exactly 11 digits";
-  }
+ // ✅ NIN is optional — validate only if filled
+if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
+  newErrors.nin = "NIN must be exactly 11 digits";
+}
+
   if (!formData.passport) newErrors.passport = "Required";
   if (!formData.stateOfOrigin?.trim())
     newErrors.stateOfOrigin = "Please select your State of Origin";
 
+
+  
   // ✅ Only require isResidentOfOgun if NOT from Ogun
   if (
     formData.stateOfOrigin &&
@@ -554,43 +578,26 @@ const handleSubmit = async (e) => {
 
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {[
-              { name: "fullNames", label: "Full Name", placeholder: "John Doe" },
-              { name: "fatherNames", label: "Father's Name", placeholder: "Doe Monk" },
-              { name: "motherNames", label: "Mother's Name", placeholder: "Doe Mara" },
-              { name: "nativeTown", label: "Native Town", placeholder: "Akute" },
-              { name: "nativePoliticalWard", label: "Native Political Ward", placeholder: "Akute Central Ward" },
-              { name: "village", label: "Village", placeholder: "Akute Village" },
-              { name: "communityHead", label: "Community Head", placeholder: "Mr Ajayi Isaac" },
-              { 
-                name: "communityHeadContact", 
-                label: "Community Head Contact", 
-                placeholder: "e.g. 08012345678 or +2348012345678" 
-              },
-              { name: "currentAddress", label: "Current Address", placeholder: "No 2, Moon Street, Akute" },
-              { name: "nin", label: "NIN", placeholder: "28392938921" },
-            ].map((field) => (
-              <div key={field.name}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {field.label}
-                </label>
-                <input
-                  type="text"
-                  name={field.name}
-                  value={formData[field.name]}
-                  onChange={handleInputChange}
-                  placeholder={field.placeholder}
-                  className={`w-full px-4 py-2 rounded-lg focus:ring-2 font-medium focus:border-transparent ${
-                    errors[field.name]
-                      ? "border-red-600 focus:ring-red-600"
-                      : "border-gray-300 focus:ring-green-600"
-                  } border`}
-                />
-                {errors[field.name] && (
-                  <p className="text-xs text-red-600 mt-1">{errors[field.name]}</p>
-                )}
-              </div>
-            ))}
+
+            <div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Full Name
+  </label>
+  <input
+    type="text"
+    name="fullNames"
+    value={formData.fullNames}
+    onChange={handleInputChange}
+    placeholder="John Doe"
+    className={`w-full px-4 py-2 rounded-lg border font-medium focus:ring-2 ${
+      errors.fullNames ? "border-red-600" : "border-gray-300 focus:ring-green-600"
+    }`}
+  />
+  {errors.fullNames && (
+    <p className="text-xs text-red-600 mt-1">{errors.fullNames}</p>
+  )}
+</div>
+
 
 
 {/* state of Origin */}
@@ -737,6 +744,78 @@ const handleSubmit = async (e) => {
     )}
   </div>
 )}
+
+            {[
+              { name: "fatherNames", label: "Father's Name", placeholder: "Doe Monk" },
+              { name: "motherNames", label: "Mother's Name", placeholder: "Doe Mara" },
+              { name: "nativeTown", label: "Native Town", placeholder: "Akute" },
+              { name: "nativePoliticalWard", label: "Native Political Ward", placeholder: "Akute Central Ward" },
+              { name: "village", label: "Village", placeholder: "Akute Village" },
+              { name: "communityHead", label: "Community Head", placeholder: "Mr Ajayi Isaac" },
+              { 
+                name: "communityHeadContact", 
+                label: "Community Head Contact", 
+                placeholder: "e.g. 08012345678 or +2348012345678" 
+              },
+              // { name: "currentAddress", label: "Current Address", placeholder: "No 2, Moon Street, Akute" },
+              { name: "nin", label: "NIN", placeholder: "28392938921" },
+            ].map((field) => (
+              <div key={field.name}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {field.label}
+                </label>
+                <input
+                  type="text"
+                  name={field.name}
+                  value={formData[field.name]}
+                  onChange={handleInputChange}
+                  placeholder={field.placeholder}
+                   disabled={
+        isNonOgun &&
+        field.name !== "nin"  // NIN should NOT be disabled
+      }
+                //   className={`w-full px-4 py-2 rounded-lg focus:ring-2 font-medium focus:border-transparent ${
+                //     errors[field.name]
+                //       ? "border-red-600 focus:ring-red-600"
+                //       : "border-gray-300 focus:ring-green-600"
+                //   } border`}
+                // />
+
+                    className={`w-full px-4 py-2 rounded-lg font-medium 
+        ${isNonOgun && field.name !== "nin" ? "bg-gray-100 cursor-not-allowed" : ""}
+        ${errors[field.name]
+          ? "border-red-600 focus:ring-red-600"
+          : "border-gray-300 focus:ring-green-600"
+        } border`}
+    />
+                {errors[field.name] && (
+                  <p className="text-xs text-red-600 mt-1">{errors[field.name]}</p>
+                )}
+              </div>
+            ))}
+
+
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Current Address <span className="text-red-500">*</span>
+  </label>
+  <input
+    type="text"
+    name="currentAddress"
+    value={formData.currentAddress}
+    onChange={handleInputChange}
+    placeholder="No 2, Moon Street, Akute"
+    className={`w-full px-4 py-2 rounded-lg border font-medium focus:ring-2 ${
+      errors.currentAddress
+        ? "border-red-600 focus:ring-red-600"
+        : "border-gray-300 focus:ring-green-600"
+    }`}
+  />
+
+  {errors.currentAddress && (
+    <p className="text-xs text-red-600 mt-1">{errors.currentAddress}</p>
+  )}
+</div>
 
 
 

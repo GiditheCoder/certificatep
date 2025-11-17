@@ -24,8 +24,12 @@ const OfficialScreen = () => {
   const [filterMonth, setFilterMonth] = useState("");
   const [filterYear, setFilterYear] = useState("");
 
+
+
+
   const navigate = useNavigate();
   const Admin = JSON.parse(localStorage.getItem("user"));
+  console.log("Admin Info:", Admin);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -164,6 +168,16 @@ const OfficialScreen = () => {
       {/* Title */}
       <h1 className="text-2xl font-bold mb-4">Approval Dashboard</h1>
       <p className="mb-6 font-medium text-gray-600">Review and manage applications</p>
+
+
+
+ <button
+  onClick={() => navigate("/signatures", { state: { lga: Admin?.lga } })}
+  className="mb-6 px-4 py-2 bg-green-700 text-white font-semibold rounded-md shadow hover:bg-green-800 transition"
+>
+  Signatures
+</button>
+
 
       {/* Summary Cards */}
       <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6">

@@ -26,6 +26,7 @@ import RequestVerificationCode from './components/RequestVerificationCode.jsx'
 import CertificateConfirmation from './components/CertificateConfirmation.jsx'
 import CertificateRequest from './components/CertificateRequest.jsx'
 import PublicCertificate from './components/PublicCertificate.jsx'
+import Signatures from './components/Signatures.jsx'
 import './index.css'
 
 const App = () => {
@@ -72,7 +73,7 @@ const App = () => {
             <Route path="/certificate-verify" element={<VerifyCertificate />} />
             <Route path="/certificate-confirmation/:ref" element={<CertificateConfirmation />} />
             <Route path="/public-certificate/:id" element={<PublicCertificate />} />
-
+            <Route path="/signatures" element={<Signatures />} />
       </Routes>
        
     </Router>
