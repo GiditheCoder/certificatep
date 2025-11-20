@@ -181,7 +181,7 @@ if (!(data.secretarySignature instanceof File)) {
           </div>
         </div>
 
-        {/* Mobile Menu Button */}
+       
         <div className="sm:hidden">
           <img
             src={MenuLogo}

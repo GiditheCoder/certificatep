@@ -205,7 +205,7 @@ const Signatures = () => {
         </div>
       )}
 
-      {/* PAGE TITLE */}
+     
       <h2 className="text-2xl font-bold mb-6 text-gray-800">
         LGA Signatories – <span className="text-green-700">{selectedLGA}</span>
       </h2>
