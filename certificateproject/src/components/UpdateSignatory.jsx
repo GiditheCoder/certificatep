@@ -38,36 +38,36 @@ const UpdateSignatory = () => {
    navigate('/signatures')
   }
 
-  // Fetch existing data
-  useEffect(() => {
-    if (!selectedLGA) return;
+useEffect(() => {
+  if (!selectedLGA) return;
 
-    const fetchData = async () => {
-      try {
-        const res = await axios.get(`${baseURL}/signatory/${selectedLGA}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+  const fetchData = async () => {
+    try {
+      await axios.get(`${baseURL}/signatory/${selectedLGA}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-        const d = res.data.data;
+      // Clear everything except LGA
+      setData({
+        chairmanName: "",
+        secretaryName: "",
+        chairmanSignature: "",
+        secretarySignature: "",
+      });
 
-        setData({
-          chairmanName: d.chairmanName,
-          secretaryName: d.secretaryName,
-          chairmanSignature: "",
-          secretarySignature: "",
-        });
+      setPreviews({
+        chairmanSignature: "",
+        secretarySignature: "",
+      });
 
-        setPreviews({
-          chairmanSignature: d.chairmanSignature || "",
-          secretarySignature: d.secretarySignature || "",
-        });
-      } catch (err) {
-        toast.error("Failed to load signatory record");
-      }
-    };
+    } catch (err) {
+      toast.error("Failed to load signatory record");
+    }
+  };
 
-    fetchData();
-  }, [selectedLGA]);
+  fetchData();
+}, [selectedLGA]);
+
 
   // Handle text input change
   const handleChange = (e) => {
@@ -90,6 +90,15 @@ const UpdateSignatory = () => {
     fd.append("lga", selectedLGA);
     fd.append("chairmanName", data.chairmanName);
     fd.append("secretaryName", data.secretaryName);
+
+    if (!(data.chairmanSignature instanceof File)) {
+  formData.append("chairmanSignature", previews.chairmanSignature);
+}
+
+if (!(data.secretarySignature instanceof File)) {
+  formData.append("secretarySignature", previews.secretarySignature);
+}
+
 
     if (data.chairmanSignature instanceof File)
       fd.append("chairmanSignature", data.chairmanSignature);
