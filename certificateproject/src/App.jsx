@@ -28,6 +28,7 @@ import CertificateRequest from './components/CertificateRequest.jsx'
 import PublicCertificate from './components/PublicCertificate.jsx'
 import Signatures from './components/Signatures.jsx'
 import UpdateSignatory from './components/UpdateSignatory.jsx'
+import AdminScreen from './components/AdminScreen.jsx'
 import './index.css'
 
 const App = () => {
@@ -76,6 +77,8 @@ const App = () => {
             <Route path="/public-certificate/:id" element={<PublicCertificate />} />
             <Route path="/signatures" element={<Signatures />} />
             <Route path="/update-signatory" element={<UpdateSignatory />} />
+            <Route path="/adminscreen" element={<AdminScreen />} />
+
       </Routes>
        
     </Router>

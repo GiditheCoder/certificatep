@@ -31,6 +31,7 @@ const OfficialScreen = () => {
   const Admin = JSON.parse(localStorage.getItem("user"));
   console.log("Admin Info:", Admin);
 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -69,6 +70,8 @@ const OfficialScreen = () => {
 
     fetchData();
   }, []);
+
+  
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -110,6 +113,8 @@ const OfficialScreen = () => {
   const total = allApplications.length;
   const approvedCount = approved.length;
   const rejectedCount = rejected.length;
+
+
 
   return (
     <div className="min-h-screen bg-white p-6 font-sans text-gray-900 relative">
@@ -388,6 +393,7 @@ const OfficialScreen = () => {
               </div>
             </div>
           </div>
+          
         </div>
       )}
     </div>

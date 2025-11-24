@@ -30,6 +30,7 @@ const SignUp = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" }); // clear error when typing
   };
+  
 
   // ✅ Handle submit
 const handleSubmit = async (e) => {

@@ -33,7 +33,9 @@ const Dashboard = () => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+    console.log(storedUser)
     const token = localStorage.getItem("token");
+ 
 
     if (!storedUser || !token) {
       navigate("/login");
@@ -48,6 +50,7 @@ const Dashboard = () => {
     const fetchApplications = async () => {
       try {
         setLoading(true);
+        console.log(token)
         const res = await axios.get(
           "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
           {
@@ -56,6 +59,7 @@ const Dashboard = () => {
         );
 
         const allApps = res.data?.data?.applications || [];
+      
         const userApps = allApps.filter((app) => app.user === parsedUser._id);
 
         setApplications(userApps);
@@ -94,17 +98,14 @@ const Dashboard = () => {
     navigate("/verify-certificate");
   };
 
-  const pendingApps = applications.filter(
-    (a) => a.isPendingPayment || a.isPendingApproval || a.isRejected
-  );
-  useEffect(() => {
-  if (pendingApps.length > 0) {
-    console.log("🟡 Pending Applications:", pendingApps);
-  }
-}, [pendingApps]);
 
-  const approvedApps = applications.filter((a) => a.isApproved);
-  console.log("✅ Approved Applications:", approvedApps);
+const pendingApps = applications.filter(
+  (a) => a.status === "pending" || a.status === "rejected" || a.status === "pending_payment"
+);
+console.log("🟡 Pending Applications:", pendingApps);
+
+const approvedApps = applications.filter((a) => a.status === "approved");
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -280,20 +281,21 @@ const Dashboard = () => {
             app.isPendingPayment ? "cursor-pointer hover:bg-gray-50" : ""
           }`}
           onClick={() => {
-            if (app.isPendingPayment && app.pendingPaymentLink) {
-              toast.info("Redirecting you to complete your payment...");
-              window.location.href = app.pendingPaymentLink; // ✅ Corrected property
-            } else if (app.isPendingPayment && !app.pendingPaymentLink) {
-              toast.error("Payment link unavailable. Please start a new application.");
-            }
+          if (app.status === "pending_payment") {
+  if (app.pendingPaymentLink) {
+    toast.info("Redirecting you to complete your payment...");
+    window.location.href = app.pendingPaymentLink;
+  } else {
+    toast.error("Payment link unavailable. Please start a new application.");
+  }
+}
+
           }}
         >
           <div className="flex items-center gap-3">
-            {app.isRejected ? (
+            {app.status === "rejected" ? (
               <XCircle className="text-red-600" />
-            ) : app.isPendingPayment ? (
-              <Clock className="text-yellow-600" />
-            ) : (
+            ): (
               <FileText className="text-gray-600" />
             )}
 
@@ -305,14 +307,16 @@ const Dashboard = () => {
                 Applied: {new Date(app.createdAt).toLocaleDateString()}
               </p>
 
-              {app.isRejected && (
+              {app.status === "rejected" && (
                 <p className="text-red-600 font-medium text-sm">Rejected</p>
               )}
-              {app.isPendingPayment && (
-                <p className="text-yellow-600 font-medium text-sm">
-                  Incomplete payment — click to retry
-                </p>
-              )}
+              
+             {app.status === "pending_payment" && (
+  <p className="text-yellow-600 font-medium text-sm">
+    Incomplete payment — click to retry
+  </p>
+)}
+
             </div>
           </div>
         </div>

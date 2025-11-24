@@ -14,6 +14,11 @@ const OfficialSignUp = () => {
   secretarySignature: "",
 });
 
+
+  const handleAdminScreen = () => {
+    navigate("/adminscreen");
+  }
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -316,25 +321,17 @@ useEffect(() => {
           </form>
         )}
 
-        {message && !showSignatureForm && (
-          <div className="mt-6 text-center">
-            <p className="text-black font-medium">{message}</p>
-            <div className="flex justify-center gap-4 mt-4">
-              <button
-                onClick={() => navigate("/official")}
-                className="bg-green-700 font-medium px-4 py-2 text-white rounded"
-              >
-                Yes(Login)
-              </button>
-              <button
-                onClick={() => setShowSignatureForm(true)}
-                className="bg-red-600 font-medium px-4 py-2 text-white rounded"
-              >
-                No (Register)
-              </button>
-            </div>
-          </div>
-        )}
+<button
+  type="button"
+  onClick={handleAdminScreen}
+  className={`bg-[#11860F] mt-4 text-white font-semibold py-3 px-3 rounded-md transition-colors hover:bg-[#0c670b]`}
+>
+Admin Dashboard
+</button>
+
+
+        
+       
 
 
       </div>
