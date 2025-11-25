@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
 const Faq = () => {
-  // All FAQs
   const faqs = [
     {
       question: "What is an LGA Certificate and why do I need it?",
@@ -27,14 +26,30 @@ const Faq = () => {
   ];
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const [hoverIndex, setHoverIndex] = useState(null);
 
-  // Handle navigation
   const handlePrev = () => {
     setActiveIndex((prev) => (prev === 0 ? faqs.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
     setActiveIndex((prev) => (prev === faqs.length - 1 ? 0 : prev + 1));
+  };
+
+  // choose background
+  const getCardStyle = (index) => {
+    // Hover overrides everything
+    if (hoverIndex === index) {
+      return "bg-[#21A41F] text-white";
+    }
+
+    // Active (selected by arrows)
+    if (activeIndex === index) {
+      return "bg-[#21A41F] text-white";
+    }
+
+    // Default
+    return "bg-[#E3F2E780] text-gray-900";
   };
 
   return (
@@ -48,15 +63,15 @@ const Faq = () => {
         </div>
 
         <div className="mt-6 md:mt-0 flex flex-col items-center md:items-start text-center md:text-left">
-          <p className="text-gray-600 max-w-md ">
+          <p className="text-gray-600 max-w-md">
             Find answers to common questions about <br /> our{" "}
             <span className="font-semibold text-gray-900">
               Ogun State LGA Certificate Platform
             </span>
           </p>
 
-          {/* Navigation Arrows */}
-          <div className="flex justify-center md:justify-start gap-4">
+          {/* Navigation */}
+          <div className="flex justify-center md:justify-start gap-4 mt-4">
             <button
               onClick={handlePrev}
               className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100"
@@ -73,16 +88,16 @@ const Faq = () => {
         </div>
       </div>
 
-      {/* FAQ Cards */}
+      {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {faqs.map((faq, index) => (
           <div
             key={index}
-            className={`rounded-xl p-6 shadow transition-colors duration-300 ${
-              index === activeIndex
-                ? "bg-[#21A41F] text-white"
-                : "bg-[#E3F2E780] text-gray-900"
-            }`}
+            onMouseEnter={() => setHoverIndex(index)}
+            onMouseLeave={() => setHoverIndex(null)}
+            className={`rounded-xl p-6 shadow-md cursor-pointer transition-all duration-380 ease-in-out ${getCardStyle(
+              index
+            )}`}
           >
             <h3 className="text-lg font-semibold mb-4">{faq.question}</h3>
             <p className="text-sm leading-relaxed">{faq.answer}</p>
@@ -94,3 +109,5 @@ const Faq = () => {
 };
 
 export default Faq;
+
+
