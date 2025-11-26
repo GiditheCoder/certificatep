@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Search, LogOutIcon } from "lucide-react";
+import { Search, LogOutIcon ,ArrowBigLeft } from "lucide-react";
 import StateLogo from "../images/StateLogo.png";
 import dropdown from "../images/Dropdown.png";
 import checkBox from "../images/checkbox.png";
 import box from "../images/boxadmin.png";
 import close from "../images/closemark.png";
 import load from "../images/load.png";
+import mark from "../images/mark.png";
+import plus from "../images/add.png";
+import reject from "../images/cross.png";
+import pending from "../images/wall-clock.png";
+import back from "../images/back.png";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -25,12 +30,16 @@ const AdminScreen = () => {
   const [endDate, setEndDate] = useState("");
 
   const navigate = useNavigate();
+
+  const handleOfficalBackScreen = () => {
+    navigate("/officialsignup");
+  }
   const Admin = JSON.parse(localStorage.getItem("user"));
 
   const token = localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
-  // ======================================================
+  
   // 🔥 FETCH SUMMARY
   // ======================================================
   const fetchSummary = async () => {
@@ -40,8 +49,10 @@ const AdminScreen = () => {
         config
       );
       console.log("🔥 Summary response:", res.data?.data);
+      console.log("🔥 Summary Raw:", res);
 
       const summaryData = res.data?.data?.summary;
+      console.log("🔥 Summary Data:", summaryData);
       setSummary(summaryData || null);
 
     } catch (error) {
@@ -130,7 +141,7 @@ const AdminScreen = () => {
 
       {/* ===== SUMMARY CARDS ===== */}
       {summary && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
 
           <div className="p-4 border rounded-md shadow-sm bg-white">
             <div className="flex justify-between">
@@ -184,20 +195,110 @@ const AdminScreen = () => {
             </div>
           </div>
 
+{/* Today Approved */}
+          <div className="p-4 border rounded-md shadow-sm bg-white">
+            <div className="flex justify-between">
+              <p className="font-bold text-xl">Today Approved</p>
+              <img src={dropdown} className="w-4 h-4" alt="" />
+            </div>
+            <div className="flex justify-between mt-2">
+              <p className="text-2xl font-bold">
+                {summary.todayApproved}
+              </p>
+              <img src={mark} className="w-8 h-8" alt="" />
+            </div>
+          </div>
+
+          {/* Today Count  */}
+          <div className="p-4 border rounded-md shadow-sm bg-white">
+            <div className="flex justify-between">
+              <p className="font-bold text-xl">Today Count</p>
+              <img src={dropdown} className="w-4 h-4" alt="" />
+            </div>
+            <div className="flex justify-between mt-2">
+              <p className="text-2xl font-bold">
+                {summary.todayCount}
+              </p>
+              <img src={plus} className="w-8 h-8" alt="" />
+            </div>
+          </div>
+
+          {/* Today Pending */}
+          <div className="p-4 border rounded-md shadow-sm bg-white">
+            <div className="flex justify-between">
+              <p className="font-bold text-xl">Today Pending</p>
+              <img src={dropdown} className="w-4 h-4" alt="" />
+            </div>
+            <div className="flex justify-between mt-2">
+              <p className="text-2xl font-bold">
+                {summary.todayPending}
+              </p>
+              <img src={pending} className="w-8 h-8" alt="" />
+            </div>
+          </div>
+
+          {/* Today Rejected */}
+          <div className="p-4 border rounded-md shadow-sm bg-white">
+            <div className="flex justify-between">
+              <p className="font-bold text-xl">Today Rejected</p>
+              <img src={dropdown} className="w-4 h-4" alt="" />
+            </div>
+            <div className="flex justify-between mt-2">
+              <p className="text-2xl font-bold">
+                {summary.todayRejected}
+              </p>
+              <img src={reject} className="w-8 h-8" alt="" />
+            </div>
+          </div>
+
         </div>
       )}
 
       {/* Search + Date Filter */}
       <div className="flex flex-col sm:flex-row gap-3 items-center mb-4">
         <div className="relative flex-1">
-          <input
-            type="text"
-            className="border border-gray-400 font-semibold py-2 px-10 rounded-md w-full"
-            placeholder="Search name..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+         
+        
+
+          {/* Search + Date Filter */}
+<div className="flex flex-col sm:flex-row gap-3 items-center mb-4">
+  {/* Name Search */}
+  <div className="relative flex-1">
+    <input
+      type="text"
+      className="border border-gray-400 font-semibold py-2 px-10 rounded-md w-full"
+      placeholder="Search name..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+    />
+    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+  </div>
+
+  {/* Date Range */}
+  <div className="flex gap-2">
+    <input
+      type="date"
+      className="border border-gray-400 px-3 py-2 rounded-md"
+      value={startDate}
+      onChange={(e) => setStartDate(e.target.value)}
+    />
+    <input
+      type="date"
+      className="border border-gray-400 px-3 py-2 rounded-md"
+      value={endDate}
+      onChange={(e) => setEndDate(e.target.value)}
+    />
+  </div>
+
+  {/* Search Button */}
+  <button
+    onClick={() => fetchApplications(filter === "All" ? "all" : filter)}
+    className="bg-green-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-700"
+  >
+    Apply Filter
+  </button>
+</div>
+
         </div>
 
      
@@ -258,7 +359,14 @@ const AdminScreen = () => {
           ))}
         </div>
       )}
+      <div className="font-semibold mt-4 cursor-pointer text-green-600"
+      onClick={handleOfficalBackScreen}>
+ <ArrowBigLeft className="inline-block mr-2" />
+     Back
     </div>
+    </div>
+
+    
   );
 };
 
