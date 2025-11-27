@@ -12,6 +12,8 @@ import reject from "../images/cross.png";
 import pending from "../images/wall-clock.png";
 import back from "../images/back.png";
 import axios from "axios";
+import MenuLogo from "../images/menu.png";
+import CloseLogo from "../images/close.png";
 import { useNavigate } from "react-router-dom";
 
 const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
@@ -24,10 +26,12 @@ const AdminScreen = () => {
 
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
-
+   const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [downloadEmail, setDownloadEmail] = useState("");
+
 
   const navigate = useNavigate();
 
@@ -99,40 +103,90 @@ const AdminScreen = () => {
     fetchApplications("all");
   }, []);
 
-  // ======================================================
-  // SEARCH FILTER (client-side)
-  // ======================================================
-  // const filteredApps = applications.filter((app) =>
-  //   app.fullNames.toLowerCase().includes(search.toLowerCase())
-  // );
-
+ 
   const filteredApps = applications.filter((app) => {
   const name = app.fullNames || "";
   return name.toLowerCase().includes(search.toLowerCase());
 });
 
+const handleSendDownloadReport = async () => {
+  if (!downloadEmail) {
+    alert("Please enter an email address");
+    return;
+  }
 
- 
+  try {
+    const body = {
+      status: filter.toLowerCase() === "all" ? "" : filter.toLowerCase(),
+      startDate,
+      endDate,
+      email: downloadEmail,
+    };
+
+    const res = await axios.post(
+      `${baseURL}/api/v1/admin/download/application`,
+      body,
+      config
+    );
+
+    alert(res.data.message || "Report sent!");
+    setDownloadEmail("");
+
+  } catch (error) {
+    console.log("❌ REPORT DOWNLOAD ERROR:", error.response?.data || error);
+    alert(error.response?.data?.message || "Error sending report");
+  }
+};
+
+ const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/official");
+  };
+
+
 
   return (
-    <div className="min-h-screen p-6 bg-white relative font-sans">
+    <div className="min-h-screen p-2 bg-white relative font-sans">
       {/* Header */}
-      <header className="flex justify-between items-center border-b border-gray-200 pb-3 mb-6">
-        <div className="flex items-center space-x-2">
-          <img src={StateLogo} className="w-8 h-8 rounded-full" alt="" />
-          <span className="font-semibold text-gray-700 text-lg">
-            Ogun State Government — Admin
-          </span>
-        </div>
+            <header className="flex items-center justify-between px-1  py-4 sm:px-8 bg-white shadow-sm ">
+              <div className="flex items-center gap-3">
+                <img src={StateLogo} alt="State Logo" className="w-10 h-10" />
+                <h1 className="text-base sm:text-lg font-semibold text-[#475467]">
+                  Ogun State Government
+                </h1>
+              </div>
+      
+              <div className="hidden md:flex items-center gap-5">
+             
+                <LogOutIcon
+                  onClick={handleLogout}
+                  className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]"
+                />
+              
+              </div>
+      
+              {/* Mobile Menu */}
+              <div className="md:hidden flex items-center">
+                <button onClick={() => setMenuOpen(!menuOpen)}>
+                  <img
+                    src={menuOpen ? CloseLogo : MenuLogo}
+                    alt="menu toggle"
+                    className="w-6 h-6"
+                  />
+                </button>
+              </div>
+      
+            {menuOpen && (
+  <div className="absolute top-18 left-80 w-full bg-white border-t border-gray-200 shadow-md flex flex-col gap-4 p-4 md:hidden z-50">
+    <LogOutIcon
+      onClick={handleLogout}
+      className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]"
+    />
+  </div>
+)}
 
-        <div className="flex items-center space-x-3">
-          <div className="text-right">
-            <p className="font-semibold">{Admin?.fullName}</p>
-            <p className="text-xs text-gray-500">System Administrator</p>
-          </div>
-       
-        </div>
-      </header>
+            </header>
 
       <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
       <p className="text-gray-600 font-medium mb-4">
@@ -141,7 +195,7 @@ const AdminScreen = () => {
 
       {/* ===== SUMMARY CARDS ===== */}
       {summary && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
 
           <div className="p-4 border rounded-md shadow-sm bg-white">
             <div className="flex justify-between">
@@ -278,13 +332,13 @@ const AdminScreen = () => {
   <div className="flex gap-2">
     <input
       type="date"
-      className="border border-gray-400 px-3 py-2 rounded-md"
+      className="border border-gray-400 font-semibold px-3 py-2 rounded-md"
       value={startDate}
       onChange={(e) => setStartDate(e.target.value)}
     />
     <input
       type="date"
-      className="border border-gray-400 px-3 py-2 rounded-md"
+      className="border border-gray-400 font-semibold px-3 py-2 rounded-md"
       value={endDate}
       onChange={(e) => setEndDate(e.target.value)}
     />
@@ -293,7 +347,7 @@ const AdminScreen = () => {
   {/* Search Button */}
   <button
     onClick={() => fetchApplications(filter === "All" ? "all" : filter)}
-    className="bg-green-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-700"
+    className="bg-green-600 text-white font-semibold px-4 py-2 rounded-md shadow-md hover:bg-green-700"
   >
     Apply Filter
   </button>
@@ -359,11 +413,29 @@ const AdminScreen = () => {
           ))}
         </div>
       )}
+          <div className="mt-4 flex gap-3 items-center">
+  <input
+    type="email"
+    placeholder="Enter email to receive report"
+    className="border font-semibold border-gray-400 px-3 py-2 rounded-md w-full"
+    value={downloadEmail}
+    onChange={(e) => setDownloadEmail(e.target.value)}
+  />
+
+  <button
+    onClick={handleSendDownloadReport}
+    className="bg-green-700 font-semibold text-white px-2 py-1 rounded-md hover:bg-green-800"
+  >
+    Send Report
+  </button>
+</div>
+
       <div className="font-semibold mt-4 cursor-pointer text-green-600"
       onClick={handleOfficalBackScreen}>
  <ArrowBigLeft className="inline-block mr-2" />
      Back
     </div>
+
     </div>
 
     
