@@ -187,86 +187,199 @@ const ApprovedCertificate = () => {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  const downloadPDF = async () => {
-    if (!certRef.current) {
-      toast.error("Certificate element not found");
-      return;
-    }
+  // const downloadPDF = async () => {
+  //   if (!certRef.current) {
+  //     toast.error("Certificate element not found");
+  //     return;
+  //   }
 
-    try {
-      toast.info("Generating PDF...");
+  //   try {
+  //     toast.info("Generating PDF...");
 
-      const canvas = await html2canvas(certRef.current, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        foreignObjectRendering: false,
-        logging: false,
-        onclone: (clonedDoc) => {
-          const allElements = clonedDoc.querySelectorAll("*");
+  //     const canvas = await html2canvas(certRef.current, {
+  //       scale: 3,
+  //       useCORS: true,
+  //       allowTaint: true,
+  //       backgroundColor: "#ffffff",
+  //       foreignObjectRendering: false,
+  //       logging: false,
+  //       onclone: (clonedDoc) => {
+  //         const allElements = clonedDoc.querySelectorAll("*");
           
-          allElements.forEach((el) => {
-            const computedStyle = window.getComputedStyle(el);
+  //         allElements.forEach((el) => {
+  //           const computedStyle = window.getComputedStyle(el);
             
-            // Fix all color properties that might contain oklch
-            const colorProps = [
-              'color', 'backgroundColor', 'borderColor', 
-              'borderTopColor', 'borderRightColor', 
-              'borderBottomColor', 'borderLeftColor',
-              'outlineColor', 'textDecorationColor'
-            ];
+  //           // Fix all color properties that might contain oklch
+  //           const colorProps = [
+  //             'color', 'backgroundColor', 'borderColor', 
+  //             'borderTopColor', 'borderRightColor', 
+  //             'borderBottomColor', 'borderLeftColor',
+  //             'outlineColor', 'textDecorationColor'
+  //           ];
             
-            colorProps.forEach(prop => {
-              const value = computedStyle[prop];
-              if (value && (value.includes('oklch') || value.includes('color('))) {
-                // Convert to a safe color
-                if (prop === 'backgroundColor') {
-                  el.style[prop] = '#ffffff';
-                } else if (prop.includes('border')) {
-                  el.style[prop] = '#d1d5db';
-                } else {
-                  el.style[prop] = '#000000';
-                }
-              }
-            });
+  //           colorProps.forEach(prop => {
+  //             const value = computedStyle[prop];
+  //             if (value && (value.includes('oklch') || value.includes('color('))) {
+  //               // Convert to a safe color
+  //               if (prop === 'backgroundColor') {
+  //                 el.style[prop] = '#ffffff';
+  //               } else if (prop.includes('border')) {
+  //                 el.style[prop] = '#d1d5db';
+  //               } else {
+  //                 el.style[prop] = '#000000';
+  //               }
+  //             }
+  //           });
             
-            // Fix background and background-image (for gradients)
-            const bgImage = computedStyle.backgroundImage;
-            if (bgImage && (bgImage.includes('oklch') || bgImage.includes('color('))) {
-              // Replace gradient with solid color based on class
-              if (el.classList.contains('from-emerald-800') || 
-                  el.classList.contains('from-emerald-700')) {
-                el.style.backgroundImage = 'none';
-                el.style.backgroundColor = '#047857'; // emerald-700
-              } else if (el.classList.contains('from-yellow-600')) {
-                el.style.backgroundImage = 'none';
-                el.style.backgroundColor = '#ca8a04'; // yellow-600
-              } else if (el.classList.contains('from-amber-50')) {
-                el.style.backgroundImage = 'none';
-                el.style.backgroundColor = '#fffbeb'; // amber-50
+  //           // Fix background and background-image (for gradients)
+  //           const bgImage = computedStyle.backgroundImage;
+  //           if (bgImage && (bgImage.includes('oklch') || bgImage.includes('color('))) {
+  //             // Replace gradient with solid color based on class
+  //             if (el.classList.contains('from-emerald-800') || 
+  //                 el.classList.contains('from-emerald-700')) {
+  //               el.style.backgroundImage = 'none';
+  //               el.style.backgroundColor = '#047857'; // emerald-700
+  //             } else if (el.classList.contains('from-yellow-600')) {
+  //               el.style.backgroundImage = 'none';
+  //               el.style.backgroundColor = '#ca8a04'; // yellow-600
+  //             } else if (el.classList.contains('from-amber-50')) {
+  //               el.style.backgroundImage = 'none';
+  //               el.style.backgroundColor = '#fffbeb'; // amber-50
+  //             } else {
+  //               el.style.backgroundImage = 'none';
+  //               el.style.backgroundColor = computedStyle.backgroundColor || '#ffffff';
+  //             }
+  //           }
+  //         });
+  //       },
+  //     });
+
+  //     const imgData = canvas.toDataURL("image/png");
+  //     const pdf = new jsPDF("p", "mm", "a4");
+  //     const width = pdf.internal.pageSize.getWidth();
+  //     const height = (canvas.height * width) / canvas.width;
+
+
+      
+  //     pdf.addImage(imgData, "PNG", 0, 0, width, height);
+  //     pdf.save(`${certificate?.fullNames || "certificate"}.pdf`);
+      
+  //     toast.success("PDF downloaded successfully!");
+  //   } catch (error) {
+  //     console.error("PDF generation failed:", error);
+  //     toast.error("Failed to generate PDF. Please try again.");
+  //   }
+  // };
+  
+const downloadPDF = async () => {
+  if (!certRef.current) {
+    toast.error("Certificate element not found");
+    return;
+  }
+
+  try {
+    toast.info("Generating PDF...");
+
+    const canvas = await html2canvas(certRef.current, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      foreignObjectRendering: false,
+      logging: false,
+      // Remove any margins/padding from capture
+      x: 0,
+      y: 0,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: certRef.current.scrollWidth,
+      windowHeight: certRef.current.scrollHeight,
+      onclone: (clonedDoc) => {
+        const allElements = clonedDoc.querySelectorAll("*");
+        
+        allElements.forEach((el) => {
+          const computedStyle = window.getComputedStyle(el);
+          
+          // Fix all color properties that might contain oklch
+          const colorProps = [
+            'color', 'backgroundColor', 'borderColor', 
+            'borderTopColor', 'borderRightColor', 
+            'borderBottomColor', 'borderLeftColor',
+            'outlineColor', 'textDecorationColor'
+          ];
+          
+          colorProps.forEach(prop => {
+            const value = computedStyle[prop];
+            if (value && (value.includes('oklch') || value.includes('color('))) {
+              if (prop === 'backgroundColor') {
+                el.style[prop] = '#ffffff';
+              } else if (prop.includes('border')) {
+                el.style[prop] = '#d1d5db';
               } else {
-                el.style.backgroundImage = 'none';
-                el.style.backgroundColor = computedStyle.backgroundColor || '#ffffff';
+                el.style[prop] = '#000000';
               }
             }
           });
-        },
-      });
+          
+          // Fix background and background-image (for gradients)
+          const bgImage = computedStyle.backgroundImage;
+          if (bgImage && (bgImage.includes('oklch') || bgImage.includes('color('))) {
+            if (el.classList.contains('from-emerald-800') || 
+                el.classList.contains('from-emerald-700')) {
+              el.style.backgroundImage = 'none';
+              el.style.backgroundColor = '#047857';
+            } else if (el.classList.contains('from-yellow-600')) {
+              el.style.backgroundImage = 'none';
+              el.style.backgroundColor = '#ca8a04';
+            } else if (el.classList.contains('from-amber-50')) {
+              el.style.backgroundImage = 'none';
+              el.style.backgroundColor = '#fffbeb';
+            } else {
+              el.style.backgroundImage = 'none';
+              el.style.backgroundColor = computedStyle.backgroundColor || '#ffffff';
+            }
+          }
+        });
+      },
+    });
 
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const width = pdf.internal.pageSize.getWidth();
-      const height = (canvas.height * width) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, width, height);
-      pdf.save(`${certificate?.fullNames || "certificate"}.pdf`);
-      
-      toast.success("PDF downloaded successfully!");
-    } catch (error) {
-      console.error("PDF generation failed:", error);
-      toast.error("Failed to generate PDF. Please try again.");
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    
+    // Calculate dimensions to fit A4 without margins
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const canvasAspectRatio = canvas.height / canvas.width;
+    const pdfAspectRatio = pdfHeight / pdfWidth;
+    
+    let finalWidth, finalHeight, offsetX, offsetY;
+    
+    if (canvasAspectRatio > pdfAspectRatio) {
+      // Canvas is taller, fit to height
+      finalHeight = pdfHeight;
+      finalWidth = finalHeight / canvasAspectRatio;
+      offsetX = (pdfWidth - finalWidth) / 2;
+      offsetY = 0;
+    } else {
+      // Canvas is wider, fit to width
+      finalWidth = pdfWidth;
+      finalHeight = finalWidth * canvasAspectRatio;
+      offsetX = 0;
+      offsetY = (pdfHeight - finalHeight) / 2;
     }
-  };
+    
+    // Add image with calculated dimensions (centered if needed)
+    pdf.addImage(imgData, "PNG", offsetX, offsetY, finalWidth, finalHeight);
+    pdf.save(`${certificate?.fullNames || "certificate"}.pdf`);
+    
+    toast.success("PDF downloaded successfully!");
+  } catch (error) {
+    console.error("PDF generation failed:", error);
+    toast.error("Failed to generate PDF. Please try again.");
+  }
+};
+
+
 
   // Loading state
   if (loading) {
@@ -364,8 +477,10 @@ const ApprovedCertificate = () => {
       )}
 
       {/* MAIN CERTIFICATE */}
-      <main className="flex flex-col items-center flex-grow mt-24 px-2 sm:px-4 pb-8">
-        <div className="relative w-full max-w-4xl overflow-hidden" ref={certRef}>
+      {/* <main className="flex flex-col items-center flex-grow mt-24 px-2 sm:px-4 pb-8">
+        <div className="relative w-full max-w-4xl overflow-hidden" ref={certRef}> */}
+        <main className="flex flex-col items-center flex-grow mt-24 px-2 sm:px-4 pb-8">
+  <div className="relative w-full max-w-4xl overflow-hidden m-0 p-0" ref={certRef}>
           {/* Outer Border */}
           <div className="bg-gradient-to-br from-yellow-600 via-yellow-500 to-yellow-600 p-3 rounded-lg shadow-2xl">
             {/* Inner Border */}
