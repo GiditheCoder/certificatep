@@ -613,6 +613,7 @@ const downloadPDF = async () => {
     )}
     <div className="border-t-2 border-gray-400 pt-2">
       <div className="font-bold text-base md:text-lg">{signatory?.secretaryName}</div>
+        <h1 className="font-semibold"> Secretary</h1>
       <div className="text-gray-600 font-semibold text-sm md:text-base">
         ({effectiveLga})
       </div>
@@ -630,6 +631,7 @@ const downloadPDF = async () => {
     )}
     <div className="border-t-2 border-gray-400 pt-2">
       <div className="font-bold text-base md:text-lg">{signatory?.chairmanName}</div>
+       <h1 className="font-semibold"> Chairman</h1>
       <div className="text-gray-600 text-sm md:text-base">
         ({effectiveLga})
       </div>
