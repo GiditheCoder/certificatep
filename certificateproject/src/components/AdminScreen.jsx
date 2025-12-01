@@ -15,10 +15,11 @@ import axios from "axios";
 import MenuLogo from "../images/menu.png";
 import CloseLogo from "../images/close.png";
 import { useNavigate } from "react-router-dom";
+import DashboardWithFilter from "./DashboardWithFilter";
 
 const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
 
-const AdminScreen = () => {
+const AdminScreen = ({onOpenFilter}) => {
   const [summary, setSummary] = useState(null);
 
   // 👇 fetched applications
@@ -26,6 +27,7 @@ const AdminScreen = () => {
 
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
+  const [filterOpen, setFilterOpen] = useState(false);
    const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -41,6 +43,7 @@ const AdminScreen = () => {
   const Admin = JSON.parse(localStorage.getItem("user"));
 
   const token = localStorage.getItem("token");
+  console.log("🔥 Admin Token:", token);
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
   
@@ -144,63 +147,67 @@ const handleSendDownloadReport = async () => {
     navigate("/official");
   };
 
+  const handleFilterApply = (summaryData) => {
+  console.log("🔄 Filter summary result:", summaryData);
+  setSummary(summaryData);
+};
+
+
 
 
   return (
+
+    
     <div className="min-h-screen p-2 bg-white relative font-sans">
-      {/* Header */}
-            <header className="flex items-center justify-between px-1  py-4 sm:px-8 bg-white shadow-sm ">
-              <div className="flex items-center gap-3">
-                <img src={StateLogo} alt="State Logo" className="w-10 h-10" />
-                <h1 className="text-base sm:text-lg font-semibold text-[#475467]">
-                  Ogun State Government
-                </h1>
-              </div>
-      
-              <div className="hidden md:flex items-center gap-5">
-             
-                <LogOutIcon
-                  onClick={handleLogout}
-                  className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]"
-                />
-              
-              </div>
-      
-              {/* Mobile Menu */}
-              <div className="md:hidden flex items-center">
-                <button onClick={() => setMenuOpen(!menuOpen)}>
-                  <img
-                    src={menuOpen ? CloseLogo : MenuLogo}
-                    alt="menu toggle"
-                    className="w-6 h-6"
-                  />
-                </button>
-              </div>
-      
-            {menuOpen && (
-  <div className="absolute top-18 left-80 w-full bg-white border-t border-gray-200 shadow-md flex flex-col gap-4 p-4 md:hidden z-50">
-    <LogOutIcon
-      onClick={handleLogout}
-      className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]"
-    />
-  </div>
-)}
 
-            </header>
+      
+    {filterOpen && (
+      <DashboardWithFilter
+        onBack={() => setFilterOpen(false)}
+        onApply={handleFilterApply}
+      />
+    )}
+     <div className="flex justify-end mb-4">
+  <LogOutIcon
+    onClick={handleLogout}
+    className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]"
+  />
+</div>
 
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-      <p className="text-gray-600 font-medium mb-4">
-        System-wide view of all certificate applications
-      </p>
+        
+
+ 
+    <div className="flex items-center justify-between mb-4">
+  <h1 className="text-2xl font-bold">
+    Dashboard
+  </h1>
+
+   <button
+          className="bg-green-700 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-800 transition-colors"
+          // onClick={onOpenFilter}
+          onClick={() => setFilterOpen(true)}
+
+        >
+          Filter
+        </button>
+
+        
+               
+                
+
+</div>
+
+
+
 
       {/* ===== SUMMARY CARDS ===== */}
       {summary && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-6">
 
-          <div className="p-4 border rounded-md shadow-sm bg-white">
+          <div className="p-6 border rounded-md shadow-sm bg-white">
             <div className="flex justify-between">
               <p className="font-bold text-xl">Total</p>
-              <img src={dropdown} className="w-4 h-4" alt="" />
+             
             </div>
             <div className="flex justify-between mt-2">
               <p className="text-2xl font-bold">
@@ -210,10 +217,12 @@ const handleSendDownloadReport = async () => {
             </div>
           </div>
 
-          <div className="p-4 border rounded-md shadow-sm bg-white">
+          
+
+          <div className="p-6 border rounded-md shadow-sm bg-white">
             <div className="flex justify-between">
               <p className="font-bold text-xl">Approved</p>
-              <img src={dropdown} className="w-4 h-4" alt="" />
+              {/* <img src={dropdown} className="w-4 h-4" alt="" /> */}
             </div>
             <div className="flex justify-between mt-2">
               <p className="text-2xl font-bold">
@@ -223,10 +232,10 @@ const handleSendDownloadReport = async () => {
             </div>
           </div>
 
-          <div className="p-4 border rounded-md shadow-sm bg-white">  
+          <div className="p-6 border rounded-md shadow-sm bg-white">  
             <div className="flex justify-between">
               <p className="font-bold text-xl">Rejected</p>
-              <img src={dropdown} className="w-4 h-4" alt="" />
+              {/* <img src={dropdown} className="w-4 h-4" alt="" /> */}
             </div>
             <div className="flex justify-between mt-2">
               <p className="text-2xl font-bold">
@@ -236,10 +245,10 @@ const handleSendDownloadReport = async () => {
             </div>
           </div>
 
-          <div className="p-4 border rounded-md shadow-sm bg-white">
+          <div className="p-6 border rounded-md shadow-sm bg-white">
             <div className="flex justify-between">
               <p className="font-bold text-xl">Pending</p>
-              <img src={dropdown} className="w-4 h-4" alt="" />
+              {/* <img src={dropdown} className="w-4 h-4" alt="" /> */}
             </div>
             <div className="flex justify-between mt-2">
               <p className="text-2xl font-bold">
@@ -250,10 +259,10 @@ const handleSendDownloadReport = async () => {
           </div>
 
 {/* Today Approved */}
-          <div className="p-4 border rounded-md shadow-sm bg-white">
+          <div className="p-6 border rounded-md shadow-sm bg-white">
             <div className="flex justify-between">
               <p className="font-bold text-xl">Today Approved</p>
-              <img src={dropdown} className="w-4 h-4" alt="" />
+              {/* <img src={dropdown} className="w-4 h-4" alt="" /> */}
             </div>
             <div className="flex justify-between mt-2">
               <p className="text-2xl font-bold">
@@ -264,10 +273,10 @@ const handleSendDownloadReport = async () => {
           </div>
 
           {/* Today Count  */}
-          <div className="p-4 border rounded-md shadow-sm bg-white">
+          <div className="p-6 border rounded-md shadow-sm bg-white">
             <div className="flex justify-between">
               <p className="font-bold text-xl">Today Count</p>
-              <img src={dropdown} className="w-4 h-4" alt="" />
+              {/* <img src={dropdown} className="w-4 h-4" alt="" /> */}
             </div>
             <div className="flex justify-between mt-2">
               <p className="text-2xl font-bold">
@@ -278,10 +287,10 @@ const handleSendDownloadReport = async () => {
           </div>
 
           {/* Today Pending */}
-          <div className="p-4 border rounded-md shadow-sm bg-white">
+          <div className="p-6 border rounded-md shadow-sm bg-white">
             <div className="flex justify-between">
               <p className="font-bold text-xl">Today Pending</p>
-              <img src={dropdown} className="w-4 h-4" alt="" />
+              {/* <img src={dropdown} className="w-4 h-4" alt="" /> */}
             </div>
             <div className="flex justify-between mt-2">
               <p className="text-2xl font-bold">
@@ -292,10 +301,10 @@ const handleSendDownloadReport = async () => {
           </div>
 
           {/* Today Rejected */}
-          <div className="p-4 border rounded-md shadow-sm bg-white">
+          <div className="p-6 border rounded-md shadow-sm bg-white">
             <div className="flex justify-between">
               <p className="font-bold text-xl">Today Rejected</p>
-              <img src={dropdown} className="w-4 h-4" alt="" />
+              {/* <img src={dropdown} className="w-4 h-4" alt="" /> */}
             </div>
             <div className="flex justify-between mt-2">
               <p className="text-2xl font-bold">
@@ -308,55 +317,7 @@ const handleSendDownloadReport = async () => {
         </div>
       )}
 
-      {/* Search + Date Filter */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center mb-4">
-        <div className="relative flex-1">
-         
-        
-
-          {/* Search + Date Filter */}
-<div className="flex flex-col sm:flex-row gap-3 items-center mb-4">
-  {/* Name Search */}
-  <div className="relative flex-1">
-    <input
-      type="text"
-      className="border border-gray-400 font-semibold py-2 px-10 rounded-md w-full"
-      placeholder="Search name..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-    />
-    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-  </div>
-
-  {/* Date Range */}
-  <div className="flex gap-2">
-    <input
-      type="date"
-      className="border border-gray-400 font-semibold px-3 py-2 rounded-md"
-      value={startDate}
-      onChange={(e) => setStartDate(e.target.value)}
-    />
-    <input
-      type="date"
-      className="border border-gray-400 font-semibold px-3 py-2 rounded-md"
-      value={endDate}
-      onChange={(e) => setEndDate(e.target.value)}
-    />
-  </div>
-
-  {/* Search Button */}
-  <button
-    onClick={() => fetchApplications(filter === "All" ? "all" : filter)}
-    className="bg-green-600 text-white font-semibold px-4 py-2 rounded-md shadow-md hover:bg-green-700"
-  >
-    Apply Filter
-  </button>
-</div>
-
-        </div>
-
      
-      </div>
 
       {/* Tabs */}
       <div className="flex font-semibold border-b mb-4 space-x-4">
@@ -376,32 +337,59 @@ const handleSendDownloadReport = async () => {
             {t}
           </button>
         ))}
+        
       </div>
 
-      {/* Applications */}
-      {loading ? (
-        <p className="py-10 text-center">Loading...</p>
-      ) : filteredApps.length === 0 ? (
-        <p className="py-10 text-center text-gray-500">No applications found.</p>
-      ) : (
-        <div className="divide-y border rounded-md shadow-sm">
-          {filteredApps.map((app) => (
-            <div
-              key={app._id}
-              className="flex items-center p-4 space-x-4 hover:bg-gray-50 cursor-pointer"
-            
+{loading ? (
+  <div className="py-10 text-center flex justify-center items-center gap-2 text-gray-600">
+    <span className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-green-600 rounded-full"></span>
+    <p className="font-medium">Loading applications…</p>
+  </div>
+) : filteredApps.length === 0 ? (
+  <p className="py-10 text-center text-gray-500">No applications found.</p>
+) : (
+  <div className="overflow-x-auto border border-gray-200 rounded-xl shadow-sm bg-white">
+    <table className="min-w-full text-sm">
+      <thead className="bg-gray-50 border-b text-gray-700">
+        <tr>
+          {["ID", "Date", "Name", "Status", "LGA"].map((text) => (
+            <th
+              key={text}
+              className="py-3 px-4 text-left text-[15px] font-semibold tracking-wide"
             >
-              <div className="flex-1">
-                <p className="font-semibold">{app.fullNames}</p>
-                <p className="text-xs text-gray-500">
-                  {new Date(app.createdAt).toLocaleString()}
-                </p>
-              </div>
+              {text}
+            </th>
+          ))}
+        </tr>
+      </thead>
 
+      <tbody>
+        {filteredApps.map((app) => (
+          <tr
+            key={app._id}
+            className="border-b hover:bg-gray-50 transition-colors text-gray-700"
+          >
+            {/* ID */}
+            <td className="py-3 px-4 text-[15px] font-medium cursor-pointer ">
+              {app._id?.slice(0, 8) || "N/A"}
+            </td>
+
+            {/* Date */}
+            <td className="py-3 px-4 text-[15px]">
+              {new Date(app.createdAt).toLocaleDateString()}
+            </td>
+
+            {/* Name */}
+            <td className="py-3 px-4 text-[15px] font-semibold capitalize">
+              {app.fullNames}
+            </td>
+
+            {/* Status */}
+            <td className="py-3 px-4">
               <span
-                className={`px-3 py-1 text-xs rounded-full ${
+                className={`px-3 py-1 text-[12px] rounded-lg font-semibold capitalize ${
                   app.status === "approved"
-                    ? "bg-green-200 text-green-700"
+                    ? "bg-green-100 text-green-700"
                     : app.status === "rejected"
                     ? "bg-red-100 text-red-700"
                     : "bg-yellow-100 text-yellow-700"
@@ -409,11 +397,21 @@ const handleSendDownloadReport = async () => {
               >
                 {app.status}
               </span>
-            </div>
-          ))}
-        </div>
-      )}
-          <div className="mt-4 flex gap-3 items-center">
+            </td>
+
+            {/* LGA */}
+            <td className="py-3 px-4 text-[15px] capitalize">
+              {app.lga || "N/A"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
+
+          {/* <div className="mt-4 flex gap-3 items-center">
   <input
     type="email"
     placeholder="Enter email to receive report"
@@ -428,13 +426,9 @@ const handleSendDownloadReport = async () => {
   >
     Send Report
   </button>
-</div>
+</div> */}
 
-      <div className="font-semibold mt-4 cursor-pointer text-green-600"
-      onClick={handleOfficalBackScreen}>
- <ArrowBigLeft className="inline-block mr-2" />
-     Back
-    </div>
+    
 
     </div>
 
@@ -443,4 +437,5 @@ const handleSendDownloadReport = async () => {
 };
 
 export default AdminScreen;
+
 

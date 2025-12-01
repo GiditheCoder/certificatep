@@ -63,7 +63,7 @@ const OfficialLogin = () => {
         // Dynamic navigation based on role
         setTimeout(() => {
           if (admin.role === "super_admin") {
-            navigate("/officialsignup"); // Super admin route
+            navigate("/adminspec"); // Super admin route
           } else if (admin.role === "admin") {
             navigate("/officialscreen"); // Normal admin route
           } else {

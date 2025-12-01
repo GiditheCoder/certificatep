@@ -29,6 +29,9 @@ import PublicCertificate from './components/PublicCertificate.jsx'
 import Signatures from './components/Signatures.jsx'
 import UpdateSignatory from './components/UpdateSignatory.jsx'
 import AdminScreen from './components/AdminScreen.jsx'
+import AdminSpec from './components/AdminSpec.jsx'
+import DownloadReport from './components/DownloadReport.jsx'
+import DashboardWithFilter from './components/DashboardWithFilter.jsx'
 import './index.css'
 
 const App = () => {
@@ -78,7 +81,9 @@ const App = () => {
             <Route path="/signatures" element={<Signatures />} />
             <Route path="/update-signatory" element={<UpdateSignatory />} />
             <Route path="/adminscreen" element={<AdminScreen />} />
-
+            <Route path="/adminspec" element={<AdminSpec />} />
+            <Route path="/downloadreport" element={<DownloadReport />} />
+            <Route path="/dashboardwithfilter" element={<DashboardWithFilter />} />
       </Routes>
        
     </Router>

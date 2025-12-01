@@ -4,7 +4,7 @@ import StateLogo from "../images/StateLogo.png";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import CloseLogo from "../images/close.png";
+
 
 const OfficialSignUp = () => {
   const navigate = useNavigate();
@@ -15,9 +15,7 @@ const OfficialSignUp = () => {
 });
 
 
-  const handleAdminScreen = () => {
-    navigate("/adminscreen");
-  }
+
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -39,55 +37,6 @@ const OfficialSignUp = () => {
   const [lgas, setLgas] = useState([]);
   const [showSignatureForm, setShowSignatureForm] = useState(false);
 
-
-    // state of origin
-//  useEffect(() => {
-//   const fetchStates = async () => {
-//     try {
-//       const res = await axios.get("https://lgacertificate-011d407b356b.herokuapp.com/api/v1/states");
-//         console.log("🌍 States API response:", res.data); // 👈 ADD THIS
-//       if (res.data.success && Array.isArray(res.data.data)) {
-//         setStates(res.data.data);
-//       } else {
-//         toast.error("Failed to load states");
-//       }
-//     } catch (error) {
-//       console.error("❌ Error fetching states:", error);
-//       toast.error("Could not fetch states. Please try again.");
-//     }
-//   };
-
-//   fetchStates();
-// }, []);
-
-
-// lga
-// useEffect(() => {
-//   const fetchLgas = async () => {
-//     if (!formData.stateOfOrigin) return; // Don’t fetch until a state is chosen
-
-//     try {
-//       const encodedState = encodeURIComponent(formData.stateOfOrigin);
-//       const res = await axios.get(
-//         `https://lgacertificate-011d407b356b.herokuapp.com/api/v1/lgas?state=${encodedState}`
-//       );
-
-//       // ✅ Access nested structure
-//       const lgaArray = res.data?.data?.lgas;
-
-//       if (res.data.success && Array.isArray(lgaArray)) {
-//         setLgas(lgaArray);
-//       } else {
-//         toast.error(`Failed to locate LGAs for ${formData.stateOfOrigin}`);
-//       }
-//     } catch (error) {
-//       console.error("❌ Error fetching LGAs:", error);
-//       toast.error("Could not fetch LGAs. Please try again.");
-//     }
-//   };
-
-//   fetchLgas();
-// }, [formData.stateOfOrigin]);
 
 
 
@@ -141,6 +90,7 @@ useEffect(() => {
     }
 
     const token = localStorage.getItem("token");
+    console.log("Token:", token); // Debugging line
     if (!token) {
       toast.error("You must be logged in as a super admin to register an official.");
       return;
@@ -159,12 +109,13 @@ useEffect(() => {
         }
       );
 
-      toast.success("Official registered successfully!");  
+      toast.success("Official registered successfully! , Check your email for login details.");  
     
     // ⏳ Delay navigation
-  setTimeout(() => {
-    navigate("/official");
-  }, 2000); // 2 seconds delay
+  // setTimeout(() => {
+  //   navigate("/official");
+  // }, 2000); 
+  // 2 seconds delay
  
     } catch (err) {
       toast.error(err.response?.data?.message || "Something went wrong. Please try again.");
@@ -179,13 +130,8 @@ useEffect(() => {
 
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row">
-      {/* LEFT SIDE */}
-      <div className="hidden lg:flex w-1/2 bg-green-700 text-white flex-col justify-center items-center p-10">
-        <img src={StateLogo} alt="State Logo" className="w-24 h-24 mb-4" />
-        <h1 className="text-2xl font-semibold">Ogun State Government</h1>
-        <p className="text-lg mt-2 font-medium">L.G.A</p>
-      </div>
+    <div className="flex min-h-screen justify-center items-center bg-white">
+     
 
       {/* RIGHT SIDE */}
       <div className="flex flex-col justify-center items-center w-full lg:w-1/2 px-8 sm:px-12 py-12">
@@ -321,13 +267,7 @@ useEffect(() => {
           </form>
         )}
 
-<button
-  type="button"
-  onClick={handleAdminScreen}
-  className={`bg-[#11860F] mt-4 text-white font-semibold py-3 px-3 rounded-md transition-colors hover:bg-[#0c670b]`}
->
-Admin Dashboard
-</button>
+
 
 
         
