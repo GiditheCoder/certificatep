@@ -378,7 +378,7 @@ const VerifyCertificate = () => {
                     <p className="font-medium">
                       is a native of
                       <span className="font-bold border-b-2 border-gray-400 inline-block min-w-[150px] gap-2 ml-2 mb-3">
-                        {lga}
+                        {lga} (lga)
                       </span>
                       of
                       <span className="font-bold border-b-2 border-gray-400 inline-block min-w-[150px] gap-2 ml-2 mb-3">
@@ -427,7 +427,7 @@ const VerifyCertificate = () => {
                         <div className="font-bold text-base md:text-lg">{signatory?.secretaryName}</div>
                          <h1 className="font-semibold"> Secretary</h1>
                         <div className="text-gray-600 font-semibold text-sm md:text-base">
-                          ({effectiveLga})
+                          {effectiveLga} (lga)
                         </div>
                       </div>
                     </div>
@@ -445,7 +445,7 @@ const VerifyCertificate = () => {
                         <div className="font-bold text-base md:text-lg">{signatory?.chairmanName}</div>
                          <h1 className="font-semibold"> Chairman</h1>
                         <div className="text-gray-600 font-semibold text-sm md:text-base">
-                          ({effectiveLga})
+                          {effectiveLga} (lga)
                         </div>
                       </div>
                     </div>

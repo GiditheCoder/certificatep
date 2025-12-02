@@ -761,7 +761,7 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
                 placeholder: "e.g. 08012345678 or +2348012345678" 
               },
               // { name: "currentAddress", label: "Current Address", placeholder: "No 2, Moon Street, Akute" },
-              { name: "nin", label: "NIN", placeholder: "28392938921" },
+              { name: "nin", label: "NIN (optional)", placeholder: "28392938921" },
             ].map((field) => (
               <div key={field.name}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

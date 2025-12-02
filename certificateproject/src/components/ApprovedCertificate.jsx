@@ -549,25 +549,25 @@ const downloadPDF = async () => {
 
 
                 {/* Certificate Body Text */}
-                <div className="text-left space-y-4 ml-5 text-gray-800 text-lg leading-relaxed">
+                <div className="text-left space-y-2 ml-5 text-gray-800 text-lg leading-relaxed">
                   <p className="font-medium"> 
                     This is to certify that from enquiry made,
-                    <span className="font-bold border-b-2 border-gray-400 inline-block min-w-[200px] ml-2">
+                    <span className="font-bold border-b-2 border-gray-400 inline-block  ml-2">
                       {name}
                     </span>
                   </p>
-
+                  
                   <p className="font-medium">
-                    of
-                    <span className="font-bold border-b-2 border-gray-400 inline-block min-w-[300px] gap-2 ml-2 mb-3">
+                    of home address
+                    <span className="font-bold border-b-2 border-gray-400 inline-block  gap-2 ml-2 ">
                       {address}
                     </span>
                   </p>
 
-                  <p className="font-medium">
+                  {/* <p className="font-medium">
                     is a native of
                     <span className="font-bold border-b-2 border-gray-400 inline-block min-w-[150px] gap-2 ml-2 mb-3 ">
-                      {lga}
+                      {lga} (lga)
                     </span>
                     of
                     <span className="font-bold border-b-2 border-gray-400 inline-block min-w-[150px] gap-2 ml-2 mb-3 ">
@@ -580,11 +580,31 @@ const downloadPDF = async () => {
                     <p className="font-medium">
                       Ancestral, historical and administrative records verified by the local government attested to this fact.
                     </p>
-                  )}
+                  )} */}
+                  {stateOfOrigin?.toLowerCase() === "ogun" ? (
+  // If origin = Ogun
+  <p className="font-medium space-y-2">
+    is a native of
+    <span className="font-bold border-b-2 border-gray-400 inline-block ml-2 mr-3">
+      {lga} 
+    </span>
+    Local Government Area of Ogun State, Nigeria.
+  </p>
+) : (
+  // If origin NOT Ogun
+  <p className="font-medium space-y-2">
+    is a resident of
+    <span className="font-bold border-b-2 border-gray-400 inline-block ml-4 mr-3">
+      {lgaOfResident}
+    </span>
+    Local Government Area of Ogun State, Nigeria.
+  </p>
+)}
+
                 </div>
 
                 {/* Attestation */}
-                <div className="text-left mb-12 ml-5 text-gray-800 text-lg">
+                <div className="text-left mb-12 ml-5 mt-2 space-y-4 text-gray-800 text-lg">
                   <p className="font-medium">
                     This certificate of {stateOfOrigin?.toLowerCase() === "ogun" ? "origin" : "residency"} is attested under my hand and the
                     public seal of
@@ -615,7 +635,7 @@ const downloadPDF = async () => {
       <div className="font-bold text-base md:text-lg">{signatory?.secretaryName}</div>
         <h1 className="font-semibold"> Secretary</h1>
       <div className="text-gray-600 font-semibold text-sm md:text-base">
-        ({effectiveLga})
+        {effectiveLga} (lga)
       </div>
     </div>
   </div>
@@ -632,8 +652,8 @@ const downloadPDF = async () => {
     <div className="border-t-2 border-gray-400 pt-2">
       <div className="font-bold text-base md:text-lg">{signatory?.chairmanName}</div>
        <h1 className="font-semibold"> Chairman</h1>
-      <div className="text-gray-600 text-sm md:text-base">
-        ({effectiveLga})
+      <div className="text-gray-600 font-semibold text-sm md:text-base">
+        {effectiveLga} (lga)
       </div>
     </div>
   </div>
