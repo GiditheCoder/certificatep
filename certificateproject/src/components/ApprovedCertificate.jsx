@@ -576,11 +576,8 @@ const downloadPDF = async () => {
                     State, Nigeria.
                   </p>
 
-                  {stateOfOrigin?.toLowerCase() === "ogun" && (
-                    <p className="font-medium">
-                      Ancestral, historical and administrative records verified by the local government attested to this fact.
-                    </p>
-                  )} */}
+                 */}
+
                   {stateOfOrigin?.toLowerCase() === "ogun" ? (
   // If origin = Ogun
   <p className="font-medium space-y-2">
@@ -601,7 +598,13 @@ const downloadPDF = async () => {
   </p>
 )}
 
+    {stateOfOrigin?.toLowerCase() === "ogun" && (
+                    <p className="font-medium">
+                      Ancestral, historical and administrative records verified by the local government attested to this fact.
+                    </p>
+                  )} 
                 </div>
+                
 
                 {/* Attestation */}
                 <div className="text-left mb-12 ml-5 mt-2 space-y-4 text-gray-800 text-lg">
