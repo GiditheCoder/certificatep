@@ -14,7 +14,9 @@ import "react-toastify/dist/ReactToastify.css";
 const ApproveApplications = () => {
   const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
   const [menuOpen, setMenuOpen] = useState(false);
-    const [loading, setLoading] = useState("");
+  const [loading, setLoading] = useState("");
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
 
 const location = useLocation();
 const { application: passedApplication } = location.state || {};
@@ -81,14 +83,25 @@ const handleApprove = async () => {
   }
 };
 
-const handleReject = async () => {
+const handleReject = () => {
+  // Show modal to get rejection reason
+  setShowRejectModal(true);
+};
+
+const handleConfirmReject = async () => {
+  // Validate rejection reason
+  if (!rejectionReason.trim()) {
+    toast.error("❌ Rejection reason is required!");
+    return;
+  }
+
   try {
     setLoading("reject");
     const token = localStorage.getItem("token");
 
     const response = await axios.post(
       `${baseURL}/api/v1/admin/application/${application._id}?approve=false`,
-      {}, // ✅ empty body
+      { rejectionReason: rejectionReason.trim() }, // ✅ include rejectionReason when approve=false
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -106,7 +119,14 @@ const handleReject = async () => {
     toast.error("❌ Failed to reject application. Please try again.");
   } finally {
     setLoading("");
+    setShowRejectModal(false);
+    setRejectionReason("");
   }
+};
+
+const handleCancelReject = () => {
+  setShowRejectModal(false);
+  setRejectionReason("");
 };
 
 
@@ -421,8 +441,48 @@ const handleReject = async () => {
 
 </div>
 
-</div>
+      {/* Rejection Reason Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/20 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4" style={{ backdropFilter: 'blur(6px)' }}>
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Reject Application
+            </h3>
+            <p className="text-sm font-semibold text-gray-600 mb-4">
+              Please provide a reason for rejecting this application:
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              className="w-full px-4 py-3 font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none mb-4"
+              rows="4"
+            />
+            <div className="flex items-center justify-end space-x-3">
+              <button
+                onClick={handleCancelReject}
+                disabled={loading === "reject"}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmReject}
+                disabled={loading === "reject" || !rejectionReason.trim()}
+                className={`px-4 py-2 bg-red-600 text-white rounded-lg font-medium transition ${
+                  loading === "reject" || !rejectionReason.trim()
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-red-700"
+                }`}
+              >
+                {loading === "reject" ? "Rejecting..." : "Confirm Rejection"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
+      </div>
       </div>
       <ToastContainer
   position="top-center"
