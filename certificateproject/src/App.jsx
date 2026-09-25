@@ -22,6 +22,7 @@ import { UserProvider } from './context/UserContext.jsx'
 import ApproveApplications from './components/ApproveApplications.jsx'
 import ApprovedCertificate from "./components/ApprovedCertificate";
 import VerifyCertificate from './components/VerifyCertificate.jsx'
+import CertValidation from './components/CertValidation.jsx'
 import RequestVerificationCode from './components/RequestVerificationCode.jsx'
 import CertificateConfirmation from './components/CertificateConfirmation.jsx'
 import CertificateRequest from './components/CertificateRequest.jsx'
@@ -76,6 +77,7 @@ const App = () => {
             <Route path='/approveapplications' element={<ApproveApplications/>} />
             <Route path="/certificate/:id" element={<ApprovedCertificate />} />
             <Route path="/certificate-verify" element={<VerifyCertificate />} />
+            <Route path="/cert-validation" element={<CertValidation />} />
             <Route path="/certificate-confirmation/:ref" element={<CertificateConfirmation />} />
             <Route path="/public-certificate/:id" element={<PublicCertificate />} />
             <Route path="/signatures" element={<Signatures />} />

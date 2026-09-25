@@ -551,7 +551,7 @@ const downloadPDF = async () => {
                       <QRCode
                         value={
                           certificateHash
-                            ? `${window.location.origin}/certificate-verify?hash=${encodeURIComponent(certificateHash)}`
+                            ? `${window.location.origin}/cert-validation?hash=${encodeURIComponent(certificateHash)}`
                             : "certificate"
                         }
                         size={90}
