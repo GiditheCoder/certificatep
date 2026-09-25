@@ -38,7 +38,7 @@ const OfficialLogin = () => {
 
     try {
       const res = await axios.post(
-        "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/admin/login",
+        "https://certapp-aae046f75d3f.herokuapp.com/api/v1/admin/login",
         {
           email: formData.email,
           password: formData.password,

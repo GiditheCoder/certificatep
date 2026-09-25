@@ -58,7 +58,7 @@ const handleSubmit = async (e) => {
 
   try {
     const res = await axios.post(
-      "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/auth/signup",
+      "https://certapp-aae046f75d3f.herokuapp.com/api/v1/auth/signup",
       formData
     );
 

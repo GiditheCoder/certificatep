@@ -9,8 +9,19 @@ import MenuLogo from "../images/menu.png";
 import CloseLogo from "../images/close.png";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import QRCode from "react-qr-code";
 
-const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
+const certificateHash = "abc123xyz";
+
+function CertificateQR() {
+  return (
+    <div style={{ background: "white", padding: "12px" }}>
+      <QRCode value={certificateHash} size={180} />
+    </div>
+  );
+}
+
+const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
 const OfficialScreen = () => {
   const [pending, setPending] = useState([]);
@@ -37,7 +48,7 @@ const OfficialScreen = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem("token");
-        console.log("Retrieved token:", token);
+        console.log("🔑 Admin token:", token);
         const config = { headers: { Authorization: `Bearer ${token}` } };
 
         const [pendingRes, approvedRes, rejectedRes] = await axios.all([
@@ -289,10 +300,58 @@ const OfficialScreen = () => {
                 }
                 
                 if (item.status === "Approved") {
-                  // ✅ UPDATED: Route using certificate ID like in Dashboard
-                  console.log("📄 Navigating to certificate with ID:", item._id);
-                  // navigate(`/certificate/${item._id}`);
-                    navigate(`/certificate/${item._id}`, { state: { email: item.user?.email } });
+                  const applicationId = item._id;
+                  console.log("📄 Navigating to certificate with ID:", applicationId);
+
+                  const fetchCertificateDetails = async () => {
+                    try {
+                      const token = localStorage.getItem("token");
+                      const config = {
+                        headers: {
+                          Authorization: `Bearer ${token}`,
+                          "Content-Type": "application/json",
+                        },
+                      };
+
+                      const response = await axios.get(
+                        `${baseURL}/api/v1/certificate/${applicationId}`,
+                        config
+                      );
+
+                      const details =
+                        response?.data?.data ??
+                        response?.data?.certificate ??
+                        response?.data ??
+                        {};
+
+                      console.log("📄 Certificate details response:", response?.data);
+                      console.log("📄 Certificate details payload:", details);
+                      console.log(
+                        "📄 Certificate hash:",
+                        details?.certificateHash || details?.hash || details?._id || applicationId
+                      );
+
+                      navigate(`/certificate/${applicationId}`, {
+                        state: {
+                          email: item.user?.email,
+                          certificate: details,
+                          certificateHash:
+                            details?.certificateHash || details?.hash || details?._id || applicationId,
+                        },
+                      });
+                    } catch (error) {
+                      console.error("❌ Failed to fetch certificate details:", error);
+                      navigate(`/certificate/${applicationId}`, {
+                        state: {
+                          email: item.user?.email,
+                          certificate: item,
+                          certificateHash: item?.certificateHash || item?._id,
+                        },
+                      });
+                    }
+                  };
+
+                  fetchCertificateDetails();
                 }
               }}
             >

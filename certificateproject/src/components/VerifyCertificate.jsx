@@ -5,6 +5,7 @@ import jsPDF from "jspdf";
 import { ShieldCheck } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useSearchParams } from "react-router-dom";
 import StateLogo from "../images/StateLogo.png";
 import MenuLogo from "../images/menu.png";
 import CloseLogo from "../images/close.png";
@@ -18,8 +19,9 @@ const VerifyCertificate = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const certRef = useRef(null);
+  const [searchParams] = useSearchParams();
 
-  const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
+  const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
   // Check for small screens
   useEffect(() => {
@@ -31,6 +33,35 @@ const VerifyCertificate = () => {
     window.addEventListener("resize", checkScreenSize);
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
+
+  useEffect(() => {
+    const hash = searchParams.get("hash");
+    if (!hash) return;
+
+    setInputCode(hash);
+    setLoading(true);
+
+    const verifyHash = async () => {
+      try {
+        const res = await axios.get(
+          `${baseURL}/api/v1/certificate/verify-hash/${encodeURIComponent(hash)}`
+        );
+        const data = res.data?.data ?? res.data;
+        const verificationData = data?.certificate ? data : { certificate: data };
+
+        setVerifiedData(verificationData);
+        toast.success("Certificate verified successfully!");
+        console.log("✅ Certificate hash verified:", verificationData);
+      } catch (error) {
+        console.error("❌ Certificate hash verification failed:", error.response?.data || error.message);
+        toast.error(error.response?.data?.message || "Certificate verification failed.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyHash();
+  }, [searchParams]);
 
   const handleVerifyCertificate = async () => {
     if (!inputCode.trim()) {

@@ -44,7 +44,7 @@ useEffect(() => {
   const fetchOgunLgas = async () => {
     try {
       const res = await axios.get(
-        "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/lgas?state=Ogun"
+        "https://certapp-aae046f75d3f.herokuapp.com/api/v1/lgas?state=Ogun"
       );
 
       const lgaArray = res.data?.data?.lgas;
@@ -99,7 +99,7 @@ useEffect(() => {
     try {
       setLoading(true);
       const res = await axios.post(
-        "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/admin/signup",
+        "https://certapp-aae046f75d3f.herokuapp.com/api/v1/admin/signup",
         formData,
         {
           headers: {

@@ -22,6 +22,7 @@ import { UserContext } from "../context/UserContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ const Dashboard = () => {
         setLoading(true);
         console.log(token)
         const res = await axios.get(
-          "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
+          "https://certapp-aae046f75d3f.herokuapp.com/api/v1/application",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -356,14 +357,48 @@ const approvedApps = applications.filter((a) => a.status === "approved");
             {/* ✅ Download Certificate Button */}
             <button
               className="flex items-center gap-2 bg-[#11860F] text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
-      onClick={() => {
-    console.log("📄 Downloading certificate for application ID:", app._id);
-    console.log("Full certificate object:", app);
-    // navigate(`/certificate/${app._id}`);
-    navigate(`/certificate/${app._id}`, {
-  state: { email: user?.email },
-});
-  }}
+              onClick={async () => {
+                try {
+                  console.log("📄 Downloading certificate for application ID:", app._id);
+                  const token = localStorage.getItem("token");
+                  const response = await axios.get(
+                    `${baseURL}/api/v1/certificate/${app._id}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                  );
+                  const certificateResponse =
+                    response?.data?.data?.certificate ??
+                    response?.data?.data ??
+                    response?.data?.certificate ??
+                    response?.data;
+                  const certificate = {
+                    ...app,
+                    ...certificateResponse,
+                    fullNames: certificateResponse?.fullNames ?? app.fullNames,
+                    currentAddress: certificateResponse?.currentAddress ?? app.currentAddress,
+                    dateOfBirth: certificateResponse?.dateOfBirth ?? app.dateOfBirth,
+                  };
+
+                  if (!certificateResponse?.certificateHash) {
+                    throw new Error("Certificate hash was not returned by the certificate API");
+                  }
+
+                  navigate(`/certificate/${app._id}`, {
+                    state: {
+                      email: user?.email,
+                      certificate,
+                      certificateHash: certificate.certificateHash,
+                    },
+                  });
+                } catch (error) {
+                  console.error("❌ Failed to fetch certificate details:", {
+                    status: error.response?.status,
+                    response: error.response?.data,
+                    message: error.message,
+                    applicationId: app._id,
+                  });
+                  toast.error("Unable to load certificate details. Please try again.");
+                }
+              }}
 >
               
             

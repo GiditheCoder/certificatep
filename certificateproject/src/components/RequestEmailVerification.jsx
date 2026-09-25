@@ -6,7 +6,7 @@ import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 
 const RequestEmailVerification = () => {
-  const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
+  const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
   const { user, updateUser } = useContext(UserContext);
   const navigate = useNavigate();
 

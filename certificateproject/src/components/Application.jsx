@@ -36,6 +36,7 @@ const communityDocRef = useRef(null);
 
   const [formData, setFormData] = useState({
     fullNames: "",
+    dateOfBirth: "",
     fatherNames: "",
     motherNames: "",
     nativeTown: "",
@@ -116,7 +117,7 @@ useEffect(() => {
 //   const checkExistingApplication = async () => {
 //     try {
 //       const res = await axios.get(
-//         "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
+//         "https://certapp-aae046f75d3f.herokuapp.com/api/v1/application",
 //         {
 //           headers: {
 //             Authorization: `Bearer ${token}`,
@@ -181,7 +182,7 @@ useEffect(() => {
  useEffect(() => {
   const fetchStates = async () => {
     try {
-      const res = await axios.get("https://lgacertificate-011d407b356b.herokuapp.com/api/v1/states");
+      const res = await axios.get("https://certapp-aae046f75d3f.herokuapp.com/api/v1/states");
         console.log("🌍 States API response:", res.data); // 👈 ADD THIS
       if (res.data.success && Array.isArray(res.data.data)) {
         setStates(res.data.data);
@@ -206,7 +207,7 @@ useEffect(() => {
     try {
       const encodedState = encodeURIComponent(formData.stateOfOrigin);
       const res = await axios.get(
-        `https://lgacertificate-011d407b356b.herokuapp.com/api/v1/lgas?state=${encodedState}`
+        `https://certapp-aae046f75d3f.herokuapp.com/api/v1/lgas?state=${encodedState}`
       );
 
       // ✅ Access nested structure
@@ -235,7 +236,7 @@ useEffect(() => {
     try {
       const encodedState = encodeURIComponent("Ogun");
       const res = await axios.get(
-        `https://lgacertificate-011d407b356b.herokuapp.com/api/v1/lgas?state=${encodedState}`
+        `https://certapp-aae046f75d3f.herokuapp.com/api/v1/lgas?state=${encodedState}`
       );
 
       const ogunLgaArray = res.data?.data?.lgas;
@@ -404,6 +405,7 @@ const handleSubmit = async (e) => {
 
 
   if (!formData.currentAddress?.trim()) newErrors.currentAddress = "Required";
+  if (!formData.dateOfBirth) newErrors.dateOfBirth = "Required";
   if (!formData.lga?.trim()) newErrors.lga = "Required";
  // ✅ NIN is optional — validate only if filled
 if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
@@ -466,7 +468,7 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
 
     // Send the request
     const res = await axios.post(
-      "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/application",
+      "https://certapp-aae046f75d3f.herokuapp.com/api/v1/application",
       multipart,
       {
         headers: {
@@ -598,6 +600,27 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
   />
   {errors.fullNames && (
     <p className="text-xs text-red-600 mt-1">{errors.fullNames}</p>
+  )}
+</div>
+
+
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Date of Birth <span className="text-red-500">*</span>
+  </label>
+  <input
+    type="date"
+    name="dateOfBirth"
+    value={formData.dateOfBirth}
+    onChange={handleInputChange}
+    className={`w-full px-4 py-2 rounded-lg border font-medium focus:ring-2 ${
+      errors.dateOfBirth
+        ? "border-red-600 focus:ring-red-600"
+        : "border-gray-300 focus:ring-green-600"
+    }`}
+  />
+  {errors.dateOfBirth && (
+    <p className="text-xs text-red-600 mt-1">{errors.dateOfBirth}</p>
   )}
 </div>
 

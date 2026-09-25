@@ -32,7 +32,7 @@ const ForgotPassword = () => {
 
     try {
       const res = await axios.post(
-        "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/auth/forgot-password",
+        "https://certapp-aae046f75d3f.herokuapp.com/api/v1/auth/forgot-password",
         { email }
       );
 

@@ -47,7 +47,7 @@ const OfficialResetPassword = () => {
     setMessage("");
     try {
       const res = await axios.post(
-        "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/admin/resend-otp",
+        "https://certapp-aae046f75d3f.herokuapp.com/api/v1/admin/resend-otp",
         { email }
       );
       setMessage(res.data.message || "A new OTP has been sent to your email.");
@@ -111,7 +111,7 @@ const OfficialResetPassword = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/admin/reset-password",
+        "https://certapp-aae046f75d3f.herokuapp.com/api/v1/admin/reset-password",
         {
           email,
           otp,

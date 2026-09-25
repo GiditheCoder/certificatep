@@ -17,7 +17,7 @@ import CloseLogo from "../images/close.png";
 import { useNavigate } from "react-router-dom";
 import DashboardWithFilter from "./DashboardWithFilter";
 
-const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
+const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
 const AdminScreen = ({onOpenFilter}) => {
   const [summary, setSummary] = useState(null);

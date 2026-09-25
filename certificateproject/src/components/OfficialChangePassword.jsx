@@ -7,7 +7,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const OfficialChangePassword = () => {
-  const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
+  const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({

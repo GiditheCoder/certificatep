@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 //     const fetchOgunLgas = async () => {
 //       try {
 //         const res = await axios.get(
-//           "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/lgas?state=Ogun"
+//           "https://certapp-aae046f75d3f.herokuapp.com/api/v1/lgas?state=Ogun"
 //         );
 
 //         const lgaArray = res.data?.data?.lgas;
@@ -41,7 +41,7 @@ import { toast } from "react-toastify";
 // //     const token = localStorage.getItem("token"); // wherever you stored it
 
 // //     const res = await axios.get(
-// //       `https://lgacertificate-011d407b356b.herokuapp.com/api/v1/admin/summary/application?lga=${encoded}`,
+// //       `https://certapp-aae046f75d3f.herokuapp.com/api/v1/admin/summary/application?lga=${encoded}`,
 // //       {
 // //         headers: {
 // //           Authorization: `Bearer ${token}`,
@@ -78,7 +78,7 @@ import { toast } from "react-toastify";
 //     const token = localStorage.getItem("token");
 
 //     const res = await axios.get(
-//       `https://lgacertificate-011d407b356b.herokuapp.com/api/v1/admin/summary/application?lga=${encoded}`,
+//       `https://certapp-aae046f75d3f.herokuapp.com/api/v1/admin/summary/application?lga=${encoded}`,
 //       {
 //         headers: {
 //           Authorization: `Bearer ${token}`,
@@ -157,7 +157,7 @@ const DashboardWithFilter = ({ onBack, onApply }) => {
     const fetchOgunLgas = async () => {
       try {
         const res = await axios.get(
-          "https://lgacertificate-011d407b356b.herokuapp.com/api/v1/lgas?state=Ogun"
+          "https://certapp-aae046f75d3f.herokuapp.com/api/v1/lgas?state=Ogun"
         );
 
         const lgaArray = res.data?.data?.lgas;
@@ -186,7 +186,7 @@ const DashboardWithFilter = ({ onBack, onApply }) => {
       const token = localStorage.getItem("token");
 
       const res = await axios.get(
-        `https://lgacertificate-011d407b356b.herokuapp.com/api/v1/admin/summary/application?lga=${encoded}`,
+        `https://certapp-aae046f75d3f.herokuapp.com/api/v1/admin/summary/application?lga=${encoded}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

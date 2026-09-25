@@ -12,7 +12,7 @@ const VerifyEmail = () => {
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(600); // 🕒 10 minutes
   const email = location.state?.email || "";
-  const baseURL = "https://lgacertificate-011d407b356b.herokuapp.com";
+  const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
   // 🕒 Countdown effect
   useEffect(() => {
