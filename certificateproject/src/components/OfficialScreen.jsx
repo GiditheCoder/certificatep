@@ -48,7 +48,6 @@ const OfficialScreen = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem("token");
-        console.log("🔑 Admin token:", token);
         const config = { headers: { Authorization: `Bearer ${token}` } };
 
         const [pendingRes, approvedRes, rejectedRes] = await axios.all([
@@ -290,70 +289,14 @@ const OfficialScreen = () => {
           {filteredData.map((item, id) => (
             <div
               key={id}
-              className="flex items-center p-4 space-x-4 hover:bg-gray-50 cursor-pointer"
-              onClick={() => {
-                console.log("📄 Clicked application:", item);
-                console.log("📄 Application ID:", item._id);
-                
-                if (item.status === "Pending") {
-                  navigate("/approveapplications", { state: { application: item } });
-                }
-                
-                if (item.status === "Approved") {
-                  const applicationId = item._id;
-                  console.log("📄 Navigating to certificate with ID:", applicationId);
-
-                  const fetchCertificateDetails = async () => {
-                    try {
-                      const token = localStorage.getItem("token");
-                      const config = {
-                        headers: {
-                          Authorization: `Bearer ${token}`,
-                          "Content-Type": "application/json",
-                        },
-                      };
-
-                      const response = await axios.get(
-                        `${baseURL}/api/v1/certificate/${applicationId}`,
-                        config
-                      );
-
-                      const details =
-                        response?.data?.data ??
-                        response?.data?.certificate ??
-                        response?.data ??
-                        {};
-
-                      console.log("📄 Certificate details response:", response?.data);
-                      console.log("📄 Certificate details payload:", details);
-                      console.log(
-                        "📄 Certificate hash:",
-                        details?.certificateHash || details?.hash || details?._id || applicationId
-                      );
-
-                      navigate(`/certificate/${applicationId}`, {
-                        state: {
-                          email: item.user?.email,
-                          certificate: details,
-                          certificateHash:
-                            details?.certificateHash || details?.hash || details?._id || applicationId,
-                        },
-                      });
-                    } catch (error) {
-                      console.error("❌ Failed to fetch certificate details:", error);
-                      navigate(`/certificate/${applicationId}`, {
-                        state: {
-                          email: item.user?.email,
-                          certificate: item,
-                          certificateHash: item?.certificateHash || item?._id,
-                        },
-                      });
-                    }
-                  };
-
-                  fetchCertificateDetails();
-                }
-              }}
+              className={`flex items-center p-4 space-x-4 hover:bg-gray-50 ${
+                item.status === "Pending" ? "cursor-pointer" : ""
+              }`}
+              onClick={
+                item.status === "Pending"
+                  ? () => navigate("/approveapplications", { state: { application: item } })
+                  : undefined
+              }
             >
               <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center">
                 {item.passport ? (

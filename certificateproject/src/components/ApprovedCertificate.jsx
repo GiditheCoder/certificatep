@@ -63,9 +63,6 @@ const ApprovedCertificate = () => {
         const token = localStorage.getItem("token");
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         
-        console.log("🔑 Token exists:", !!token);
-        console.log("🔑 Token:", token);
-        console.log("🔑 Token preview:", token?.substring(0, 20) + "...");
         console.log("👤 User role:", user?.role || "user");
         console.log("🆔 Certificate ID:", id);
         

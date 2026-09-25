@@ -58,7 +58,6 @@ const handleApprove = async () => {
   try {
     setLoading("approve");
     const token = localStorage.getItem("token");
-    console.log(token)
 
     const response = await axios.post(
       `${baseURL}/api/v1/admin/application/${application._id}?approve=true`,

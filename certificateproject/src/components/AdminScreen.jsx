@@ -43,7 +43,6 @@ const AdminScreen = ({onOpenFilter}) => {
   const Admin = JSON.parse(localStorage.getItem("user"));
 
   const token = localStorage.getItem("token");
-  console.log("🔥 Admin Token:", token);
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
   

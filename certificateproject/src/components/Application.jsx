@@ -104,7 +104,6 @@ useEffect(() => {
   const storedUser = localStorage.getItem("user");
   const token = localStorage.getItem("token");
 
-  console.log("TOKEN ON PAGE LOAD:", token);
 
 
   if (!storedUser || !token) {

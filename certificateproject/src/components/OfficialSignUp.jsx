@@ -90,7 +90,6 @@ useEffect(() => {
     }
 
     const token = localStorage.getItem("token");
-    console.log("Token:", token); // Debugging line
     if (!token) {
       toast.error("You must be logged in as a super admin to register an official.");
       return;

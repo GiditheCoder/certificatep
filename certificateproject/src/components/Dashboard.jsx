@@ -51,7 +51,6 @@ const Dashboard = () => {
     const fetchApplications = async () => {
       try {
         setLoading(true);
-        console.log(token)
         const res = await axios.get(
           "https://certapp-aae046f75d3f.herokuapp.com/api/v1/application",
           {
