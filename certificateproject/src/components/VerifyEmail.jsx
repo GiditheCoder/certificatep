@@ -84,7 +84,7 @@ const VerifyEmail = () => {
         theme: "colored",
       });
 
-      setTimeout(() => navigate("/dashboard"), 1500);
+      setTimeout(() => navigate("/login"), 1000);
     } catch (err) {
       console.error("❌ Verify Error:", err.response?.data || err.message);
       const errorMessage =
