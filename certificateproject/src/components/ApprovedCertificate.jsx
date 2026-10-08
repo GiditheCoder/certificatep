@@ -1,7 +1,7 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { Document, Image, Page, StyleSheet, Text, View, pdf } from "@react-pdf/renderer";
+import QRCodeGenerator from "qrcode";
 import QRCode from "react-qr-code";
 import StateLogo from "../images/StateLogo.png";
 import MenuLogo from "../images/menu.png";
@@ -15,8 +15,342 @@ import { ArrowLeft, Download, ShieldCheck } from "lucide-react";
 
 const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
+const pdfStyles = StyleSheet.create({
+  page: {
+    padding: 22,
+    backgroundColor: "#ffffff",
+    color: "#26332a",
+    fontFamily: "Helvetica",
+  },
+  frame: {
+    flex: 1,
+    borderWidth: 3,
+    borderColor: "#11860f",
+    padding: 18,
+    position: "relative",
+  },
+  corner: {
+    position: "absolute",
+    width: 76,
+    height: 76,
+  },
+  content: {
+    flex: 1,
+  },
+  header: {
+    minHeight: 102,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  applicantBlock: {
+    alignItems: "center",
+    width: 100,
+  },
+  applicantPhoto: {
+    width: 76,
+    height: 88,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: "#9cb99f",
+    objectFit: "cover",
+  },
+  officeCaption: {
+    marginTop: 6,
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "center",
+  },
+  premierLogo: {
+    width: 76,
+    height: 76,
+    objectFit: "contain",
+  },
+  organization: {
+    marginTop: 4,
+    marginBottom: 17,
+    color: "#11860f",
+    fontSize: 21,
+    lineHeight: 1.2,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "center",
+    textTransform: "uppercase",
+  },
+  details: {
+    minHeight: 76,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  addressBlock: {
+    width: 190,
+    fontSize: 8,
+    lineHeight: 1.45,
+    fontFamily: "Helvetica-Bold",
+  },
+  reference: {
+    marginTop: 7,
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+  },
+  qrCode: {
+    width: 68,
+    height: 68,
+  },
+  certificateNumbers: {
+    width: 150,
+    alignItems: "flex-end",
+    fontSize: 8,
+    lineHeight: 1.6,
+    fontFamily: "Helvetica-Bold",
+  },
+  certificateType: {
+    marginTop: 18,
+    color: "#b21e1e",
+    fontSize: 27,
+    textAlign: "center",
+    fontFamily: "Times-Roman",
+  },
+  subtitle: {
+    marginTop: 10,
+    color: "#6f2419",
+    fontSize: 9,
+    letterSpacing: 2.5,
+    textAlign: "center",
+    fontFamily: "Helvetica-Bold",
+  },
+  fullField: {
+    alignItems: "stretch",
+  },
+  nameField: {
+    marginTop: 28,
+  },
+  explanatoryText: {
+    marginTop: 18,
+    fontSize: 11,
+    lineHeight: 1.5,
+    color: "#718078",
+    textAlign: "center",
+  },
+  addressField: {
+    marginTop: 16,
+  },
+  confirmationText: {
+    marginTop: 17,
+    fontSize: 11,
+    lineHeight: 1.5,
+    color: "#718078",
+    textAlign: "center",
+  },
+  fullFieldText: {
+    fontSize: 15,
+    lineHeight: 1.35,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "center",
+    textTransform: "uppercase",
+  },
+  fullFieldUnderline: {
+    marginTop: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: "#26332a",
+  },
+  inlineFields: {
+    marginTop: 18,
+    flexDirection: "row",
+    alignItems: "flex-end",
+  },
+  inlineLabel: {
+    marginRight: 8,
+    fontSize: 10,
+  },
+  inlineField: {
+    flex: 1,
+    minHeight: 27,
+    marginRight: 10,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#26332a",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  inlineValue: {
+    fontSize: 14,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "center",
+    textTransform: "uppercase",
+  },
+  purposeRow: {
+    marginTop: 17,
+    flexDirection: "row",
+    alignItems: "flex-end",
+  },
+  purposeLabel: {
+    marginRight: 8,
+    marginBottom: 6,
+    fontSize: 10,
+  },
+  purposeField: {
+    flex: 1,
+    minHeight: 27,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#26332a",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  signatures: {
+    marginTop: "auto",
+    paddingTop: 32,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
+  signatory: {
+    width: 190,
+    alignItems: "center",
+  },
+  signatureImage: {
+    width: 100,
+    height: 40,
+    marginBottom: 5,
+    objectFit: "contain",
+  },
+  signatureRule: {
+    width: "100%",
+    borderBottomWidth: 1,
+    borderBottomColor: "#26332a",
+  },
+  signatoryName: {
+    marginTop: 7,
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "center",
+  },
+  signatoryTitle: {
+    marginTop: 4,
+    fontSize: 7,
+    color: "#55705c",
+    textAlign: "center",
+    textTransform: "uppercase",
+  },
+  stateSeal: {
+    width: 62,
+    height: 62,
+    objectFit: "contain",
+  },
+});
+
+const resolveImageSource = (source) => {
+  if (!source) return null;
+  if (/^(https?:|data:|blob:)/i.test(source)) return source;
+  return `${window.location.origin}/${source.replace(/^\/+/, "")}`;
+};
+
+const CertificatePdf = ({
+  certificate,
+  signatory,
+  certificateHash,
+  qrCode,
+  applicantImage,
+  formattedDate,
+  birthDate,
+}) => (
+  <Document>
+    <Page size="A4" style={pdfStyles.page}>
+      <View style={pdfStyles.frame}>
+        <Image src={Borderside} style={{ ...pdfStyles.corner, top: -9, left: -9, transform: "rotate(90deg)" }} />
+        <Image src={Borderside} style={{ ...pdfStyles.corner, top: -9, right: -9, transform: "rotate(180deg)" }} />
+        <Image src={Borderside} style={{ ...pdfStyles.corner, bottom: -9, left: -9   }} />
+        <Image src={Borderside} style={{ ...pdfStyles.corner, bottom: -9, right: -9, transform: "rotate(270deg)" }} />
+        <View style={pdfStyles.content}>
+          <View style={pdfStyles.header}>
+            <View style={pdfStyles.applicantBlock}>
+              {applicantImage ? (
+                <Image src={applicantImage} style={pdfStyles.applicantPhoto} />
+              ) : (
+                <View style={[pdfStyles.applicantPhoto, { justifyContent: "center", alignItems: "center", backgroundColor: "#f3f4f6" }]}>
+                  <Text style={{ fontSize: 8, color: "#718078" }}>No Photo</Text>
+                </View>
+              )}
+              <Text style={pdfStyles.officeCaption}>OFFICE OF THE CHAIRMAN</Text>
+            </View>
+            <Image src={PremierLogo} style={pdfStyles.premierLogo} />
+          </View>
+
+          <Text style={pdfStyles.organization}>Abeokuta South Local Government</Text>
+
+          <View style={pdfStyles.details}>
+            <View style={pdfStyles.addressBlock}>
+              <Text>SECRETARIAT:</Text>
+              <Text>A.S.L.G Secretariat, P.M.B 2036</Text>
+              <Text>Ake, Abeokuta, Ogun State Nigeria</Text>
+              <Text style={pdfStyles.reference}>REF NO: ABSLG/CHM/VOL.1</Text>
+            </View>
+            <Image src={qrCode} style={pdfStyles.qrCode} />
+            <View style={pdfStyles.certificateNumbers}>
+              <Text>NO: {certificate?._id || "N/A"}</Text>
+              <Text>Date: {formattedDate}</Text>
+            </View>
+          </View>
+
+          <Text style={pdfStyles.certificateType}>Certificate of State of Origin</Text>
+          <Text style={pdfStyles.subtitle}>TO WHOM IT MAY CONCERN</Text>
+
+          <View style={[pdfStyles.fullField, pdfStyles.nameField]}>
+            <Text style={pdfStyles.fullFieldText}>{certificate?.fullNames || "N/A"}</Text>
+            <View style={pdfStyles.fullFieldUnderline} />
+          </View>
+          <Text style={pdfStyles.explanatoryText}>We confirm that the above name person living at</Text>
+          <View style={[pdfStyles.fullField, pdfStyles.addressField]}>
+            <Text style={pdfStyles.fullFieldText}>{certificate?.currentAddress || "N/A"}</Text>
+            <View style={pdfStyles.fullFieldUnderline} />
+          </View>
+          <Text style={pdfStyles.confirmationText}>is a bona fide Indigene/Resident of Ogun State being</Text>
+
+          <View style={pdfStyles.inlineFields}>
+            <Text style={pdfStyles.inlineLabel}>Born in</Text>
+            <View style={pdfStyles.inlineField}>
+              <Text style={pdfStyles.inlineValue}>{certificate?.stateOfOrigin || "N/A"}</Text>
+            </View>
+            <Text style={pdfStyles.inlineLabel}>On</Text>
+            <View style={[pdfStyles.inlineField, { marginRight: 0 }]}>
+              <Text style={pdfStyles.inlineValue}>{birthDate}</Text>
+            </View>
+          </View>
+
+          <View style={pdfStyles.purposeRow}>
+            <Text style={pdfStyles.purposeLabel}>Purpose</Text>
+            <View style={pdfStyles.purposeField}>
+              <Text style={pdfStyles.inlineValue}>{certificate?.purpose || "IDENTIFICATION"}</Text>
+            </View>
+          </View>
+
+          <View style={pdfStyles.signatures}>
+            <View style={pdfStyles.signatory}>
+              {signatory?.secretarySignature && (
+                <Image src={resolveImageSource(signatory.secretarySignature)} style={pdfStyles.signatureImage} />
+              )}
+              <View style={pdfStyles.signatureRule} />
+              <Text style={pdfStyles.signatoryName}>{signatory?.secretaryName || ""}</Text>
+              <Text style={pdfStyles.signatoryTitle}>Secretary to the Local Government</Text>
+            </View>
+            <Image src={StateLogo} style={pdfStyles.stateSeal} />
+            <View style={pdfStyles.signatory}>
+              {signatory?.chairmanSignature && (
+                <Image src={resolveImageSource(signatory.chairmanSignature)} style={pdfStyles.signatureImage} />
+              )}
+              <View style={pdfStyles.signatureRule} />
+              <Text style={pdfStyles.signatoryName}>{signatory?.chairmanName || ""}</Text>
+              <Text style={pdfStyles.signatoryTitle}>Executive Chairman</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </Page>
+  </Document>
+);
+
 const ApprovedCertificate = () => {
-  const certRef = useRef();
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -264,105 +598,43 @@ const ApprovedCertificate = () => {
   // };
   
 const downloadPDF = async () => {
-  if (!certRef.current) {
-    toast.error("Certificate element not found");
-    return;
-  }
-
   try {
     toast.info("Generating PDF...");
-
-    const canvas = await html2canvas(certRef.current, {
-      scale: 3,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#ffffff",
-      foreignObjectRendering: false,
-      logging: false,
-      // Remove any margins/padding from capture
-      x: 0,
-      y: 0,
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: certRef.current.scrollWidth,
-      windowHeight: certRef.current.scrollHeight,
-      onclone: (clonedDoc) => {
-        const allElements = clonedDoc.querySelectorAll("*");
-        
-        allElements.forEach((el) => {
-          const computedStyle = window.getComputedStyle(el);
-          
-          // Fix all color properties that might contain oklch
-          const colorProps = [
-            'color', 'backgroundColor', 'borderColor', 
-            'borderTopColor', 'borderRightColor', 
-            'borderBottomColor', 'borderLeftColor',
-            'outlineColor', 'textDecorationColor'
-          ];
-          
-          colorProps.forEach(prop => {
-            const value = computedStyle[prop];
-            if (value && (value.includes('oklch') || value.includes('color('))) {
-              if (prop === 'backgroundColor') {
-                el.style[prop] = '#ffffff';
-              } else if (prop.includes('border')) {
-                el.style[prop] = '#d1d5db';
-              } else {
-                el.style[prop] = '#000000';
-              }
-            }
-          });
-          
-          // Fix background and background-image (for gradients)
-          const bgImage = computedStyle.backgroundImage;
-          if (bgImage && (bgImage.includes('oklch') || bgImage.includes('color('))) {
-            if (el.classList.contains('from-emerald-800') || 
-                el.classList.contains('from-emerald-700')) {
-              el.style.backgroundImage = 'none';
-              el.style.backgroundColor = '#047857';
-            } else if (el.classList.contains('from-yellow-600')) {
-              el.style.backgroundImage = 'none';
-              el.style.backgroundColor = '#ca8a04';
-            } else if (el.classList.contains('from-amber-50')) {
-              el.style.backgroundImage = 'none';
-              el.style.backgroundColor = '#fffbeb';
-            } else {
-              el.style.backgroundImage = 'none';
-              el.style.backgroundColor = computedStyle.backgroundColor || '#ffffff';
-            }
-          }
-        });
-      },
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    
-    // Calculate dimensions to fit A4 without margins
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const canvasAspectRatio = canvas.height / canvas.width;
-    const pdfAspectRatio = pdfHeight / pdfWidth;
-    
-    let finalWidth, finalHeight, offsetX, offsetY;
-    
-    if (canvasAspectRatio > pdfAspectRatio) {
-      // Canvas is taller, fit to height
-      finalHeight = pdfHeight;
-      finalWidth = finalHeight / canvasAspectRatio;
-      offsetX = (pdfWidth - finalWidth) / 2;
-      offsetY = 0;
-    } else {
-      // Canvas is wider, fit to width
-      finalWidth = pdfWidth;
-      finalHeight = finalWidth * canvasAspectRatio;
-      offsetX = 0;
-      offsetY = (pdfHeight - finalHeight) / 2;
-    }
-    
-    // Add image with calculated dimensions (centered if needed)
-    pdf.addImage(imgData, "PNG", offsetX, offsetY, finalWidth, finalHeight);
-    pdf.save(`${certificate?.fullNames || "certificate"}.pdf`);
+    const verificationHash = certificateHash || certificate?._id || id || "certificate";
+    const qrCode = await QRCodeGenerator.toDataURL(
+      `${window.location.origin}/cert-validation?hash=${encodeURIComponent(verificationHash)}`,
+      { margin: 1, width: 256 }
+    );
+    const document = pdf(
+      <CertificatePdf
+        certificate={certificate}
+        signatory={signatory}
+        certificateHash={verificationHash}
+        qrCode={qrCode}
+        applicantImage={resolveImageSource(certificate?.passport)}
+        formattedDate={approvedDate
+          ? new Date(approvedDate).toLocaleDateString("en-GB", {
+              year: "2-digit",
+              month: "2-digit",
+              day: "2-digit",
+            })
+          : "N/A"}
+        birthDate={birthDateValue
+          ? new Date(birthDateValue).toLocaleDateString("en-GB", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            })
+          : "N/A"}
+      />
+    );
+    const blob = await document.toBlob();
+    const downloadUrl = URL.createObjectURL(blob);
+    const downloadLink = window.document.createElement("a");
+    downloadLink.href = downloadUrl;
+    downloadLink.download = `${certificate?.fullNames || "certificate"}.pdf`;
+    downloadLink.click();
+    URL.revokeObjectURL(downloadUrl);
     
     toast.success("PDF downloaded successfully!");
   } catch (error) {
@@ -475,7 +747,7 @@ const downloadPDF = async () => {
       </header>
 
       <main className="flex flex-col items-center flex-grow mt-24 px-3 sm:px-6 pb-10">
-        <div className="w-full max-w-5xl" ref={certRef}>
+        <div className="w-full max-w-5xl">
           <div className="relative bg-white border-[3px] border-[#11860f] p-1 shadow-[0_18px_50px_rgba(28,61,38,0.14)]">
             <div className="relative p-5 sm:p-9 md:p-12 overflow-hidden">
               <img
