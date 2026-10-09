@@ -26,7 +26,7 @@ const pdfStyles = StyleSheet.create({
     flex: 1,
     borderWidth: 3,
     borderColor: "#11860f",
-    padding: 18,
+    padding: 32,
     position: "relative",
   },
   corner: {
@@ -46,10 +46,12 @@ const pdfStyles = StyleSheet.create({
   applicantBlock: {
     alignItems: "center",
     width: 100,
+    marginTop: 14,
+    marginLeft: 10,
   },
   applicantPhoto: {
-    width: 76,
-    height: 88,
+    width: 86,
+    height: 98,
     padding: 4,
     borderWidth: 1,
     borderColor: "#9cb99f",
@@ -62,8 +64,8 @@ const pdfStyles = StyleSheet.create({
     textAlign: "center",
   },
   premierLogo: {
-    width: 76,
-    height: 76,
+    width: 88,
+    height: 88,
     objectFit: "contain",
   },
   organization: {
@@ -259,8 +261,8 @@ const CertificatePdf = ({
     <Page size="A4" style={pdfStyles.page}>
       <View style={pdfStyles.frame}>
         <Image src={Borderside} style={{ ...pdfStyles.corner, top: -9, left: -9, transform: "rotate(90deg)" }} />
-        <Image src={Borderside} style={{ ...pdfStyles.corner, top: -9, right: -9, transform: "rotate(180deg)" }} />
-        <Image src={Borderside} style={{ ...pdfStyles.corner, bottom: -9, left: -9   }} />
+        <Image src={Borderside} style={{ ...pdfStyles.corner, top: -9, right: -9, transform: "rotate(90deg) scaleY(-1)" }} />
+        <Image src={Borderside} style={{ ...pdfStyles.corner, bottom: -9, left: -9, transform: "rotate(90deg) scaleX(-1)" }} />
         <Image src={Borderside} style={{ ...pdfStyles.corner, bottom: -9, right: -9, transform: "rotate(270deg)" }} />
         <View style={pdfStyles.content}>
           <View style={pdfStyles.header}>
@@ -931,4 +933,3 @@ const downloadPDF = async () => {
 };
 
 export default ApprovedCertificate;
-
