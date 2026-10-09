@@ -5,9 +5,9 @@ import QRCodeGenerator from "qrcode";
 import QRCode from "react-qr-code";
 import StateLogo from "../images/StateLogo.png";
 import MenuLogo from "../images/menu.png";
-import PremierLogo from "../images/premierlogo.png";
 import CloseLogo from "../images/close.png";
 import Borderside from "../images/border.png";
+import Seal from "../images/seal.png";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -62,11 +62,6 @@ const pdfStyles = StyleSheet.create({
     fontSize: 7,
     fontFamily: "Helvetica-Bold",
     textAlign: "center",
-  },
-  premierLogo: {
-    width: 88,
-    height: 88,
-    objectFit: "contain",
   },
   organization: {
     marginTop: 4,
@@ -240,6 +235,11 @@ const pdfStyles = StyleSheet.create({
     height: 62,
     objectFit: "contain",
   },
+  certificateSeal: {
+    width: 62,
+    height: 62,
+    objectFit: "contain",
+  },
 });
 
 const resolveImageSource = (source) => {
@@ -256,6 +256,11 @@ const CertificatePdf = ({
   applicantImage,
   formattedDate,
   birthDate,
+  certificateType,
+  organizationName,
+  secretariatName,
+  lgaName,
+  referencePrefix,
 }) => (
   <Document>
     <Page size="A4" style={pdfStyles.page}>
@@ -276,17 +281,17 @@ const CertificatePdf = ({
               )}
               <Text style={pdfStyles.officeCaption}>OFFICE OF THE CHAIRMAN</Text>
             </View>
-            <Image src={PremierLogo} style={pdfStyles.premierLogo} />
+            <Image src={StateLogo} style={pdfStyles.stateSeal} />
           </View>
 
-          <Text style={pdfStyles.organization}>Abeokuta South Local Government</Text>
+          <Text style={pdfStyles.organization}>{organizationName}</Text>
 
           <View style={pdfStyles.details}>
             <View style={pdfStyles.addressBlock}>
               <Text>SECRETARIAT:</Text>
-              <Text>A.S.L.G Secretariat, P.M.B 2036</Text>
-              <Text>Ake, Abeokuta, Ogun State Nigeria</Text>
-              <Text style={pdfStyles.reference}>REF NO: ABSLG/CHM/VOL.1</Text>
+              <Text>{secretariatName}, P.M.B 2036</Text>
+              <Text>{lgaName}, Ogun State Nigeria</Text>
+              <Text style={pdfStyles.reference}>REF NO: {referencePrefix}/CHM/VOL.1</Text>
             </View>
             <Image src={qrCode} style={pdfStyles.qrCode} />
             <View style={pdfStyles.certificateNumbers}>
@@ -295,7 +300,7 @@ const CertificatePdf = ({
             </View>
           </View>
 
-          <Text style={pdfStyles.certificateType}>Certificate of State of Origin</Text>
+          <Text style={pdfStyles.certificateType}>{certificateType}</Text>
           <Text style={pdfStyles.subtitle}>TO WHOM IT MAY CONCERN</Text>
 
           <View style={[pdfStyles.fullField, pdfStyles.nameField]}>
@@ -307,7 +312,7 @@ const CertificatePdf = ({
             <Text style={pdfStyles.fullFieldText}>{certificate?.currentAddress || "N/A"}</Text>
             <View style={pdfStyles.fullFieldUnderline} />
           </View>
-          <Text style={pdfStyles.confirmationText}>is a bona fide Indigene/Resident of Ogun State being</Text>
+          <Text style={pdfStyles.confirmationText}>is a bonafide Indigene/Resident of Ogun State being</Text>
 
           <View style={pdfStyles.inlineFields}>
             <Text style={pdfStyles.inlineLabel}>Born in</Text>
@@ -336,7 +341,7 @@ const CertificatePdf = ({
               <Text style={pdfStyles.signatoryName}>{signatory?.secretaryName || ""}</Text>
               <Text style={pdfStyles.signatoryTitle}>Secretary to the Local Government</Text>
             </View>
-            <Image src={StateLogo} style={pdfStyles.stateSeal} />
+            <Image src={Seal} style={pdfStyles.certificateSeal} />
             <View style={pdfStyles.signatory}>
               {signatory?.chairmanSignature && (
                 <Image src={resolveImageSource(signatory.chairmanSignature)} style={pdfStyles.signatureImage} />
@@ -456,7 +461,7 @@ const ApprovedCertificate = () => {
   }, [id, navigate, passedCertificate]);
 
   const effectiveLga =
-    certificate?.stateOfOrigin?.toLowerCase() === "ogun"
+    certificate?.stateOfOrigin?.trim().toLowerCase() === "ogun"
       ? certificate?.lga
       : certificate?.lgaOfResident;
 
@@ -612,6 +617,11 @@ const downloadPDF = async () => {
               day: "2-digit",
             })
           : "N/A"}
+        certificateType={certificateType}
+        organizationName={organizationName}
+        secretariatName={secretariatName}
+        lgaName={lgaName}
+        referencePrefix={referencePrefix}
       />
     );
     const blob = await document.toBlob();
@@ -671,8 +681,26 @@ const downloadPDF = async () => {
     _id: certificateId,
   } = certificate;
 
-  const isOriginCertificate = stateOfOrigin?.toLowerCase() === "ogun";
-  const certificateType = "Certificate of State of Origin";
+  const isOriginCertificate = stateOfOrigin?.trim().toLowerCase() === "ogun";
+  const certificateType = isOriginCertificate
+    ? "Certificate of State of Origin"
+    : "Certificate of Residency";
+  const lgaWords = (effectiveLga?.trim() || "Abeokuta South").split(/\s+/);
+  const lgaName = lgaWords
+    .map((word) => word.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()))
+    .join(" ");
+  const organizationName = `${lgaName} Local Government`;
+  const secretariatName = `${lgaWords
+    .map((word) => word[0].toUpperCase())
+    .join(".")}.L.G. Secretariat`;
+  const lgaAbbreviation =
+    lgaWords.length === 1
+      ? lgaWords[0][0].toUpperCase()
+      : `${lgaWords[0].slice(0, 2).toUpperCase()}${lgaWords
+          .slice(1)
+          .map((word) => word[0].toUpperCase())
+          .join("")}`;
+  const referencePrefix = `${lgaAbbreviation}LG`;
   const formattedDate = approvedDate
     ? new Date(approvedDate).toLocaleDateString("en-GB", {
         year: "2-digit",
@@ -784,21 +812,24 @@ const downloadPDF = async () => {
                     </div>
                     <p className="mt-2 w-max self-center whitespace-nowrap text-center text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.08em] text-[#26392a]">Office of the Chairman</p>
                   </div>
-
-                    <img src={PremierLogo} alt="Ogun State premier logo" className="w-20 h-20 sm:w-28 sm:h-28 object-contain" />
+                  <img
+                    src={StateLogo}
+                    alt="Ogun State seal"
+                    className="mr-4 mt-4 h-16 w-16 shrink-0 object-contain sm:mr-6 sm:mt-6 sm:h-20 sm:w-20"
+                  />
                   </div>
 
                   <h1 className="mt-5 w-full text-center text-[clamp(1.05rem,4vw,2.25rem)] font-black uppercase tracking-[0.03em] leading-tight text-[#11860f]">
-                    Abeokuta South Local Government
+                    {organizationName}
                   </h1>
                 </div>
 
                 <div className="mt-6 grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-4 py-4 text-[10px] sm:text-xs text-[#26332a] items-center">
                   <div className="font-semibold">
                     <p className="font-bold tracking-[0.16em]">SECRETARIAT:</p>
-                    <p>A.S.L.G Secretariat, P.M.B 2036</p>
-                    <p>Ake, Abeokuta, Ogun State Nigeria</p>
-                    <p className="mt-3 font-bold tracking-[0.12em]">REF NO: ABSLG/CHM/VOL.1</p>
+                    <p>{secretariatName}, P.M.B 2036</p>
+                    <p>{lgaName}, Ogun State Nigeria</p>
+                    <p className="mt-3 font-bold tracking-[0.12em]">REF NO: {referencePrefix}/CHM/VOL.1</p>
                   </div>
 
                   <div className="flex justify-center">
@@ -829,7 +860,7 @@ const downloadPDF = async () => {
                   <p className="text-lg sm:text-2xl md:text-3xl font-bold uppercase border-b-2 border-[#26332a] pb-1">{name || "N/A"}</p>
                   <p>We confirm that the above name person living at</p>
                   <p className="text-base sm:text-lg md:text-xl font-bold uppercase border-b-2 border-[#26332a] pb-1">{address || "N/A"}</p>
-                  <p>is a bona fide Indigene/Resident of Ogun State being</p>
+                  <p>is a bonafide Indigene/Resident of Ogun State being</p>
                   <p className="flex w-full items-center gap-2 text-left">
                     <span className="shrink-0">Born in</span>
                     <strong className="min-w-0 flex-1 border-b-2 border-[#26332a] px-2 text-center text-lg font-bold uppercase sm:text-xl md:text-2xl">{stateOfOrigin || "N/A"}</strong>
@@ -858,11 +889,7 @@ const downloadPDF = async () => {
   </div>
 
   <div className="order-last sm:order-none w-full sm:w-24 shrink-0 flex justify-center items-center pb-2">
-    <img
-      src={StateLogo}
-      alt="Ogun State seal"
-      className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
-    />
+    <img src={Seal} alt="Certificate seal" className="w-20 h-20 sm:w-24 sm:h-24 object-contain" />
   </div>
 
   <div className="flex-1 text-center w-full sm:min-w-0">
