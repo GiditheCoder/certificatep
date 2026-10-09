@@ -369,7 +369,25 @@ const approvedApps = applications.filter((a) => a.status === "approved");
                     fullNames: certificateResponse?.fullNames ?? app.fullNames,
                     currentAddress: certificateResponse?.currentAddress ?? app.currentAddress,
                     dateOfBirth: certificateResponse?.dateOfBirth ?? app.dateOfBirth,
+                    isRevoked:
+                      certificateResponse?.isRevoked ??
+                      certificateResponse?.data?.isRevoked ??
+                      app.isRevoked,
+                    revocationReason:
+                      certificateResponse?.revocationReason ??
+                      certificateResponse?.data?.revocationReason ??
+                      app.revocationReason,
                   };
+
+                  if (certificate.isRevoked) {
+                    toast.error(
+                      `This certificate has been revoked. Reason: ${
+                        certificate.revocationReason || "No reason was provided."
+                      }`,
+                      { autoClose: 10000 }
+                    );
+                    return;
+                  }
 
                   if (!certificateResponse?.certificateHash) {
                     throw new Error("Certificate hash was not returned by the certificate API");

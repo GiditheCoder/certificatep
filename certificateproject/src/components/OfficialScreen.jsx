@@ -27,10 +27,19 @@ const OfficialScreen = () => {
   const [pending, setPending] = useState([]);
   const [approved, setApproved] = useState([]);
   const [rejected, setRejected] = useState([]);
+  const [certificates, setCertificates] = useState([]);
+  const [certificatesLoading, setCertificatesLoading] = useState(true);
+  const [certificatesError, setCertificatesError] = useState("");
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
+  const [activeList, setActiveList] = useState("applications");
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
+  const [certificateSearch, setCertificateSearch] = useState("");
+  const [selectedCertificate, setSelectedCertificate] = useState(null);
+  const [revocationReason, setRevocationReason] = useState("");
+  const [revocationError, setRevocationError] = useState("");
+  const [revokingCertificate, setRevokingCertificate] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [filterMonth, setFilterMonth] = useState("");
@@ -51,9 +60,9 @@ const OfficialScreen = () => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
 
         const [pendingRes, approvedRes, rejectedRes] = await axios.all([
-          axios.get(`${baseURL}/api/v1/admin/applications/pending`, config),
-          axios.get(`${baseURL}/api/v1/admin/applications/approved`, config),
-          axios.get(`${baseURL}/api/v1/admin/applications/rejected`, config),
+          axios.get(baseURL + "/api/v1/admin/applications/pending", config),
+          axios.get(baseURL + "/api/v1/admin/applications/approved", config),
+          axios.get(baseURL + "/api/v1/admin/applications/rejected", config),
         ]);
 
         const normalize = (res) =>
@@ -77,6 +86,45 @@ const OfficialScreen = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        setCertificatesLoading(true);
+        setCertificatesError("");
+        const token = localStorage.getItem("token");
+        const response = await axios.get(baseURL + "/api/v1/certificates/admin", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const list =
+          response?.data?.data?.certificates ??
+          response?.data?.certificates ??
+          response?.data?.data?.data ??
+          response?.data?.data ??
+          response?.data;
+
+        if (!Array.isArray(list)) {
+          throw new Error("Unexpected certificates response format.");
+        }
+
+        setCertificates(
+          list.map((certificate) => ({
+            ...(certificate.application || {}),
+            ...certificate,
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to load certificates:", error);
+        setCertificatesError(
+          error.response?.data?.message || error.message || "Unable to load certificates."
+        );
+      } finally {
+        setCertificatesLoading(false);
+      }
+    };
+
+    fetchCertificates();
+  }, []);
+
   
 
   const handleLogout = () => {
@@ -94,7 +142,7 @@ const OfficialScreen = () => {
   const getDisplayName = (item) =>
     item.name ||
     item.fullNames ||
-    `${item.firstName || ""} ${item.lastName || ""}`.trim() ||
+    [item.firstName || "", item.lastName || ""].join(" ").trim() ||
     "Unknown";
 
   const filteredData = allApplications.filter((item) => {
@@ -116,6 +164,60 @@ const OfficialScreen = () => {
     return matchesFilter && matchesSearch && matchesMonthYear;
   });
 
+  const filteredCertificates = certificates.filter((certificate) =>
+    (certificate.fullNames || certificate.name || "")
+      .toLowerCase()
+      .includes(certificateSearch.toLowerCase())
+  );
+
+  const handleRevokeCertificate = async (event) => {
+    event.preventDefault();
+    const reason = revocationReason.trim();
+    const certificateId = selectedCertificate?._id || selectedCertificate?.id;
+
+    if (!certificateId) {
+      setRevocationError("Certificate ID is missing.");
+      return;
+    }
+
+    if (!reason) {
+      setRevocationError("Enter a reason for revoking this certificate.");
+      return;
+    }
+
+    try {
+      setRevokingCertificate(true);
+      setRevocationError("");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setRevocationError("Authentication token not found. Please log in again.");
+        return;
+      }
+
+      await axios.put(
+        baseURL + "/api/v1/certificate/revoke/" + encodeURIComponent(certificateId),
+        { revocationReason: reason },
+        { headers: { Authorization: "Bearer " + token } }
+      );
+      setCertificates((currentCertificates) =>
+        currentCertificates.map((certificate) =>
+          (certificate._id || certificate.id) === certificateId
+            ? { ...certificate, isRevoked: true, revocationReason: reason }
+            : certificate
+        )
+      );
+      setSelectedCertificate(null);
+      setRevocationReason("");
+    } catch (error) {
+      console.error("Failed to revoke certificate:", error);
+      setRevocationError(
+        error.response?.data?.message || "Unable to revoke certificate. Please try again."
+      );
+    } finally {
+      setRevokingCertificate(false);
+    }
+  };
+
   const total = allApplications.length;
   const approvedCount = approved.length;
   const rejectedCount = rejected.length;
@@ -135,7 +237,9 @@ const OfficialScreen = () => {
 
         <div className="hidden sm:flex items-center space-x-3 text-sm">
           <div className="text-right">
-            <p className="font-semibold">{`${Admin?.firstName || ""} ${Admin?.lastName || ""}`}</p>
+            <p className="font-semibold">
+              {Admin?.firstName || ""} {Admin?.lastName || ""}
+            </p>
             <p className="text-gray-400 font-medium text-xs">{Admin?.position}</p>
           </div>
           <LogOutIcon onClick={handleLogout} className="cursor-pointer hover:text-red-500 transition" />
@@ -165,7 +269,9 @@ const OfficialScreen = () => {
           </div>
           <div className="flex items-center space-x-3 text-sm">
             <div className="text-right">
-              <p className="font-semibold">{`${Admin?.firstName || ""} ${Admin?.lastName || ""}`}</p>
+              <p className="font-semibold">
+                {Admin?.firstName || ""} {Admin?.lastName || ""}
+              </p>
               <p className="text-gray-400 font-medium text-xs">{Admin?.position}</p>
             </div>
             <LogOutIcon
@@ -190,7 +296,29 @@ const OfficialScreen = () => {
   Signatures
 </button>
 
+      <div className="mb-6 flex gap-3 border-b border-gray-200">
+        {[
+          { id: "applications", label: "Applications" },
+          { id: "certificates", label: "Certificates" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveList(tab.id)}
+            className={[
+              "border-b-2 px-4 py-2 font-semibold",
+              activeList === tab.id
+                ? "border-green-600 text-green-700"
+                : "border-transparent text-gray-600",
+            ].join(" ")}
+          >
+            {tab.label}
+            {tab.id === "certificates" && <> ({certificates.length})</>}
+          </button>
+        ))}
+      </div>
 
+      {activeList === "applications" ? (
+        <>
       {/* Summary Cards */}
       <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
         <div className="flex-1 p-4 rounded-lg shadow-sm">
@@ -263,11 +391,12 @@ const OfficialScreen = () => {
           {["All", "Pending", "Approved", "Rejected"].map((tab) => (
             <button
               key={tab}
-              className={`py-2 px-4 -mb-px border-b-2 whitespace-nowrap ${
+              className={[
+                "py-2 px-4 -mb-px border-b-2 whitespace-nowrap",
                 filter === tab
                   ? "border-green-600 font-semibold text-green-600"
-                  : "border-transparent text-gray-600"
-              }`}
+                  : "border-transparent text-gray-600",
+              ].join(" ")}
               onClick={() => setFilter(tab)}
             >
               {tab}
@@ -286,9 +415,10 @@ const OfficialScreen = () => {
           {filteredData.map((item, id) => (
             <div
               key={id}
-              className={`flex items-center p-4 space-x-4 hover:bg-gray-50 ${
-                item.status === "Pending" ? "cursor-pointer" : ""
-              }`}
+              className={[
+                "flex items-center p-4 space-x-4 hover:bg-gray-50",
+                item.status === "Pending" ? "cursor-pointer" : "",
+              ].join(" ")}
               onClick={
                 item.status === "Pending"
                   ? () => navigate("/approveapplications", { state: { application: item } })
@@ -301,7 +431,7 @@ const OfficialScreen = () => {
                     src={
                       item.passport.startsWith("http")
                         ? item.passport
-                        : `${baseURL}/${item.passport}`
+                        : baseURL + "/" + item.passport
                     }
                     alt="Applicant Passport"
                     className="w-full h-full object-cover"
@@ -317,13 +447,14 @@ const OfficialScreen = () => {
               </div>
 
               <span
-                className={`text-xs px-3 py-1 rounded-full flex items-center space-x-1 ${
+                className={[
+                  "text-xs px-3 py-1 rounded-full flex items-center space-x-1",
                   item.status === "Approved"
                     ? "bg-green-200 text-green-700 font-medium"
                     : item.status === "Rejected"
                     ? "bg-red-100 text-red-700"
-                    : "bg-yellow-100 text-yellow-700"
-                }`}
+                    : "bg-yellow-100 text-yellow-700",
+                ].join(" ")}
               >
                 {item.status === "Approved" && <Check className="w-3 h-3" />}
                 {item.status === "Rejected" && <X className="w-3 h-3" />}
@@ -334,9 +465,147 @@ const OfficialScreen = () => {
           ))}
         </div>
       )}
+        </>
+      ) : (
+        <section>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-bold">Issued Certificates</h2>
+            <div className="relative min-w-[200px] flex-1 sm:max-w-sm">
+              <input
+                type="search"
+                placeholder="Search certificates"
+                className="w-full rounded-md border border-gray-400 px-4 py-2"
+                value={certificateSearch}
+                onChange={(event) => setCertificateSearch(event.target.value)}
+              />
+            </div>
+          </div>
+
+          {certificatesLoading ? (
+            <p className="py-10 text-center text-gray-600 animate-pulse">Loading certificates...</p>
+          ) : certificatesError ? (
+            <p role="alert" className="py-10 text-center text-red-600">{certificatesError}</p>
+          ) : filteredCertificates.length === 0 ? (
+            <p className="py-10 text-center font-medium text-gray-400">
+              {certificates.length ? "No matching certificates." : "No certificates found."}
+            </p>
+          ) : (
+            <div className="divide-y divide-gray-200 rounded-md border border-gray-200 bg-white shadow-sm">
+              {filteredCertificates.map((certificate) => {
+                const certificateId = certificate._id || certificate.id;
+                const certificateLga =
+                  certificate.stateOfOrigin?.trim().toLowerCase() === "ogun"
+                    ? certificate.lga
+                    : certificate.lgaOfResident || certificate.lga;
+                return (
+                  <button
+                    key={certificateId || certificate.certificateRef}
+                    type="button"
+                    disabled={!certificateId || certificate.isRevoked}
+                    onClick={() => {
+                      setSelectedCertificate(certificate);
+                      setRevocationReason("");
+                      setRevocationError("");
+                    }}
+                    className="flex w-full items-center justify-between gap-4 p-4 text-left hover:bg-gray-50 disabled:cursor-default disabled:hover:bg-white"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">
+                        {certificate.fullNames || certificate.name || "Unknown"}
+                      </span>
+                      <span className="mt-1 block truncate text-sm text-gray-500">
+                        {certificateLga || "LGA unavailable"}
+                        {certificate.stateOfOrigin && <> · {certificate.stateOfOrigin}</>}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-right text-xs text-gray-500">
+                      {certificate.isRevoked ? (
+                        <span className="mb-1 block font-semibold text-red-600">Revoked</span>
+                      ) : null}
+                      {certificate.updatedAt || certificate.createdAt
+                        ? new Date(certificate.updatedAt || certificate.createdAt).toLocaleDateString()
+                        : "Date unavailable"}
+                      <span className={[
+                        "mt-1 block",
+                        certificate.isRevoked ? "text-gray-400" : "text-red-700",
+                      ].join(" ")}>
+                        {certificate.isRevoked ? "Certificate revoked" : "Revoke certificate"}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {selectedCertificate && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !revokingCertificate) {
+              setSelectedCertificate(null);
+            }
+          }}
+        >
+          <form
+            onSubmit={handleRevokeCertificate}
+            className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="revoke-certificate-title"
+          >
+            <h2 id="revoke-certificate-title" className="text-xl font-bold text-gray-900">
+              Revoke certificate
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Revoke the certificate for{" "}
+              <span className="font-semibold">
+                {selectedCertificate.fullNames || selectedCertificate.name || "this applicant"}
+              </span>
+              . Add the reason for revocation below.
+            </p>
+            <label htmlFor="revocation-reason" className="mt-5 block text-sm font-semibold text-gray-700">
+              Revocation reason
+            </label>
+            <textarea
+              id="revocation-reason"
+              required
+              rows={4}
+              value={revocationReason}
+              onChange={(event) => setRevocationReason(event.target.value)}
+              placeholder="Explain why this certificate is being revoked"
+              className="mt-2 w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100"
+              disabled={revokingCertificate}
+            />
+            {revocationError && (
+              <p role="alert" className="mt-2 text-sm text-red-600">{revocationError}</p>
+            )}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedCertificate(null)}
+                disabled={revokingCertificate}
+                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={revokingCertificate || !revocationReason.trim()}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {revokingCertificate ? "Revoking..." : "Revoke certificate"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Filter Popup */}
-      {showFilter && (
+      {showFilter && activeList === "applications" && (
         <div className="absolute right-0 top-20 z-50">
           <div className="relative bg-white p-6 rounded-lg w-[90%] sm:w-80 shadow-xl border border-gray-200">
             <button
