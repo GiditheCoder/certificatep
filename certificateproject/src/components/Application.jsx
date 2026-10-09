@@ -80,11 +80,9 @@ useEffect(() => {
 
         
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        console.log("✅ Face detection models loaded");
          // ⏱ Add 1000 seconds (1,000,000 ms) delay before marking as loaded
       setTimeout(() => {
         setModelsLoaded(true);
-        console.log("⏳ Loader finished after 1000 seconds");
       }, 1000); // 1000 seconds * 1000 ms
 
         // setModelsLoaded(true);
@@ -182,7 +180,6 @@ useEffect(() => {
   const fetchStates = async () => {
     try {
       const res = await axios.get("https://certapp-aae046f75d3f.herokuapp.com/api/v1/states");
-        console.log("🌍 States API response:", res.data); // 👈 ADD THIS
       if (res.data.success && Array.isArray(res.data.data)) {
         setStates(res.data.data);
       } else {
@@ -239,8 +236,6 @@ useEffect(() => {
       );
 
       const ogunLgaArray = res.data?.data?.lgas;
-
-      console.log("🌍 Ogun LGAs API response:", ogunLgaArray); // 👈 ADD THIS
 
       if (res.data.success && Array.isArray(ogunLgaArray)) {
         setOgunLgas(ogunLgaArray);
@@ -1094,4 +1089,3 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
 };
 
   export default Application;
-

@@ -359,9 +359,6 @@ const ApprovedCertificate = () => {
   const passedEmail = location.state?.email;
   const passedCertificate = location.state?.certificate;
   const passedCertificateHash = location.state?.certificateHash;
-  console.log("📧 Email passed from Dashboard:", passedEmail);
-  console.log("📄 Certificate payload passed from navigation:", passedCertificate);
-  console.log("📄 Certificate hash passed from navigation:", passedCertificateHash);
   const [certificate, setCertificate] = useState(passedCertificate || null);
   const [certificateHash, setCertificateHash] = useState(
     passedCertificateHash || passedCertificate?.certificateHash || passedCertificate?.hash || ""
@@ -388,8 +385,6 @@ const ApprovedCertificate = () => {
             passedCertificate?._id ||
             id;
 
-          console.log("📄 Using certificate from navigation state.", passedCertificate);
-          console.log("📄 Hash from navigation state:", hashFromPayload);
           setCertificate(passedCertificate);
           setCertificateHash(hashFromPayload);
           setLoading(false);
@@ -398,9 +393,6 @@ const ApprovedCertificate = () => {
 
         const token = localStorage.getItem("token");
         const user = JSON.parse(localStorage.getItem("user") || "{}");
-        
-        console.log("👤 User role:", user?.role || "user");
-        console.log("🆔 Certificate ID:", id);
         
         if (!token) {
           toast.error("Authentication token not found. Please login again.");
@@ -426,13 +418,6 @@ const ApprovedCertificate = () => {
           certificateRes?.data?.certificate ??
           certificateRes?.data ??
           null;
-
-        console.log("📄 Certificate API response:", certificateRes?.data);
-        console.log("📄 Certificate details from API:", cert);
-        console.log(
-          "📄 Certificate hash from API:",
-          cert?.certificateHash || cert?.hash || cert?._id || id
-        );
 
         if (!cert) {
           toast.error("Certificate not found with ID: " + id);
@@ -486,10 +471,9 @@ const ApprovedCertificate = () => {
           )}`
         );
         setSignatory(response.data.data || response.data);
-        console.log("✍️ Signatory data:", response.data);
       } catch (error) {
         console.error("❌ Failed to fetch signatory:", error);
-        toast.warning("Could not load signature details");
+        toast.warning("Could not load signature details", { toastId: "signatory-load-error" });
       }
     };
 

@@ -34,15 +34,6 @@ useEffect(() => {
 }, [application, navigate]);
 
 
-useEffect(() => {
-  if (application) {
-    console.log("📄 Application details:", application);
-  } else {
-    console.log("⚠️ No application found in state");
-  }
-}, [application]);
-
-
   const Admin = JSON.parse(localStorage.getItem("user"));
 
  
@@ -59,7 +50,7 @@ const handleApprove = async () => {
     setLoading("approve");
     const token = localStorage.getItem("token");
 
-    const response = await axios.post(
+    await axios.post(
       `${baseURL}/api/v1/admin/application/${application._id}?approve=true`,
       {}, // ✅ empty body
       {
@@ -67,15 +58,13 @@ const handleApprove = async () => {
       }
     );
 
-    console.log("Application approved:", response.data);
     setApplication((prev) => ({ ...prev, status: "Approved" }));
     toast.success("✅ Application successfully approved!");
 
     setTimeout(() => {
       navigate("/officialscreen");
     }, 1500);
-  } catch (error) {
-    console.error("Error approving application:", error.response || error.message);
+  } catch {
     toast.error("❌ Failed to approve application. Please try again.");
   } finally {
     setLoading("");
@@ -98,7 +87,7 @@ const handleConfirmReject = async () => {
     setLoading("reject");
     const token = localStorage.getItem("token");
 
-    const response = await axios.post(
+    await axios.post(
       `${baseURL}/api/v1/admin/application/${application._id}?approve=false`,
       { rejectionReason: rejectionReason.trim() }, // ✅ include rejectionReason when approve=false
       {
@@ -106,15 +95,13 @@ const handleConfirmReject = async () => {
       }
     );
 
-    console.log("Application rejected:", response.data);
     setApplication((prev) => ({ ...prev, status: "Rejected" }));
     toast.success("🚫 Application successfully rejected!");
 
     setTimeout(() => {
       navigate("/officialscreen");
     }, 1500);
-  } catch (error) {
-    console.error("Error rejecting application:", error.response || error.message);
+  } catch {
     toast.error("❌ Failed to reject application. Please try again.");
   } finally {
     setLoading("");

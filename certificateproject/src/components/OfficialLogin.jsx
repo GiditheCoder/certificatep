@@ -48,9 +48,6 @@ const OfficialLogin = () => {
       if (res.data.success) {
         const { token, admin } = res.data.data;
 
-        console.log("✅ Admin object received:", admin);
-        console.log("✅ Role:", admin.role);
-
         // Save token and admin info
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(admin));
@@ -72,8 +69,6 @@ const OfficialLogin = () => {
         }, 1000);
       }
     } catch (error) {
-      console.error("Login Error:", error.response?.data || error.message);
-
       const errorMsg =
         error.response?.data?.message || "Login failed. Please try again.";
 

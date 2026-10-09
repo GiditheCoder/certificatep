@@ -34,7 +34,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    console.log(storedUser)
     const token = localStorage.getItem("token");
  
 
@@ -45,8 +44,6 @@ const Dashboard = () => {
 
     const parsedUser = JSON.parse(storedUser);
     updateUser(parsedUser);
-
-     console.log("📧 Logged in user's email:", parsedUser?.email);
 
     const fetchApplications = async () => {
       try {
@@ -102,8 +99,6 @@ const Dashboard = () => {
 const pendingApps = applications.filter(
   (a) => a.status === "pending" || a.status === "rejected" || a.status === "pending_payment"
 );
-console.log("🟡 Pending Applications:", pendingApps);
-
 const approvedApps = applications.filter((a) => a.status === "approved");
 
 
@@ -358,7 +353,6 @@ const approvedApps = applications.filter((a) => a.status === "approved");
               className="flex items-center gap-2 bg-[#11860F] text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
               onClick={async () => {
                 try {
-                  console.log("📄 Downloading certificate for application ID:", app._id);
                   const token = localStorage.getItem("token");
                   const response = await axios.get(
                     `${baseURL}/api/v1/certificate/${app._id}`,
@@ -447,4 +441,3 @@ const approvedApps = applications.filter((a) => a.status === "approved");
 };
 
 export default Dashboard;
-

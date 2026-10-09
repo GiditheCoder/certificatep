@@ -28,6 +28,7 @@ const OfficialScreen = () => {
   const [approved, setApproved] = useState([]);
   const [rejected, setRejected] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -40,7 +41,6 @@ const OfficialScreen = () => {
 
   const navigate = useNavigate();
   const Admin = JSON.parse(localStorage.getItem("user"));
-  console.log("Admin Info:", Admin);
 
 
   useEffect(() => {
@@ -64,15 +64,11 @@ const OfficialScreen = () => {
           res?.data ??
           [];
 
-        const approvedData = normalize(approvedRes);
-        console.log("✅ Approved Applications:", approvedData);
-        console.log("✅ Pending Applications:", normalize(pendingRes));
-
         setPending(normalize(pendingRes));
         setApproved(normalize(approvedRes));
         setRejected(normalize(rejectedRes));
-      } catch (error) {
-        console.error("❌ Error fetching applications:", error);
+      } catch {
+        setFetchError("Unable to load applications. Please refresh and try again.");
       } finally {
         setLoading(false);
       }
@@ -183,6 +179,7 @@ const OfficialScreen = () => {
       {/* Title */}
       <h1 className="text-2xl font-bold mb-4">Approval Dashboard</h1>
       <p className="mb-6 font-medium text-gray-600">Review and manage applications</p>
+      {fetchError && <p role="alert" className="mb-4 text-red-600">{fetchError}</p>}
 
 
 

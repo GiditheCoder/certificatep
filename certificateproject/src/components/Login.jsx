@@ -74,7 +74,6 @@ const handleSignIn = async (e) => {
       localStorage.setItem("user", JSON.stringify(userObj));
 
       setMessage(res.data.message || "Login successful!");
-      console.log("✅ Response:", res.data);
 
       // ✅ Redirect after short delay
       setTimeout(() => {
