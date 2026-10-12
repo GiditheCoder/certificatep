@@ -9,7 +9,8 @@ import { useSearchParams } from "react-router-dom";
 import StateLogo from "../images/StateLogo.png";
 import MenuLogo from "../images/menu.png";
 import CloseLogo from "../images/close.png";
-import CoatofArms from "../images/coatofarms.jpeg";
+import Borderside from "../images/border.png";
+import QRCode from "react-qr-code";
 
 const VerifyCertificate = () => {
   const [inputCode, setInputCode] = useState("");
@@ -254,17 +255,23 @@ const VerifyCertificate = () => {
       currentAddress: address,
       lga,
       lgaOfResident,
-      email,
       stateOfOrigin,
       passport: image,
-      updatedAt: approvedDate,
       _id: certificateId,
     } = app;
 
     const effectiveLga = stateOfOrigin?.toLowerCase() === "ogun" ? lga : lgaOfResident;
+    const nativeTown = app.nativeTown || app.town || "N/A";
+    const nativePoliticalWard = app.nativePoliticalWard || "N/A";
+    const lgaName = (effectiveLga?.trim() || "Abeokuta South")
+      .split(/\s+/)
+      .map((word) => word.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()))
+      .join(" ");
+    const verificationHash = cert.certificateHash || cert.hash || certificateId;
+    const certificateDate = "8th day of October, 2026";
 
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-[#edf3ef] text-[#19221d] flex flex-col">
         {isSmallScreen && (
           <div className="fixed inset-0 z-50 bg-transparent bg-opacity-70 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg p-6 max-w-sm text-center shadow-lg">
@@ -283,16 +290,19 @@ const VerifyCertificate = () => {
         )}
 
         {/* HEADER */}
-        <header className="flex justify-between items-center border-b border-gray-200 w-full px-4 sm:px-6 py-3 fixed top-0 left-0 bg-white z-50">
+        <header className="flex justify-between items-center border-b border-[#d5e1d8] w-full px-4 sm:px-8 py-3 fixed top-0 left-0 bg-[#f8fbf8]/95 backdrop-blur z-50">
           <div className="flex items-center gap-2 sm:gap-3">
-            <img src={StateLogo} alt="State Logo" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full" />
-            <span className="text-sm sm:text-lg font-semibold text-[#475467]">Ogun State Government</span>
+            <img src={StateLogo} alt="Ogun State logo" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full" />
+            <div>
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#55705c]">Digital certificate</p>
+              <p className="text-sm sm:text-base font-bold text-[#1d3023]">Ogun State Government</p>
+            </div>
           </div>
 
           <div className="hidden sm:flex items-center gap-4 text-sm">
             <div className="text-right leading-tight">
-              <p className="font-semibold text-gray-800">Verified Certificate</p>
-              <p className="text-gray-400 font-medium text-xs">Public Verification</p>
+              <p className="font-semibold text-[#1d3023]">Verified Certificate</p>
+              <p className="text-[#718078] font-medium text-xs">Public Verification</p>
             </div>
           </div>
 
@@ -303,194 +313,149 @@ const VerifyCertificate = () => {
 
         {/* MOBILE MENU */}
         {menuOpen && (
-          <div className="sm:hidden absolute top-14 right-4 bg-white shadow-lg border rounded-md p-4 z-50 w-64">
+          <div className="sm:hidden absolute top-14 right-4 bg-white shadow-lg border border-[#d5e1d8] rounded-md p-4 z-50 w-64">
             <div className="flex justify-between items-center mb-4">
               <p className="font-semibold">Verification Info</p>
               <img src={CloseLogo} alt="Close" className="w-5 h-5 cursor-pointer" onClick={() => setMenuOpen(false)} />
             </div>
             <div className="text-sm">
-              <p className="font-semibold text-gray-800">Verified Certificate</p>
-              <p className="text-gray-400 text-xs">Public Verification</p>
+              <p className="font-semibold text-[#1d3023]">Verified Certificate</p>
+              <p className="text-[#718078] text-xs">Public Verification</p>
             </div>
           </div>
         )}
 
         {/* MAIN CERTIFICATE */}
-        <main className="flex flex-col items-center flex-grow mt-24 px-2 sm:px-4 pb-8">
+        <main className="flex flex-col items-center flex-grow mt-24 px-3 sm:px-6 pb-10">
+          <div className="w-full max-w-5xl my-4">
+            <div className="flex items-center justify-center gap-2 rounded-md border border-green-600 bg-green-50 px-4 py-2 text-center text-sm font-semibold text-green-800 sm:text-base">
+              <ShieldCheck className="h-5 w-5" />
+              This certificate is publicly verified and authentic.
+            </div>
+          </div>
 
-          <div className="w-full max-w-4xl my-4">
-  <div className="bg-green-50 border border-green-600 text-green-800 px-4 py-2 rounded-md text-center font-semibold text-sm sm:text-base flex items-center justify-center gap-2">
-    <ShieldCheck className="w-5 h-5" />
-    This certificate is publicly verified and authentic.
-  </div>
-</div>
+          <div className="relative w-full max-w-5xl" ref={certRef}>
+            <div className="relative border-[3px] border-[#11860f] bg-white p-1 shadow-[0_18px_50px_rgba(28,61,38,0.14)]">
+              <div className="relative overflow-hidden p-5 sm:p-9 md:p-12">
+                <img
+                  src={Borderside}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -left-5 -top-8 z-0 h-32 w-24 rotate-90 object-contain sm:-left-7 sm:-top-10 sm:h-44 sm:w-32 md:h-52 md:w-36"
+                />
+                <img
+                  src={Borderside}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-5 -top-8 z-0 h-32 w-24 rotate-180 object-contain sm:-right-7 sm:-top-10 sm:h-44 sm:w-32 md:h-52 md:w-36"
+                />
+                <img
+                  src={Borderside}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -bottom-8 -left-5 z-0 h-32 w-24 object-contain sm:-bottom-10 sm:-left-7 sm:h-44 sm:w-32 md:h-52 md:w-36"
+                />
+                <img
+                  src={Borderside}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -bottom-8 -right-5 z-0 h-32 w-24 rotate-[270deg] object-contain sm:-bottom-10 sm:-right-7 sm:h-44 sm:w-32 md:h-52 md:w-36"
+                />
 
-          <div className="relative w-full max-w-4xl overflow-hidden m-0 p-0" ref={certRef}>
-            {/* Outer Border */}
-            <div className="bg-gradient-to-br from-yellow-600 via-yellow-500 to-yellow-600 p-3 rounded-lg shadow-2xl">
-              {/* Inner Border */}
-              <div className="bg-gradient-to-br from-emerald-700 to-emerald-600 p-6 rounded-lg">
-                {/* Certificate Body */}
-                <div className="bg-gradient-to-br from-amber-50 via-cream-100 to-amber-100 p-8 rounded-lg relative overflow-hidden">
-                  
-                  {/* Watermark */}
-                  <div className="absolute inset-0 opacity-10 flex items-center justify-center">
-                    <img
-                      src={CoatofArms}
-                      alt="Coat of Arms Watermark"
-                      className="w-[60%] object-contain"
-                    />
-                  </div>
-
-                  {/* Header */}
-                  <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 sm:gap-0">
-                    {/* Logo Badge */}
-                    <div className="inline-block bg-gradient-to-br from-emerald-700 to-emerald-600 rounded-full p-1 mb-2 sm:mb-0">
-                      <div className="bg-white rounded-full w-20 sm:w-24 h-20 sm:h-24 flex items-center justify-center border-4 border-emerald-600">
-                        <img src={StateLogo} alt="State Logo" className="w-16 sm:w-20 h-16 sm:h-20 object-contain" />
+                <div className="relative z-10">
+                  <div className="flex flex-col items-center pb-5 text-center">
+                    <img src={StateLogo} alt="Ogun State seal" className="h-20 w-20 shrink-0 object-contain sm:h-24 sm:w-24" />
+                    <h1 className="mt-2 w-full text-center text-[clamp(1.05rem,4vw,2rem)] font-black uppercase tracking-[0.03em] leading-tight text-[#111111]">
+                      {lgaName} Local Government
+                    </h1>
+                    <p className="mt-1 text-[9px] font-bold uppercase tracking-wide text-[#26332a] sm:text-xs">
+                      Owode Egba, Ogun State, Nigeria
+                    </p>
+                    <p className="mt-2 text-[9px] font-bold uppercase text-red-600 sm:text-[10px]">
+                      Office of the Chairman
+                    </p>
+                    <div className="mt-3 flex w-full max-w-lg items-center justify-between gap-20 px-4 sm:gap-32">
+                      <div className="h-24 w-20 shrink-0 border border-[#9cb99f] bg-[#f7faf7] p-1 sm:h-32 sm:w-28">
+                        {image ? (
+                          <img
+                            src={image.startsWith("http") ? image : `${window.location.origin}/${image}`}
+                            className="h-full w-full object-cover"
+                            alt="Applicant"
+                            onError={(event) => {
+                              event.currentTarget.onerror = null;
+                              event.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f3f4f6' width='100' height='100'/%3E%3Ctext x='50' y='50' text-anchor='middle' fill='%239ca3af' font-size='12'%3ENo Photo%3C/text%3E%3C/svg%3E";
+                            }}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xs text-gray-400">
+                            No Photo
+                          </div>
+                        )}
+                      </div>
+                      <div className="shrink-0 rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
+                        <QRCode
+                          value={`${window.location.origin}/cert-validation?hash=${encodeURIComponent(verificationHash || "certificate")}`}
+                          size={84}
+                        />
                       </div>
                     </div>
-
-                    {/* Center Text */}
-                    <div className="flex flex-col items-center text-center flex-1 px-2">
-                      <h1 className="text-xl sm:text-3xl font-bold text-gray-800 mb-1">
-                        OGUN STATE GOVERNMENT
-                      </h1>
-                      <h2 className="text-sm sm:text-xl font-semibold text-gray-700">
-                        Local Government Authority
-                      </h2>
-                    </div>
-
-                    {/* Passport Photo */}
-                    <div className="border-4 border-gray-300 bg-white p-1 w-20 sm:w-32 h-20 sm:h-32 shrink-0 mt-2 sm:mt-0">
-                      {image ? (
-                        <img
-                          src={image.startsWith("http") ? image : `${window.location.origin}/${image}`}
-                          className="w-full h-full object-cover"
-                          alt="Applicant"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src =
-                              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f3f4f6' width='100' height='100'/%3E%3Ctext x='50' y='50' text-anchor='middle' fill='%239ca3af' font-size='12'%3ENo Photo%3C/text%3E%3C/svg%3E";
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-xs">
-                          No Photo
-                        </div>
-                      )}
-                    </div>
                   </div>
 
-                  {/* Title */}
-                  <h3
-                    className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif text-center mb-8 text-amber-700"
-                    style={{ fontFamily: "Georgia, serif" }}
-                  >
-                    Certificate Of {stateOfOrigin?.toLowerCase() === "ogun" ? "Origin" : "Residency"}
-                  </h3>
-
-                  {/* Certificate Body Text */}
-                  <div className="text-left space-y-4 ml-5 text-gray-800 text-lg leading-relaxed">
-                    <p className="font-medium">
-                      This is to certify that from enquiry made,
-                      <span className="font-bold border-b-2 border-gray-400 inline-block min-w-[200px] ml-2">
-                        {name}
-                      </span>
-                    </p>
-
-                    <p className="font-medium">
-                      of
-                      <span className="font-bold border-b-2 border-gray-400 inline-block min-w-[300px] gap-2 ml-2 mb-3">
-                        {address}
-                      </span>
-                    </p>
-
-                    <p className="font-medium">
-                      is a native of
-                      <span className="font-bold border-b-2 border-gray-400 inline-block min-w-[150px] gap-2 ml-2 mb-3">
-                        {lga} (lga)
-                      </span>
-                      of
-                      <span className="font-bold border-b-2 border-gray-400 inline-block min-w-[150px] gap-2 ml-2 mb-3">
-                        {stateOfOrigin}
-                      </span>
-                      State, Nigeria.
-                    </p>
-
-                    {stateOfOrigin?.toLowerCase() === "ogun" && (
-                      <p className="font-medium">
-                        Ancestral, historical and administrative records verified by the local government attested to this fact.
-                      </p>
-                    )}
+                  <div className="py-4 text-center sm:py-5">
+                    <h2 className="text-2xl font-serif text-red-600 sm:text-4xl">Certificate of Origin</h2>
                   </div>
 
-                  {/* Attestation */}
-                  <div className="text-left mb-12 ml-5 text-gray-800 text-lg">
-                    <p className="font-medium">
-                      This certificate of {stateOfOrigin?.toLowerCase() === "ogun" ? "origin" : "residency"} is attested under my hand and the
-                      public seal of
-                      <span className="font-bold mx-1 underline">{effectiveLga}</span>
-                      on
-                      <span className="font-bold mx-1 underline">
-                        {new Date(approvedDate).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </span>.
+                  <div className="space-y-2 text-center text-sm font-medium leading-6 text-[#19221d] sm:text-base sm:leading-7">
+                    <p>This is to certify that from enquiry made</p>
+                    <p className="text-base font-bold sm:text-xl">{name || "N/A"},</p>
+                    <p>whose photograph passport is affixed above and who resides at</p>
+                    <p className="font-bold underline">{address || "N/A"}</p>
+                    <p>
+                      is a native of <strong className="underline">{nativeTown}</strong> within{" "}
+                      <strong className="underline">Polling Unit 20</strong> of{" "}
+                      <strong className="underline">{nativePoliticalWard}</strong> of
+                    </p>
+                    <p>
+                      {lgaName} Local Government Area of Ogun State, Nigeria. Ancestral, Historical and
+                      Administrative records verified by the Local Government attested to this fact.
+                    </p>
+                    <p className="pt-3">
+                      This Certificate of Origin is issued today under my hand and the public seal of{" "}
+                      {lgaName} Local Government at Owode this day {certificateDate}.
                     </p>
                   </div>
 
-                  {/* Signatures */}
-                  <div className="flex justify-between items-end gap-10 px-4 md:px-12 mb-8">
-                    {/* Secretary */}
-                    <div className="flex-1 text-center">
+                  <div className="mt-10 mb-8 flex flex-col items-end justify-between gap-8 px-2 sm:mt-12 sm:mb-10 sm:flex-row sm:px-8">
+                    <div className="w-full flex-1 text-center sm:min-w-0">
                       {signatory?.secretarySignature && (
                         <img
-                          src={signatory?.secretarySignature}
-                          className="w-24 h-14 md:w-28 md:h-16 mx-auto mb-2 object-contain"
+                          src={signatory.secretarySignature}
+                          className="mx-auto mb-2 h-16 w-28 object-contain md:w-32"
                           alt="Secretary Signature"
                         />
                       )}
-                      <div className="border-t-2 border-gray-400 pt-2">
-                         
-                        <div className="font-bold text-base md:text-lg">{signatory?.secretaryName}</div>
-                         <h1 className="font-semibold"> Secretary</h1>
-                        <div className="text-gray-600 font-semibold text-sm md:text-base">
-                          {effectiveLga} (lga)
-                        </div>
+                      <div className="border-t border-[#26332a] pt-2">
+                        <div className="text-sm font-bold md:text-base">{signatory?.secretaryName}</div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[#55705c]">
+                          Secretary to the Local Government
+                        </p>
                       </div>
                     </div>
-
-                    {/* Chairman */}
-                    <div className="flex-1 text-center">
+                    <div className="w-full flex-1 text-center sm:min-w-0">
                       {signatory?.chairmanSignature && (
                         <img
-                          src={signatory?.chairmanSignature}
-                          className="w-24 h-14 md:w-28 md:h-16 mx-auto mb-2 object-contain"
+                          src={signatory.chairmanSignature}
+                          className="mx-auto mb-2 h-16 w-28 object-contain md:w-32"
                           alt="Chairman Signature"
                         />
                       )}
-                      <div className="border-t-2 border-gray-400 pt-2">
-                        <div className="font-bold text-base md:text-lg">{signatory?.chairmanName}</div>
-                         <h1 className="font-semibold"> Chairman</h1>
-                        <div className="text-gray-600 font-semibold text-sm md:text-base">
-                          {effectiveLga} (lga)
-                        </div>
+                      <div className="border-t border-[#26332a] pt-2">
+                        <div className="text-sm font-bold md:text-base">{signatory?.chairmanName}</div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[#55705c]">
+                          Executive Chairman
+                        </p>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="text-center text-sm font-semibold text-gray-700 space-y-1">
-                    <p>Email: {email || cert?.user?.email || "N/A"}</p>
-                    <p>Certificate ID: {certificateId}</p>
-                  </div>
-
-                  {/* Decorative Element */}
-                  <div className="flex justify-center mt-6">
-                    <div className="text-amber-600 text-4xl">⚜ ❦ ⚜</div>
                   </div>
                 </div>
               </div>
@@ -501,7 +466,7 @@ const VerifyCertificate = () => {
           <div className="flex flex-col sm:flex-row gap-3 mt-6 w-full sm:w-auto justify-center px-4">
             <button
               onClick={downloadPDF}
-              className="bg-[#11860F] font-semibold text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-md hover:bg-[#0a5608] transition text-sm sm:text-base w-full sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#11860f] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0a5608] sm:w-auto sm:text-base"
             >
               Download Certificate
             </button>
@@ -511,7 +476,7 @@ const VerifyCertificate = () => {
           <div className="mt-4 mb-4">
             <button
               onClick={() => window.history.back()}
-              className="text-[#11860F] font-semibold hover:underline text-sm"
+              className="rounded-lg border border-[#11860f] bg-white px-5 py-3 text-sm font-semibold text-[#11860f] transition hover:bg-[#f1f8f2]"
             >
               &larr; Back
             </button>
@@ -533,40 +498,58 @@ const VerifyCertificate = () => {
 
   // Default: verification input view
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 px-4">
-      <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
-          <ShieldCheck className="text-[#11860F]" />
-          Verify Certificate
-        </h2>
-
-        <div className="mt-6 text-left">
-          <input
-            type="text"
-            value={inputCode}
-            onChange={(e) => setInputCode(e.target.value)}
-            placeholder="Enter verification code here"
-            className="w-full border font-semibold border-gray-300 rounded-md px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-green-700"
-          />
-
-          <button
-            onClick={handleVerifyCertificate}
-            disabled={loading}
-            className={`w-full bg-green-800 text-white py-3 rounded font-semibold hover:bg-green-900 transition ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
-          >
-            {loading ? "Verifying..." : "Verify Certificate"}
-          </button>
+    <div className="flex min-h-screen flex-col bg-[#edf3ef] text-[#19221d]">
+      <header className="flex w-full items-center justify-between border-b border-[#d5e1d8] bg-[#f8fbf8]/95 px-4 py-3 backdrop-blur sm:px-8">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <img src={StateLogo} alt="Ogun State logo" className="h-8 w-8 rounded-full sm:h-10 sm:w-10" />
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#55705c] sm:text-xs">Digital certificate</p>
+            <p className="text-sm font-bold text-[#1d3023] sm:text-base">Ogun State Government</p>
+          </div>
         </div>
+      </header>
 
-        <button
-          onClick={() => window.history.back()}
-          className="mt-2 mb-1 text-gray-500 font-medium hover:text-[#11860F] text-sm"
-        >
-          ← Go Back
-        </button>
-      </div>
+      <main className="flex flex-1 flex-col items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md border-[3px] border-[#11860f] bg-white p-1 shadow-[0_18px_50px_rgba(28,61,38,0.14)]">
+          <div className="p-6 text-center sm:p-8">
+            <img src={StateLogo} alt="" aria-hidden="true" className="mx-auto h-20 w-20 object-contain" />
+            <h2 className="mt-4 flex items-center justify-center gap-2 text-2xl font-bold text-[#1d3023]">
+              <ShieldCheck className="text-[#11860f]" />
+              Verify Certificate
+            </h2>
+            <p className="mt-2 text-sm text-[#55705c]">
+              Enter the certificate verification code to check its authenticity.
+            </p>
+
+            <div className="mt-6 text-left">
+              <input
+                type="text"
+                value={inputCode}
+                onChange={(e) => setInputCode(e.target.value)}
+                placeholder="Enter verification code here"
+                className="mb-3 w-full rounded-md border border-[#9cb99f] px-3 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-[#11860f]"
+              />
+
+              <button
+                onClick={handleVerifyCertificate}
+                disabled={loading}
+                className={`w-full rounded-lg bg-[#11860f] py-3 font-semibold text-white transition hover:bg-[#0a5608] ${
+                  loading ? "cursor-not-allowed opacity-70" : ""
+                }`}
+              >
+                {loading ? "Verifying..." : "Verify Certificate"}
+              </button>
+            </div>
+
+            <button
+              onClick={() => window.history.back()}
+              className="mt-4 text-sm font-medium text-[#55705c] hover:text-[#11860f]"
+            >
+              &larr; Go Back
+            </button>
+          </div>
+        </div>
+      </main>
 
       <ToastContainer position="top-center" autoClose={3000} theme="colored" />
     </div>

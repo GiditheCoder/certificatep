@@ -7,13 +7,15 @@ import StateLogo from "../images/StateLogo.png";
 import MenuLogo from "../images/menu.png";
 import CloseLogo from "../images/close.png";
 import Borderside from "../images/border.png";
-import Seal from "../images/seal.png";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ArrowLeft, Download, ShieldCheck } from "lucide-react";
 
 const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
+const certificateDate = "8th day of October, 2026";
+const pollingUnit = "Polling Unit 20";
+const organizationLocation = "Owode Egba, Ogun State, Nigeria";
 
 const pdfStyles = StyleSheet.create({
   page: {
@@ -38,166 +40,86 @@ const pdfStyles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    minHeight: 102,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
   },
   applicantBlock: {
     alignItems: "center",
-    width: 100,
-    marginTop: 14,
-    marginLeft: 10,
+    width: "100%",
+    marginTop: 8,
+  },
+  applicantImages: {
+    width: 320,
+    marginTop: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    columnGap: 48,
+    alignItems: "center",
   },
   applicantPhoto: {
-    width: 86,
-    height: 98,
+    width: 76,
+    height: 88,
     padding: 4,
     borderWidth: 1,
     borderColor: "#9cb99f",
     objectFit: "cover",
   },
   officeCaption: {
-    marginTop: 6,
-    fontSize: 7,
+    marginTop: 4,
+    color: "#b21e1e",
+    fontSize: 8,
     fontFamily: "Helvetica-Bold",
     textAlign: "center",
   },
   organization: {
     marginTop: 4,
-    marginBottom: 17,
-    color: "#11860f",
-    fontSize: 21,
+    color: "#111111",
+    fontSize: 16,
     lineHeight: 1.2,
     fontFamily: "Helvetica-Bold",
     textAlign: "center",
     textTransform: "uppercase",
   },
-  details: {
-    minHeight: 76,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  addressBlock: {
-    width: 190,
-    fontSize: 8,
-    lineHeight: 1.45,
-    fontFamily: "Helvetica-Bold",
-  },
-  reference: {
-    marginTop: 7,
+  organizationLocation: {
+    marginTop: 2,
     fontSize: 8,
     fontFamily: "Helvetica-Bold",
+    textAlign: "center",
   },
   qrCode: {
-    width: 68,
-    height: 68,
-  },
-  certificateNumbers: {
-    width: 150,
-    alignItems: "flex-end",
-    fontSize: 8,
-    lineHeight: 1.6,
-    fontFamily: "Helvetica-Bold",
+    width: 76,
+    height: 76,
   },
   certificateType: {
-    marginTop: 18,
-    color: "#b21e1e",
-    fontSize: 27,
+    marginTop: 12,
+    color: "#ff0000",
+    fontSize: 25,
     textAlign: "center",
     fontFamily: "Times-Roman",
   },
-  subtitle: {
-    marginTop: 10,
-    color: "#6f2419",
-    fontSize: 9,
-    letterSpacing: 2.5,
-    textAlign: "center",
-    fontFamily: "Helvetica-Bold",
-  },
-  fullField: {
-    alignItems: "stretch",
-  },
-  nameField: {
-    marginTop: 28,
-  },
-  explanatoryText: {
-    marginTop: 18,
-    fontSize: 11,
-    lineHeight: 1.5,
-    color: "#718078",
-    textAlign: "center",
-  },
-  addressField: {
+  body: {
     marginTop: 16,
+    alignItems: "center",
   },
-  confirmationText: {
-    marginTop: 17,
-    fontSize: 11,
+  bodyText: {
+    marginTop: 4,
+    fontSize: 10,
+    fontWeight: 500,
     lineHeight: 1.5,
-    color: "#718078",
     textAlign: "center",
   },
-  fullFieldText: {
-    fontSize: 15,
-    lineHeight: 1.35,
+  emphasizedText: {
     fontFamily: "Helvetica-Bold",
-    textAlign: "center",
-    textTransform: "uppercase",
   },
-  fullFieldUnderline: {
-    marginTop: 7,
-    borderBottomWidth: 1,
-    borderBottomColor: "#26332a",
-  },
-  inlineFields: {
-    marginTop: 18,
-    flexDirection: "row",
-    alignItems: "flex-end",
-  },
-  inlineLabel: {
-    marginRight: 8,
+  issuanceText: {
+    marginTop: 14,
     fontSize: 10,
-  },
-  inlineField: {
-    flex: 1,
-    minHeight: 27,
-    marginRight: 10,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#26332a",
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  inlineValue: {
-    fontSize: 14,
-    fontFamily: "Helvetica-Bold",
+    fontWeight: 500,
+    lineHeight: 1.5,
     textAlign: "center",
-    textTransform: "uppercase",
-  },
-  purposeRow: {
-    marginTop: 17,
-    flexDirection: "row",
-    alignItems: "flex-end",
-  },
-  purposeLabel: {
-    marginRight: 8,
-    marginBottom: 6,
-    fontSize: 10,
-  },
-  purposeField: {
-    flex: 1,
-    minHeight: 27,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#26332a",
-    alignItems: "center",
-    justifyContent: "flex-end",
   },
   signatures: {
     marginTop: "auto",
-    paddingTop: 32,
+    paddingTop: 22,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
@@ -231,13 +153,8 @@ const pdfStyles = StyleSheet.create({
     textTransform: "uppercase",
   },
   stateSeal: {
-    width: 62,
-    height: 62,
-    objectFit: "contain",
-  },
-  certificateSeal: {
-    width: 62,
-    height: 62,
+    width: 68,
+    height: 68,
     objectFit: "contain",
   },
 });
@@ -251,16 +168,12 @@ const resolveImageSource = (source) => {
 const CertificatePdf = ({
   certificate,
   signatory,
-  certificateHash,
   qrCode,
   applicantImage,
-  formattedDate,
-  birthDate,
-  certificateType,
   organizationName,
-  secretariatName,
   lgaName,
-  referencePrefix,
+  nativeTown,
+  nativePoliticalWard,
 }) => (
   <Document>
     <Page size="A4" style={pdfStyles.page}>
@@ -271,7 +184,12 @@ const CertificatePdf = ({
         <Image src={Borderside} style={{ ...pdfStyles.corner, bottom: -9, right: -9, transform: "rotate(270deg)" }} />
         <View style={pdfStyles.content}>
           <View style={pdfStyles.header}>
+            <Image src={StateLogo} style={pdfStyles.stateSeal} />
+            <Text style={pdfStyles.organization}>{organizationName}</Text>
+            <Text style={pdfStyles.organizationLocation}>{organizationLocation.toUpperCase()}</Text>
             <View style={pdfStyles.applicantBlock}>
+              <Text style={pdfStyles.officeCaption}>OFFICE OF THE CHAIRMAN</Text>
+              <View style={pdfStyles.applicantImages}>
               {applicantImage ? (
                 <Image src={applicantImage} style={pdfStyles.applicantPhoto} />
               ) : (
@@ -279,57 +197,33 @@ const CertificatePdf = ({
                   <Text style={{ fontSize: 8, color: "#718078" }}>No Photo</Text>
                 </View>
               )}
-              <Text style={pdfStyles.officeCaption}>OFFICE OF THE CHAIRMAN</Text>
-            </View>
-            <Image src={StateLogo} style={pdfStyles.stateSeal} />
-          </View>
-
-          <Text style={pdfStyles.organization}>{organizationName}</Text>
-
-          <View style={pdfStyles.details}>
-            <View style={pdfStyles.addressBlock}>
-              <Text>SECRETARIAT:</Text>
-              <Text>{secretariatName}, P.M.B 2036</Text>
-              <Text>{lgaName}, Ogun State Nigeria</Text>
-              <Text style={pdfStyles.reference}>REF NO: {referencePrefix}/CHM/VOL.1</Text>
-            </View>
-            <Image src={qrCode} style={pdfStyles.qrCode} />
-            <View style={pdfStyles.certificateNumbers}>
-              <Text>NO: {certificate?._id || "N/A"}</Text>
-              <Text>Date: {formattedDate}</Text>
+                <Image src={qrCode} style={pdfStyles.qrCode} />
+              </View>
             </View>
           </View>
 
-          <Text style={pdfStyles.certificateType}>{certificateType}</Text>
-          <Text style={pdfStyles.subtitle}>TO WHOM IT MAY CONCERN</Text>
+          <Text style={pdfStyles.certificateType}>Certificate of Origin</Text>
 
-          <View style={[pdfStyles.fullField, pdfStyles.nameField]}>
-            <Text style={pdfStyles.fullFieldText}>{certificate?.fullNames || "N/A"}</Text>
-            <View style={pdfStyles.fullFieldUnderline} />
-          </View>
-          <Text style={pdfStyles.explanatoryText}>We confirm that the above name person living at</Text>
-          <View style={[pdfStyles.fullField, pdfStyles.addressField]}>
-            <Text style={pdfStyles.fullFieldText}>{certificate?.currentAddress || "N/A"}</Text>
-            <View style={pdfStyles.fullFieldUnderline} />
-          </View>
-          <Text style={pdfStyles.confirmationText}>is a bonafide Indigene/Resident of Ogun State being</Text>
-
-          <View style={pdfStyles.inlineFields}>
-            <Text style={pdfStyles.inlineLabel}>Born in</Text>
-            <View style={pdfStyles.inlineField}>
-              <Text style={pdfStyles.inlineValue}>{certificate?.stateOfOrigin || "N/A"}</Text>
-            </View>
-            <Text style={pdfStyles.inlineLabel}>On</Text>
-            <View style={[pdfStyles.inlineField, { marginRight: 0 }]}>
-              <Text style={pdfStyles.inlineValue}>{birthDate}</Text>
-            </View>
-          </View>
-
-          <View style={pdfStyles.purposeRow}>
-            <Text style={pdfStyles.purposeLabel}>Purpose</Text>
-            <View style={pdfStyles.purposeField}>
-              <Text style={pdfStyles.inlineValue}>{certificate?.purpose || "IDENTIFICATION"}</Text>
-            </View>
+          <View style={pdfStyles.body}>
+            <Text style={pdfStyles.bodyText}>This is to certify that from enquiry made</Text>
+            <Text style={[pdfStyles.bodyText, pdfStyles.emphasizedText]}>{certificate?.fullNames || "N/A"},</Text>
+            <Text style={pdfStyles.bodyText}>whose photograph passport is affixed above and who resides at</Text>
+            <Text style={[pdfStyles.bodyText, pdfStyles.emphasizedText]}>{certificate?.currentAddress || "N/A"}</Text>
+            <Text style={pdfStyles.bodyText}>
+              is a native of <Text style={pdfStyles.emphasizedText}>{nativeTown || "N/A"}</Text> within{" "}
+              <Text style={pdfStyles.emphasizedText}>{pollingUnit}</Text> of{" "}
+              <Text style={pdfStyles.emphasizedText}>{nativePoliticalWard || "N/A"}</Text> of
+            </Text>
+            <Text style={pdfStyles.bodyText}>
+              {lgaName} Local Government Area of Ogun State, Nigeria.
+            </Text>
+            <Text style={pdfStyles.bodyText}>
+              Ancestral, Historical and Administrative records verified by the Local Government attested to this fact.
+            </Text>
+            <Text style={pdfStyles.issuanceText}>
+              This Certificate of Origin is issued today under my hand and the public seal of {lgaName} Local Government
+              at Owode this day {certificateDate}.
+            </Text>
           </View>
 
           <View style={pdfStyles.signatures}>
@@ -341,7 +235,6 @@ const CertificatePdf = ({
               <Text style={pdfStyles.signatoryName}>{signatory?.secretaryName || ""}</Text>
               <Text style={pdfStyles.signatoryTitle}>Secretary to the Local Government</Text>
             </View>
-            <Image src={Seal} style={pdfStyles.certificateSeal} />
             <View style={pdfStyles.signatory}>
               {signatory?.chairmanSignature && (
                 <Image src={resolveImageSource(signatory.chairmanSignature)} style={pdfStyles.signatureImage} />
@@ -600,28 +493,12 @@ const downloadPDF = async () => {
       <CertificatePdf
         certificate={certificate}
         signatory={signatory}
-        certificateHash={verificationHash}
         qrCode={qrCode}
         applicantImage={resolveImageSource(certificate?.passport)}
-        formattedDate={approvedDate
-          ? new Date(approvedDate).toLocaleDateString("en-GB", {
-              year: "2-digit",
-              month: "2-digit",
-              day: "2-digit",
-            })
-          : "N/A"}
-        birthDate={birthDateValue
-          ? new Date(birthDateValue).toLocaleDateString("en-GB", {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-            })
-          : "N/A"}
-        certificateType={certificateType}
         organizationName={organizationName}
-        secretariatName={secretariatName}
         lgaName={lgaName}
-        referencePrefix={referencePrefix}
+        nativeTown={nativeTown}
+        nativePoliticalWard={certificate?.nativePoliticalWard}
       />
     );
     const blob = await document.toBlob();
@@ -671,52 +548,15 @@ const downloadPDF = async () => {
   const {
     fullNames: name,
     currentAddress: address,
-    lga,
-    lgaOfResident,
-    town: nativeTown,
-    email,
-    stateOfOrigin,
     passport: image,
-    updatedAt: approvedDate,
-    _id: certificateId,
   } = certificate;
 
-  const isOriginCertificate = stateOfOrigin?.trim().toLowerCase() === "ogun";
-  const certificateType = isOriginCertificate
-    ? "Certificate of State of Origin"
-    : "Certificate of Residency";
+  const nativeTown = certificate?.nativeTown || certificate?.town || "N/A";
   const lgaWords = (effectiveLga?.trim() || "Abeokuta South").split(/\s+/);
   const lgaName = lgaWords
     .map((word) => word.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()))
     .join(" ");
   const organizationName = `${lgaName} Local Government`;
-  const secretariatName = `${lgaWords
-    .map((word) => word[0].toUpperCase())
-    .join(".")}.L.G. Secretariat`;
-  const lgaAbbreviation =
-    lgaWords.length === 1
-      ? lgaWords[0][0].toUpperCase()
-      : `${lgaWords[0].slice(0, 2).toUpperCase()}${lgaWords
-          .slice(1)
-          .map((word) => word[0].toUpperCase())
-          .join("")}`;
-  const referencePrefix = `${lgaAbbreviation}LG`;
-  const formattedDate = approvedDate
-    ? new Date(approvedDate).toLocaleDateString("en-GB", {
-        year: "2-digit",
-        month: "2-digit",
-        day: "2-digit",
-      })
-    : "N/A";
-  const birthDateValue = certificate?.dateOfBirth || certificate?.dob;
-  const birthDate = birthDateValue
-    ? new Date(birthDateValue).toLocaleDateString("en-GB", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      })
-    : "N/A";
-  const certificatePurpose = certificate?.purpose || "IDENTIFICATION";
 
   return (
     <div className="min-h-screen bg-[#edf3ef] text-[#19221d] flex flex-col">
@@ -789,13 +629,26 @@ const downloadPDF = async () => {
                 className="pointer-events-none absolute -bottom-8 -right-5 z-0 h-32 w-24 rotate-[270deg] object-contain sm:-bottom-10 sm:-right-7 sm:h-44 sm:w-32 md:h-52 md:w-36"
               />
               <div className="relative z-10">
-                <div className="pb-5">
-                  <div className="flex flex-row items-start justify-between gap-3 sm:gap-5">
-                  <div className="ml-6 mt-4 w-20 shrink-0 flex flex-col items-center text-center sm:ml-8 sm:mt-6 sm:w-28">
-                    <div className="border border-[#9cb99f] bg-[#f7faf7] p-1 w-20 h-24 sm:w-28 sm:h-32">
+                <div className="flex flex-col items-center pb-5 text-center">
+                  <img
+                    src={StateLogo}
+                    alt="Ogun State seal"
+                    className="h-20 w-20 shrink-0 object-contain sm:h-24 sm:w-24"
+                  />
+                  <h1 className="mt-2 w-full text-center text-[clamp(1.05rem,4vw,2rem)] font-black uppercase tracking-[0.03em] leading-tight text-[#111111]">
+                    {organizationName}
+                  </h1>
+                  <p className="mt-1 text-[9px] font-bold uppercase tracking-wide text-[#26332a] sm:text-xs">
+                    {organizationLocation}
+                  </p>
+                  <p className="mt-2 text-[9px] font-bold uppercase text-red-600 sm:text-[10px]">
+                    Office of the Chairman
+                  </p>
+                  <div className="mt-3 flex w-full max-w-lg items-center justify-between gap-20 px-4 sm:gap-32">
+                    <div className="h-24 w-20 shrink-0 border border-[#9cb99f] bg-[#f7faf7] p-1 sm:h-32 sm:w-28">
                       {image ? (
                         <img
-                          src={image.startsWith("http") ? image : `${window.location.origin}/${image}`}
+                          src={resolveImageSource(image)}
                           className="w-full h-full object-cover"
                           alt="Applicant"
                           onError={(e) => {
@@ -810,70 +663,40 @@ const downloadPDF = async () => {
                         </div>
                       )}
                     </div>
-                    <p className="mt-2 w-max self-center whitespace-nowrap text-center text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.08em] text-[#26392a]">Office of the Chairman</p>
-                  </div>
-                  <img
-                    src={StateLogo}
-                    alt="Ogun State seal"
-                    className="mr-4 mt-4 h-16 w-16 shrink-0 object-contain sm:mr-6 sm:mt-6 sm:h-20 sm:w-20"
-                  />
-                  </div>
-
-                  <h1 className="mt-5 w-full text-center text-[clamp(1.05rem,4vw,2.25rem)] font-black uppercase tracking-[0.03em] leading-tight text-[#11860f]">
-                    {organizationName}
-                  </h1>
-                </div>
-
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-4 py-4 text-[10px] sm:text-xs text-[#26332a] items-center">
-                  <div className="font-semibold">
-                    <p className="font-bold tracking-[0.16em]">SECRETARIAT:</p>
-                    <p>{secretariatName}, P.M.B 2036</p>
-                    <p>{lgaName}, Ogun State Nigeria</p>
-                    <p className="mt-3 font-bold tracking-[0.12em]">REF NO: {referencePrefix}/CHM/VOL.1</p>
-                  </div>
-
-                  <div className="flex justify-center">
-                    <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                    <div className="shrink-0 rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
                       <QRCode
-                        value={
-                          certificateHash
-                            ? `${window.location.origin}/cert-validation?hash=${encodeURIComponent(certificateHash)}`
-                            : "certificate"
-                        }
-                        size={90}
+                        value={`${window.location.origin}/cert-validation?hash=${encodeURIComponent(certificateHash || "certificate")}`}
+                        size={84}
                       />
                     </div>
                   </div>
-
-                  <div className="flex flex-col justify-between sm:text-right font-semibold">
-                    <p>NO: {certificateId || "N/A"}</p>
-                    <p>Date: <span className="border-b border-[#26332a] px-3">{formattedDate}</span></p>
-                  </div>
                 </div>
 
-                <div className="text-center py-7 sm:py-9">
-                  <h2 className="text-2xl sm:text-4xl md:text-5xl font-serif text-[#b21e1e]">{certificateType}</h2>
-                  <p className="mt-4 text-xs sm:text-sm font-bold tracking-[0.3em] text-[#6f2419]">TO WHOM IT MAY CONCERN</p>
+                <div className="py-4 text-center sm:py-5">
+                  <h2 className="text-2xl font-serif text-red-600 sm:text-4xl">Certificate of Origin</h2>
                 </div>
 
-                <div className="space-y-5 text-center text-sm sm:text-base leading-8 text-[#26332a]">
-                  <p className="text-lg sm:text-2xl md:text-3xl font-bold uppercase border-b-2 border-[#26332a] pb-1">{name || "N/A"}</p>
-                  <p>We confirm that the above name person living at</p>
-                  <p className="text-base sm:text-lg md:text-xl font-bold uppercase border-b-2 border-[#26332a] pb-1">{address || "N/A"}</p>
-                  <p>is a bonafide Indigene/Resident of Ogun State being</p>
-                  <p className="flex w-full items-center gap-2 text-left">
-                    <span className="shrink-0">Born in</span>
-                    <strong className="min-w-0 flex-1 border-b-2 border-[#26332a] px-2 text-center text-lg font-bold uppercase sm:text-xl md:text-2xl">{stateOfOrigin || "N/A"}</strong>
-                    <span className="shrink-0">On</span>
-                    <strong className="min-w-0 flex-1 border-b-2 border-[#26332a] px-2 text-center text-lg font-bold sm:text-xl md:text-2xl">{birthDate}</strong>
+                <div className="space-y-2 text-center text-sm font-medium leading-6 text-[#19221d] sm:text-base sm:leading-7">
+                  <p>This is to certify that from enquiry made</p>
+                  <p className="text-base font-bold sm:text-xl">{name || "N/A"},</p>
+                  <p>whose photograph passport is affixed above and who resides at</p>
+                  <p className="font-bold underline">{address || "N/A"}</p>
+                  <p>
+                    is a native of <strong className="underline">{nativeTown}</strong> within{" "}
+                    <strong className="underline">{pollingUnit}</strong> of{" "}
+                    <strong className="underline">{certificate?.nativePoliticalWard || "N/A"}</strong> of
                   </p>
-                  <p className="flex w-full items-center gap-2 text-left">
-                    <span className="shrink-0">Purpose</span>
-                    <strong className="min-w-0 flex-1 border-b-2 border-[#26332a] px-2 text-center text-lg font-bold uppercase sm:text-xl md:text-2xl">{certificatePurpose}</strong>
+                  <p>
+                    {lgaName} Local Government Area of Ogun State, Nigeria. Ancestral, Historical and
+                    Administrative records verified by the Local Government attested to this fact.
+                  </p>
+                  <p className="pt-3">
+                    This Certificate of Origin is issued today under my hand and the public seal of{" "}
+                    {lgaName} Local Government at Owode this day {certificateDate}.
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-between items-end gap-8 px-2 sm:px-8 mt-16 mb-10">
+                <div className="mt-10 mb-8 flex flex-col items-end justify-between gap-8 px-2 sm:mt-12 sm:mb-10 sm:flex-row sm:px-8">
   <div className="flex-1 text-center w-full sm:min-w-0">
     {signatory?.secretarySignature && (
       <img
@@ -886,10 +709,6 @@ const downloadPDF = async () => {
       <div className="font-bold text-sm md:text-base">{signatory?.secretaryName}</div>
         <p className="font-semibold text-xs uppercase tracking-wider text-[#55705c]">Secretary to the Local Government</p>
     </div>
-  </div>
-
-  <div className="order-last sm:order-none w-full sm:w-24 shrink-0 flex justify-center items-center pb-2">
-    <img src={Seal} alt="Certificate seal" className="w-20 h-20 sm:w-24 sm:h-24 object-contain" />
   </div>
 
   <div className="flex-1 text-center w-full sm:min-w-0">
