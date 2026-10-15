@@ -17,6 +17,8 @@ const ApproveApplications = () => {
   const [loading, setLoading] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [signatureStatus, setSignatureStatus] = useState("loading");
+  const [signatureCheckAttempt, setSignatureCheckAttempt] = useState(0);
 
 const location = useLocation();
 const { application: passedApplication } = location.state || {};
@@ -36,9 +38,47 @@ useEffect(() => {
 
   const Admin = JSON.parse(localStorage.getItem("user"));
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkSignature = async () => {
+      if (!Admin?.lga) {
+        setSignatureStatus("missing");
+        return;
+      }
+
+      setSignatureStatus("loading");
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `${baseURL}/api/v1/signatory/${encodeURIComponent(Admin.lga)}`,
+          { headers: { Authorization: "Bearer " + token } }
+        );
+        const signatory = response?.data?.data ?? response?.data;
+        const hasSignature = Boolean(
+          signatory?.chairmanSignature || signatory?.secretarySignature
+        );
+
+        if (isMounted) {
+          setSignatureStatus(hasSignature ? "ready" : "missing");
+        }
+      } catch (error) {
+        console.error("Unable to verify admin signature:", error);
+        if (isMounted) {
+          setSignatureStatus("error");
+        }
+      }
+    };
+
+    checkSignature();
+    return () => {
+      isMounted = false;
+    };
+  }, [Admin?.lga, signatureCheckAttempt]);
+
  
 
-  const handleLogout = () => {
+    const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/official");
@@ -46,6 +86,11 @@ useEffect(() => {
 
   
 const handleApprove = async () => {
+  if (signatureStatus !== "ready") {
+    toast.error("Upload a signature before approving or rejecting applications.");
+    return;
+  }
+
   try {
     setLoading("approve");
     const token = localStorage.getItem("token");
@@ -54,7 +99,7 @@ const handleApprove = async () => {
       `${baseURL}/api/v1/admin/application/${application._id}?approve=true`,
       {}, // ✅ empty body
       {
-        headers: { Authorization: `Bearer ${token}` }, // ✅ correct place
+        headers: { Authorization: "Bearer " + token },
       }
     );
 
@@ -77,6 +122,11 @@ const handleReject = () => {
 };
 
 const handleConfirmReject = async () => {
+  if (signatureStatus !== "ready") {
+    toast.error("Upload a signature before approving or rejecting applications.");
+    return;
+  }
+
   // Validate rejection reason
   if (!rejectionReason.trim()) {
     toast.error("❌ Rejection reason is required!");
@@ -91,7 +141,7 @@ const handleConfirmReject = async () => {
       `${baseURL}/api/v1/admin/application/${application._id}?approve=false`,
       { rejectionReason: rejectionReason.trim() }, // ✅ include rejectionReason when approve=false
       {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: "Bearer " + token },
       }
     );
 
@@ -208,6 +258,38 @@ const handleCancelReject = () => {
       Review and take action
     </p>
   </div>
+
+  {signatureStatus === "loading" && (
+    <p role="status" className="mb-6 w-full text-sm text-gray-600">
+      Checking your LGA signature...
+    </p>
+  )}
+  {signatureStatus === "missing" && (
+    <div role="alert" className="mb-6 w-full rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+      Upload an LGA signature before you can approve or reject applications.
+      {Admin?.lga && (
+        <button
+          type="button"
+          onClick={() => navigate("/signatures", { state: { lga: Admin.lga } })}
+          className="ml-2 font-semibold underline"
+        >
+          Upload signature
+        </button>
+      )}
+    </div>
+  )}
+  {signatureStatus === "error" && (
+    <div role="alert" className="mb-6 w-full rounded-md bg-red-50 p-3 text-sm text-red-700">
+    Unable to verify your LGA signature. Approval and rejection are unavailable.
+    <button
+      type="button"
+      onClick={() => setSignatureCheckAttempt((attempt) => attempt + 1)}
+      className="ml-2 font-semibold underline"
+    >
+      Try again
+    </button>
+    </div>
+  )}
 
   {/* Applicant Photo */}
       <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-200 mb-4">
@@ -392,9 +474,9 @@ const handleCancelReject = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-end sm:space-x-3 space-y-3 sm:space-y-0 w-full pt-6 border-t border-gray-200">
           <button
   onClick={handleReject}
-  disabled={loading === "reject"}
+  disabled={signatureStatus !== "ready" || loading === "reject"}
   className={`flex items-center justify-center space-x-2 px-6 py-2.5 border border-red-300 text-red-600 rounded-lg font-medium w-full sm:w-auto transition ${
-    loading === "reject" ? "opacity-30 cursor-not-allowed" : "hover:bg-red-50"
+    signatureStatus !== "ready" || loading === "reject" ? "opacity-30 cursor-not-allowed" : "hover:bg-red-50"
   }`}
 >
   {loading === "reject" ? (
@@ -409,9 +491,9 @@ const handleCancelReject = () => {
 
         <button
   onClick={handleApprove}
-  disabled={loading === "approve"}
+  disabled={signatureStatus !== "ready" || loading === "approve"}
   className={`flex items-center justify-center space-x-2 px-6 py-2.5 bg-green-600 text-white rounded-lg font-medium w-full sm:w-auto transition ${
-    loading === "approve" ? "opacity-70 cursor-not-allowed" : "hover:bg-green-700"
+    signatureStatus !== "ready" || loading === "approve" ? "opacity-70 cursor-not-allowed" : "hover:bg-green-700"
   }`}
 >
   {loading === "approve" ? (

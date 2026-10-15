@@ -109,7 +109,17 @@ useEffect(() => {
       );
 
       toast.success("Official registered successfully! , Check your email for login details.");  
-    
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        position: "",
+        staffID: "",
+        lga: "",
+      });
+      setErrors({});
+
     // ⏳ Delay navigation
   // setTimeout(() => {
   //   navigate("/official");

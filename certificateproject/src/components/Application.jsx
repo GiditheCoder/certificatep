@@ -12,6 +12,7 @@ import * as faceapi from "face-api.js";
 
 const Application = () => {
   const navigate = useNavigate();
+  const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
   const fileInputRef = useRef(null);
   const imageRef = useRef(null);
   const canvasRef = useRef(null);
@@ -20,6 +21,8 @@ const Application = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("online");
+  const [transferDetails, setTransferDetails] = useState(null);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [isValidatingFace, setIsValidatingFace] = useState(false);
   const [states, setStates] = useState([]);
@@ -461,31 +464,56 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
     }
 
     // Send the request
+    const endpoint = paymentMethod === "transfer"
+      ? `${baseURL}/api/v1/application/partner`
+      : `${baseURL}/api/v1/application`;
     const res = await axios.post(
-      "https://certapp-aae046f75d3f.herokuapp.com/api/v1/application",
+      endpoint,
       multipart,
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
         },
       }
     );
 
     console.log("✅ Response:", res.data);
 
-    if (res.data.success && res.data.data?.paymentLink) {
+    if (paymentMethod === "transfer") {
+      const accountData = res.data?.data?.paymentData?.data;
+      if (
+        res.data?.success &&
+        accountData?.accountNumber &&
+        accountData?.accountName
+      ) {
+        setTransferDetails({
+          certificateId: res.data.data.certificateId,
+          accountNumber: accountData.accountNumber,
+          accountName: accountData.accountName,
+          expiryDateTime: accountData.expiryDateTime || accountData.expiryTime,
+        });
+        toast.success("Application submitted. Use the account details to complete your bank transfer.");
+      } else {
+        toast.error(res.data?.message || "The bank transfer account could not be created.");
+      }
+    } else if (res.data.success && res.data.data?.paymentLink) {
       toast.success("✅ Application submitted! Redirecting to payment...");
       window.location.href = res.data.data.paymentLink;
     } else {
       toast.error(res.data.message || "Something went wrong.");
     }
   } catch (error) {
-    console.error("❌ Submission error:", error);
-    if (error.response) {
-      toast.error(error.response.data.message || "Something went wrong.");
+    console.error("❌ Submission error:", {
+      status: error.response?.status,
+      response: error.response?.data,
+      message: error.message,
+    });
+    if (error.response?.data?.message) {
+      toast.error(error.response.data.message);
+    } else if (error.response?.status) {
+      toast.error(`Application submission failed (HTTP ${error.response.status}). Please try again later.`);
     } else {
-      toast.error("Network error. Please try again.");
+      toast.error("Could not reach the application server. Check your connection and try again.");
     }
   } finally {
     setLoading(false);
@@ -1034,9 +1062,61 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
               </p>
             </div>
 
+            <fieldset className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
+              <legend className="px-1 text-sm font-semibold text-gray-800">Payment method</legend>
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="online"
+                  checked={paymentMethod === "online"}
+                  onChange={() => setPaymentMethod("online")}
+                  disabled={Boolean(transferDetails)}
+                  className="mt-1 accent-green-700"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-gray-800">Online payment</span>
+                  <span className="block text-xs text-gray-500">Pay using the existing secure payment page.</span>
+                </span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="transfer"
+                  checked={paymentMethod === "transfer"}
+                  onChange={() => setPaymentMethod("transfer")}
+                  disabled={Boolean(transferDetails)}
+                  className="mt-1 accent-green-700"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-gray-800">Bank transfer</span>
+                  <span className="block text-xs text-gray-500">Generate a temporary account for your application.</span>
+                </span>
+              </label>
+            </fieldset>
+
+            {transferDetails && (
+              <section
+                aria-live="polite"
+                className="space-y-2 rounded-lg border border-green-300 bg-green-50 p-4 text-sm text-green-950"
+              >
+                <h2 className="font-semibold">Bank transfer account</h2>
+                {transferDetails.certificateId && (
+                  <p>Application reference: <strong>{transferDetails.certificateId}</strong></p>
+                )}
+                <p>Account name: <strong>{transferDetails.accountName}</strong></p>
+                <p>Account number: <strong className="select-all text-lg">{transferDetails.accountNumber}</strong></p>
+                {transferDetails.expiryDateTime && (
+                  <p>Account expires: <strong>{transferDetails.expiryDateTime}</strong></p>
+                )}
+                <p>Complete the transfer before the account expires.</p>
+              </section>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || Boolean(transferDetails)}
               className={`w-full flex justify-center items-center gap-2 font-semibold py-3 rounded-lg transition-colors ${
                 loading
                   ? "bg-green-500 cursor-not-allowed text-white"
@@ -1067,7 +1147,9 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
                   <span>Submitting...</span>
                 </>
               ) : (
-                "Submit Application"
+                transferDetails
+                  ? "Bank transfer account generated"
+                  : "Submit Application"
               )}
             </button>
           </form>
