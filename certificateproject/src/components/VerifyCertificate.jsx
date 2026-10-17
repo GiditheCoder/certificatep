@@ -1,7 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import {
+  Document,
+  Image as PdfImage,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+  pdf,
+} from "@react-pdf/renderer";
+import QRCodeGenerator from "qrcode";
 import { ShieldCheck } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,6 +20,272 @@ import CloseLogo from "../images/close.png";
 import Borderside from "../images/border.png";
 import QRCode from "react-qr-code";
 
+const pdfStyles = StyleSheet.create({
+  page: {
+    padding: 22,
+    backgroundColor: "#ffffff",
+    color: "#26332a",
+    fontFamily: "Helvetica",
+  },
+  frame: {
+    flex: 1,
+    borderWidth: 3,
+    borderColor: "#11860f",
+    padding: 32,
+    position: "relative",
+  },
+  corner: {
+    position: "absolute",
+    width: 76,
+    height: 76,
+  },
+  content: {
+    flex: 1,
+  },
+  header: {
+    alignItems: "center",
+  },
+  applicantBlock: {
+    alignItems: "center",
+    width: "100%",
+    marginTop: 8,
+  },
+  applicantImages: {
+    width: 320,
+    marginTop: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    columnGap: 48,
+    alignItems: "center",
+  },
+  applicantPhoto: {
+    width: 76,
+    height: 88,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: "#9cb99f",
+    objectFit: "cover",
+  },
+  officeCaption: {
+    marginTop: 4,
+    color: "#b21e1e",
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "center",
+  },
+  organization: {
+    marginTop: 4,
+    color: "#111111",
+    fontSize: 16,
+    lineHeight: 1.2,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "center",
+    textTransform: "uppercase",
+  },
+  organizationLocation: {
+    marginTop: 2,
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "center",
+  },
+  qrCode: {
+    width: 76,
+    height: 76,
+  },
+  certificateType: {
+    marginTop: 12,
+    color: "#ff0000",
+    fontSize: 25,
+    textAlign: "center",
+    fontFamily: "Times-Roman",
+  },
+  body: {
+    marginTop: 16,
+    alignItems: "center",
+  },
+  bodyText: {
+    marginTop: 4,
+    fontSize: 10,
+    fontWeight: 500,
+    lineHeight: 1.5,
+    textAlign: "center",
+  },
+  emphasizedText: {
+    fontFamily: "Helvetica-Bold",
+  },
+  issuanceText: {
+    marginTop: 14,
+    fontSize: 10,
+    fontWeight: 500,
+    lineHeight: 1.5,
+    textAlign: "center",
+  },
+  signatures: {
+    marginTop: "auto",
+    paddingTop: 22,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
+  signatory: {
+    width: 190,
+    alignItems: "center",
+  },
+  signatureImage: {
+    width: 100,
+    height: 40,
+    marginBottom: 5,
+    objectFit: "contain",
+  },
+  signatureRule: {
+    width: "100%",
+    borderBottomWidth: 1,
+    borderBottomColor: "#26332a",
+  },
+  signatoryName: {
+    marginTop: 7,
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "center",
+  },
+  signatoryTitle: {
+    marginTop: 4,
+    fontSize: 7,
+    color: "#55705c",
+    textAlign: "center",
+    textTransform: "uppercase",
+  },
+  stateSeal: {
+    width: 68,
+    height: 68,
+    objectFit: "contain",
+  },
+});
+
+const resolvePdfImageSource = (source) => {
+  if (!source) return null;
+  if (/^(https?:|data:|blob:)/i.test(source)) return source;
+  return `${window.location.origin}/${source.replace(/^\/+/, "")}`;
+};
+
+const VerificationCertificatePdf = ({
+  certificate,
+  signatory,
+  qrCode,
+  applicantImage,
+  organizationName,
+  lgaName,
+  nativeTown,
+  nativePoliticalWard,
+}) => (
+  <Document>
+    <Page size="A4" style={pdfStyles.page}>
+      <View style={pdfStyles.frame}>
+        <PdfImage
+          src={Borderside}
+          style={{ ...pdfStyles.corner, top: -9, left: -9, transform: "rotate(90deg)" }}
+        />
+        <PdfImage
+          src={Borderside}
+          style={{ ...pdfStyles.corner, top: -9, right: -9, transform: "rotate(90deg) scaleY(-1)" }}
+        />
+        <PdfImage
+          src={Borderside}
+          style={{ ...pdfStyles.corner, bottom: -9, left: -9, transform: "rotate(90deg) scaleX(-1)" }}
+        />
+        <PdfImage
+          src={Borderside}
+          style={{ ...pdfStyles.corner, bottom: -9, right: -9, transform: "rotate(270deg)" }}
+        />
+        <View style={pdfStyles.content}>
+          <View style={pdfStyles.header}>
+            <PdfImage src={StateLogo} style={pdfStyles.stateSeal} />
+            <Text style={pdfStyles.organization}>{organizationName}</Text>
+            <Text style={pdfStyles.organizationLocation}>
+              OWODE EGBA, OGUN STATE, NIGERIA
+            </Text>
+            <View style={pdfStyles.applicantBlock}>
+              <Text style={pdfStyles.officeCaption}>OFFICE OF THE CHAIRMAN</Text>
+              <View style={pdfStyles.applicantImages}>
+                {applicantImage ? (
+                  <PdfImage src={applicantImage} style={pdfStyles.applicantPhoto} />
+                ) : (
+                  <View
+                    style={[
+                      pdfStyles.applicantPhoto,
+                      { justifyContent: "center", alignItems: "center", backgroundColor: "#f3f4f6" },
+                    ]}
+                  >
+                    <Text style={{ fontSize: 8, color: "#718078" }}>No Photo</Text>
+                  </View>
+                )}
+                <PdfImage src={qrCode} style={pdfStyles.qrCode} />
+              </View>
+            </View>
+          </View>
+          <Text style={pdfStyles.certificateType}>Certificate of Origin</Text>
+          <View style={pdfStyles.body}>
+            <Text style={pdfStyles.bodyText}>This is to certify that from enquiry made</Text>
+            <Text style={[pdfStyles.bodyText, pdfStyles.emphasizedText]}>
+              {certificate?.fullNames || "N/A"},
+            </Text>
+            <Text style={pdfStyles.bodyText}>
+              whose photograph passport is affixed above and who resides at
+            </Text>
+            <Text style={[pdfStyles.bodyText, pdfStyles.emphasizedText]}>
+              {certificate?.currentAddress || "N/A"}
+            </Text>
+            <Text style={pdfStyles.bodyText}>
+              is a native of <Text style={pdfStyles.emphasizedText}>{nativeTown || "N/A"}</Text>{" "}
+              within Polling Unit{" "}
+              <Text style={pdfStyles.emphasizedText}>
+                {certificate?.nativePollingUnit || "N/A"}
+              </Text>{" "}
+              of <Text style={pdfStyles.emphasizedText}>{nativePoliticalWard || "N/A"}</Text> of
+            </Text>
+            <Text style={pdfStyles.bodyText}>
+              {lgaName} Local Government Area of Ogun State, Nigeria.
+            </Text>
+            <Text style={pdfStyles.bodyText}>
+              Ancestral, Historical and Administrative records verified by the Local Government attested to this fact.
+            </Text>
+            <Text style={pdfStyles.issuanceText}>
+              This Certificate of Origin is issued today under my hand and the public seal of {lgaName} Local Government
+              at Owode this day 8th day of October, 2026.
+            </Text>
+          </View>
+          <View style={pdfStyles.signatures}>
+            <View style={pdfStyles.signatory}>
+              {signatory?.secretarySignature && (
+                <PdfImage
+                  src={resolvePdfImageSource(signatory.secretarySignature)}
+                  style={pdfStyles.signatureImage}
+                />
+              )}
+              <View style={pdfStyles.signatureRule} />
+              <Text style={pdfStyles.signatoryName}>{signatory?.secretaryName || ""}</Text>
+              <Text style={pdfStyles.signatoryTitle}>
+                Secretary to the Local Government
+              </Text>
+            </View>
+            <View style={pdfStyles.signatory}>
+              {signatory?.chairmanSignature && (
+                <PdfImage
+                  src={resolvePdfImageSource(signatory.chairmanSignature)}
+                  style={pdfStyles.signatureImage}
+                />
+              )}
+              <View style={pdfStyles.signatureRule} />
+              <Text style={pdfStyles.signatoryName}>{signatory?.chairmanName || ""}</Text>
+              <Text style={pdfStyles.signatoryTitle}>Executive Chairman</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </Page>
+  </Document>
+);
+
 const VerifyCertificate = () => {
   const [inputCode, setInputCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,7 +293,6 @@ const VerifyCertificate = () => {
   const [signatory, setSignatory] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const certRef = useRef(null);
   const [searchParams] = useSearchParams();
 
   const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
@@ -135,98 +408,54 @@ const VerifyCertificate = () => {
   }, [verifiedData]);
 
   const downloadPDF = async () => {
-    if (!certRef.current) {
-      toast.error("Certificate element not found");
+    if (!verifiedData?.certificate?.application) {
+      toast.error("Certificate details are not available");
       return;
     }
 
     try {
       toast.info("Generating PDF...");
-
-      const canvas = await html2canvas(certRef.current, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        foreignObjectRendering: false,
-        logging: false,
-        x: 0,
-        y: 0,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: certRef.current.scrollWidth,
-        windowHeight: certRef.current.scrollHeight,
-        onclone: (clonedDoc) => {
-          const allElements = clonedDoc.querySelectorAll("*");
-          
-          allElements.forEach((el) => {
-            const computedStyle = window.getComputedStyle(el);
-            
-            const colorProps = [
-              'color', 'backgroundColor', 'borderColor', 
-              'borderTopColor', 'borderRightColor', 
-              'borderBottomColor', 'borderLeftColor',
-              'outlineColor', 'textDecorationColor'
-            ];
-            
-            colorProps.forEach(prop => {
-              const value = computedStyle[prop];
-              if (value && (value.includes('oklch') || value.includes('color('))) {
-                if (prop === 'backgroundColor') {
-                  el.style[prop] = '#ffffff';
-                } else if (prop.includes('border')) {
-                  el.style[prop] = '#d1d5db';
-                } else {
-                  el.style[prop] = '#000000';
-                }
-              }
-            });
-            
-            const bgImage = computedStyle.backgroundImage;
-            if (bgImage && (bgImage.includes('oklch') || bgImage.includes('color('))) {
-              if (el.classList.contains('from-emerald-800') || 
-                  el.classList.contains('from-emerald-700')) {
-                el.style.backgroundImage = 'none';
-                el.style.backgroundColor = '#047857';
-              } else if (el.classList.contains('from-yellow-600')) {
-                el.style.backgroundImage = 'none';
-                el.style.backgroundColor = '#ca8a04';
-              } else if (el.classList.contains('from-amber-50')) {
-                el.style.backgroundImage = 'none';
-                el.style.backgroundColor = '#fffbeb';
-              } else {
-                el.style.backgroundImage = 'none';
-                el.style.backgroundColor = computedStyle.backgroundColor || '#ffffff';
-              }
-            }
-          });
-        },
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const canvasAspectRatio = canvas.height / canvas.width;
-      const pdfAspectRatio = pdfHeight / pdfWidth;
-      
-      let finalWidth, finalHeight, offsetX, offsetY;
-      
-      if (canvasAspectRatio > pdfAspectRatio) {
-        finalHeight = pdfHeight;
-        finalWidth = finalHeight / canvasAspectRatio;
-        offsetX = (pdfWidth - finalWidth) / 2;
-        offsetY = 0;
-      } else {
-        finalWidth = pdfWidth;
-        finalHeight = finalWidth * canvasAspectRatio;
-        offsetX = 0;
-        offsetY = (pdfHeight - finalHeight) / 2;
-      }
-      
-      pdf.addImage(imgData, "PNG", offsetX, offsetY, finalWidth, finalHeight);
-      pdf.save(`${verifiedData?.certificate?.application?.fullNames || "certificate"}.pdf`);
+      const { certificate: cert } = verifiedData;
+      const app = cert.application;
+      const effectiveLga =
+        app.stateOfOrigin?.trim().toLowerCase() === "ogun" ? app.lga : app.lgaOfResident;
+      const lgaName = (effectiveLga?.trim() || "Abeokuta South")
+        .split(/\s+/)
+        .map((word, index) =>
+          index === 0
+            ? word.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase())
+            : word.toLowerCase()
+        )
+        .join("-");
+      const verificationHash = cert.certificateHash || cert.hash || app._id || "certificate";
+      const qrCode = await QRCodeGenerator.toDataURL(
+        `${window.location.origin}/cert-validation?hash=${encodeURIComponent(verificationHash)}`,
+        { margin: 1, width: 256 }
+      );
+      const applicantImage = app.passport
+        ? /^(https?:|data:|blob:)/i.test(app.passport)
+          ? app.passport
+          : `${window.location.origin}/${app.passport.replace(/^\/+/, "")}`
+        : null;
+      const certificateDocument = pdf(
+        <VerificationCertificatePdf
+          certificate={app}
+          signatory={signatory}
+          qrCode={qrCode}
+          applicantImage={applicantImage}
+          organizationName={`${lgaName} Local Government`}
+          lgaName={lgaName}
+          nativeTown={app.nativeTown || app.town || "N/A"}
+          nativePoliticalWard={app.nativePoliticalWard || "N/A"}
+        />
+      );
+      const blob = await certificateDocument.toBlob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const downloadLink = window.document.createElement("a");
+      downloadLink.href = downloadUrl;
+      downloadLink.download = `${app.fullNames || "certificate"}.pdf`;
+      downloadLink.click();
+      URL.revokeObjectURL(downloadUrl);
       
       toast.success("PDF downloaded successfully!");
     } catch (error) {
@@ -265,8 +494,12 @@ const VerifyCertificate = () => {
     const nativePoliticalWard = app.nativePoliticalWard || "N/A";
     const lgaName = (effectiveLga?.trim() || "Abeokuta South")
       .split(/\s+/)
-      .map((word) => word.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()))
-      .join(" ");
+      .map((word, index) =>
+        index === 0
+          ? word.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase())
+          : word.toLowerCase()
+      )
+      .join("-");
     const verificationHash = cert.certificateHash || cert.hash || certificateId;
     const certificateDate = "8th day of October, 2026";
 
@@ -334,7 +567,7 @@ const VerifyCertificate = () => {
             </div>
           </div>
 
-          <div className="relative w-full max-w-5xl" ref={certRef}>
+          <div className="relative w-full max-w-5xl">
             <div className="relative border-[3px] border-[#11860f] bg-white p-1 shadow-[0_18px_50px_rgba(28,61,38,0.14)]">
               <div className="relative overflow-hidden p-5 sm:p-9 md:p-12">
                 <img

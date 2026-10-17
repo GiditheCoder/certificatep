@@ -164,7 +164,7 @@ const resolveImageSource = (source) => {
   return `${window.location.origin}/${source.replace(/^\/+/, "")}`;
 };
 
-const CertificatePdf = ({
+export const CertificatePdf = ({
   certificate,
   signatory,
   qrCode,
