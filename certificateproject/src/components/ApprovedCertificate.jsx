@@ -553,8 +553,12 @@ const downloadPDF = async () => {
   const nativeTown = certificate?.nativeTown || certificate?.town || "N/A";
   const lgaWords = (effectiveLga?.trim() || "Abeokuta South").split(/\s+/);
   const lgaName = lgaWords
-    .map((word) => word.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()))
-    .join(" ");
+    .map((word, index) =>
+      index === 0
+        ? word.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase())
+        : word.toLowerCase()
+    )
+    .join("-");
   const organizationName = `${lgaName} Local Government`;
 
   return (
