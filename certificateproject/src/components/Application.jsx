@@ -44,6 +44,7 @@ const communityDocRef = useRef(null);
     motherNames: "",
     nativeTown: "",
     nativePoliticalWard: "",
+    nativePollingUnit: "",
     village: "",
     communityHead: "",
     communityHeadContact: "",
@@ -258,7 +259,7 @@ useEffect(() => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "nin") {
+    if (name === "nin" || name === "nativePollingUnit") {
       if (!/^\d*$/.test(value)) return;
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -387,9 +388,6 @@ const handleSubmit = async (e) => {
   if (!isNonOgun) {
   if (!formData.fatherNames?.trim()) newErrors.fatherNames = "Required";
   if (!formData.motherNames?.trim()) newErrors.motherNames = "Required";
-  if (!formData.nativeTown?.trim()) newErrors.nativeTown = "Required";
-  if (!formData.nativePoliticalWard?.trim())
-    newErrors.nativePoliticalWard = "Required";
   if (!formData.village?.trim()) newErrors.village = "Required";
   if (!formData.communityHead?.trim()) newErrors.communityHead = "Required";
   if (!formData.communityHeadContact?.toString().trim()) {
@@ -399,7 +397,12 @@ const handleSubmit = async (e) => {
   }
 }
 
-
+  if (!formData.nativeTown?.trim())
+    newErrors.nativeTown = "Required";
+  if (!formData.nativePoliticalWard?.trim())
+    newErrors.nativePoliticalWard = "Required";
+  if (!formData.nativePollingUnit?.trim())
+    newErrors.nativePollingUnit = "Required";
 
   if (!formData.currentAddress?.trim()) newErrors.currentAddress = "Required";
   if (!formData.dateOfBirth) newErrors.dateOfBirth = "Required";
@@ -796,8 +799,9 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
             {[
               { name: "fatherNames", label: "Father's Name", placeholder: "Doe Monk" },
               { name: "motherNames", label: "Mother's Name", placeholder: "Doe Mara" },
-              { name: "nativeTown", label: "Native Town", placeholder: "Akute" },
-              { name: "nativePoliticalWard", label: "Native Political Ward", placeholder: "Akute Central Ward" },
+              { name: "nativeTown", label: "Native Town", placeholder: "Akute", required: true },
+              { name: "nativePoliticalWard", label: "Native Political Ward", placeholder: "Akute Central Ward", required: true },
+              { name: "nativePollingUnit", label: "Native Polling Unit", placeholder: "Enter your native polling unit", required: true },
               { name: "village", label: "Village", placeholder: "Akute Village" },
               { name: "communityHead", label: "Community Head", placeholder: "Mr Ajayi Isaac" },
               { 
@@ -811,16 +815,18 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
               <div key={field.name}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {field.label}
+                  {field.required && <span className="text-red-500"> *</span>}
                 </label>
                 <input
                   type="text"
+                  inputMode={field.name === "nativePollingUnit" ? "numeric" : undefined}
                   name={field.name}
                   value={formData[field.name]}
                   onChange={handleInputChange}
                   placeholder={field.placeholder}
                    disabled={
         isNonOgun &&
-        field.name !== "nin"  // NIN should NOT be disabled
+        !["nin", "nativeTown", "nativePoliticalWard", "nativePollingUnit"].includes(field.name)
       }
                 //   className={`w-full px-4 py-2 rounded-lg focus:ring-2 font-medium focus:border-transparent ${
                 //     errors[field.name]
@@ -830,7 +836,7 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
                 // />
 
                     className={`w-full px-4 py-2 rounded-lg font-medium 
-        ${isNonOgun && field.name !== "nin" ? "bg-gray-100 cursor-not-allowed" : ""}
+        ${isNonOgun && !["nin", "nativeTown", "nativePoliticalWard", "nativePollingUnit"].includes(field.name) ? "bg-gray-100 cursor-not-allowed" : ""}
         ${errors[field.name]
           ? "border-red-600 focus:ring-red-600"
           : "border-gray-300 focus:ring-green-600"

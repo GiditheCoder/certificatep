@@ -14,7 +14,6 @@ import { ArrowLeft, Download, ShieldCheck } from "lucide-react";
 
 const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 const certificateDate = "8th day of October, 2026";
-const pollingUnit = "Polling Unit 20";
 const organizationLocation = "Owode Egba, Ogun State, Nigeria";
 
 const pdfStyles = StyleSheet.create({
@@ -210,8 +209,8 @@ const CertificatePdf = ({
             <Text style={pdfStyles.bodyText}>whose photograph passport is affixed above and who resides at</Text>
             <Text style={[pdfStyles.bodyText, pdfStyles.emphasizedText]}>{certificate?.currentAddress || "N/A"}</Text>
             <Text style={pdfStyles.bodyText}>
-              is a native of <Text style={pdfStyles.emphasizedText}>{nativeTown || "N/A"}</Text> within{" "}
-              <Text style={pdfStyles.emphasizedText}>{pollingUnit}</Text> of{" "}
+              is a native of <Text style={pdfStyles.emphasizedText}>{nativeTown || "N/A"}</Text> within Polling Unit{" "}
+              <Text style={pdfStyles.emphasizedText}>{certificate?.nativePollingUnit || "N/A"}</Text> of{" "}
               <Text style={pdfStyles.emphasizedText}>{nativePoliticalWard || "N/A"}</Text> of
             </Text>
             <Text style={pdfStyles.bodyText}>
@@ -682,8 +681,8 @@ const downloadPDF = async () => {
                   <p>whose photograph passport is affixed above and who resides at</p>
                   <p className="font-bold underline">{address || "N/A"}</p>
                   <p>
-                    is a native of <strong className="underline">{nativeTown}</strong> within{" "}
-                    <strong className="underline">{pollingUnit}</strong> of{" "}
+                    is a native of <strong className="underline">{nativeTown}</strong> within Polling Unit{" "}
+                    <strong className="underline">{certificate?.nativePollingUnit || "N/A"}</strong> of{" "}
                     <strong className="underline">{certificate?.nativePoliticalWard || "N/A"}</strong> of
                   </p>
                   <p>

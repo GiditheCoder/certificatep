@@ -412,7 +412,7 @@ const VerifyCertificate = () => {
                     <p className="font-bold underline">{address || "N/A"}</p>
                     <p>
                       is a native of <strong className="underline">{nativeTown}</strong> within{" "}
-                      <strong className="underline">Polling Unit 20</strong> of{" "}
+                      <strong className="underline">{app.nativePollingUnit || "N/A"}</strong> of{" "}
                       <strong className="underline">{nativePoliticalWard}</strong> of
                     </p>
                     <p>
