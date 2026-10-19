@@ -7,6 +7,7 @@ import ForgotPassword from './components/ForgotPassword'
 import Dashboard from './components/Dashboard'
 import Application from './components/Application'
 import Successful from './components/Successful.jsx'
+import Banktransfer from './components/Banktransfer.jsx'
 import ResetPassword from './components/ResetPassword'
 import Role from './components/Role'
 import OfficialLogin from './components/OfficialLogin'
@@ -67,6 +68,8 @@ const App = () => {
        {/* Verify email after login */}
          <Route path='/request-email-verify' element={<RequestEmailVerification/>} />
           <Route path="/certificate-request" element={<CertificateRequest />} />
+         {/* Shared bank transfer account details */}
+         <Route path="/bank-transfer" element={<Banktransfer />} />
          {/* Route to the admin screen */}
            <Route path='/officialscreen' element={<OfficialScreen/>} />
            {/* Route for Official Admin */}

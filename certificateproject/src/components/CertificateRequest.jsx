@@ -12,6 +12,7 @@ const CertificateRequest = () => {
   const certificateId = state?.certificateId;
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("online");
   const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
  
@@ -35,13 +36,49 @@ const CertificateRequest = () => {
 
     try {
       setLoading(true);
+      const endpoint =
+        paymentMethod === "transfer"
+          ? `${baseURL}/api/v1/certificate/partner/request-verification/${certificateId}`
+          : `${baseURL}/api/v1/certificate/request-verification/${certificateId}`;
       const response = await axios.post(
-        `${baseURL}/api/v1/certificate/request-verification/${certificateId}`,
+        endpoint,
         { email },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
+      if (paymentMethod === "transfer") {
+        const paymentData = response.data?.data?.paymentData;
+        const accountData = paymentData?.data ?? paymentData;
+        if (
+          response.data?.success &&
+          accountData?.accountName &&
+          accountData?.accountNumber
+        ) {
+          navigate("/bank-transfer", {
+            state: {
+              flow: "certificate-verification",
+              transferDetails: {
+                applicationId:
+                  response.data.data.applicationId ??
+                  response.data.data.certificateId ??
+                  certificateId,
+                accountName: accountData.accountName,
+                accountNumber: accountData.accountNumber,
+                expiryDateTime:
+                  accountData.expiryDateTime || accountData.expiryTime,
+              },
+            },
+          });
+        } else {
+          toast.error(
+            response.data?.message ||
+              "The bank transfer account could not be created."
+          );
+        }
+        return;
+      }
 
       if (response.data?.success && response.data?.data?.paymentLink) {
         toast.info("Redirecting to payment page...");
@@ -76,6 +113,50 @@ const CertificateRequest = () => {
           Enter your email to receive a verification code for your certificate.
         </p>
 
+        <fieldset className="mb-4 space-y-3 rounded-lg border border-gray-200 p-4 text-left">
+          <legend className="px-1 text-sm font-semibold text-gray-800">
+            Payment method
+          </legend>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="online"
+              checked={paymentMethod === "online"}
+              onChange={() => setPaymentMethod("online")}
+              disabled={loading}
+              className="mt-1 accent-green-700"
+            />
+            <span>
+              <span className="block text-sm font-medium text-gray-800">
+                Online payment
+              </span>
+              <span className="block text-xs text-gray-500">
+                Continue to the secure online payment page.
+              </span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="transfer"
+              checked={paymentMethod === "transfer"}
+              onChange={() => setPaymentMethod("transfer")}
+              disabled={loading}
+              className="mt-1 accent-green-700"
+            />
+            <span>
+              <span className="block text-sm font-medium text-gray-800">
+                Bank transfer
+              </span>
+              <span className="block text-xs text-gray-500">
+                Generate a temporary account for your verification request.
+              </span>
+            </span>
+          </label>
+        </fieldset>
+
         <input
           type="email"
           className="w-full border border-gray-300 rounded-md px-3 py-2 mb-3 font-semibold"
@@ -91,7 +172,13 @@ const CertificateRequest = () => {
             loading ? "opacity-70 cursor-not-allowed" : ""
           }`}
         >
-          {loading ? "Sending..." : "Send Verification Code"}
+          {loading
+            ? paymentMethod === "transfer"
+              ? "Creating account..."
+              : "Sending..."
+            : paymentMethod === "transfer"
+              ? "Continue with Bank Transfer"
+              : "Send Verification Code"}
         </button>
 
         <button

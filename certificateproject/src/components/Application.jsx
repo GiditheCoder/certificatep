@@ -22,7 +22,6 @@ const Application = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("online");
-  const [transferDetails, setTransferDetails] = useState(null);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [isValidatingFace, setIsValidatingFace] = useState(false);
   const [states, setStates] = useState([]);
@@ -483,19 +482,25 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
     console.log("✅ Response:", res.data);
 
     if (paymentMethod === "transfer") {
-      const accountData = res.data?.data?.paymentData?.data;
+      const paymentData = res.data?.data?.paymentData;
+      const accountData = paymentData?.data ?? paymentData;
       if (
         res.data?.success &&
         accountData?.accountNumber &&
         accountData?.accountName
       ) {
-        setTransferDetails({
-          certificateId: res.data.data.certificateId,
-          accountNumber: accountData.accountNumber,
-          accountName: accountData.accountName,
-          expiryDateTime: accountData.expiryDateTime || accountData.expiryTime,
+        navigate("/bank-transfer", {
+          state: {
+            transferDetails: {
+              applicationId:
+                res.data.data.applicationId ?? res.data.data.certificateId,
+              accountNumber: accountData.accountNumber,
+              accountName: accountData.accountName,
+              expiryDateTime:
+                accountData.expiryDateTime || accountData.expiryTime,
+            },
+          },
         });
-        toast.success("Application submitted. Use the account details to complete your bank transfer.");
       } else {
         toast.error(res.data?.message || "The bank transfer account could not be created.");
       }
@@ -1077,7 +1082,6 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
                   value="online"
                   checked={paymentMethod === "online"}
                   onChange={() => setPaymentMethod("online")}
-                  disabled={Boolean(transferDetails)}
                   className="mt-1 accent-green-700"
                 />
                 <span>
@@ -1092,7 +1096,6 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
                   value="transfer"
                   checked={paymentMethod === "transfer"}
                   onChange={() => setPaymentMethod("transfer")}
-                  disabled={Boolean(transferDetails)}
                   className="mt-1 accent-green-700"
                 />
                 <span>
@@ -1102,27 +1105,9 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
               </label>
             </fieldset>
 
-            {transferDetails && (
-              <section
-                aria-live="polite"
-                className="space-y-2 rounded-lg border border-green-300 bg-green-50 p-4 text-sm text-green-950"
-              >
-                <h2 className="font-semibold">Bank transfer account</h2>
-                {transferDetails.certificateId && (
-                  <p>Application reference: <strong>{transferDetails.certificateId}</strong></p>
-                )}
-                <p>Account name: <strong>{transferDetails.accountName}</strong></p>
-                <p>Account number: <strong className="select-all text-lg">{transferDetails.accountNumber}</strong></p>
-                {transferDetails.expiryDateTime && (
-                  <p>Account expires: <strong>{transferDetails.expiryDateTime}</strong></p>
-                )}
-                <p>Complete the transfer before the account expires.</p>
-              </section>
-            )}
-
             <button
               type="submit"
-              disabled={loading || Boolean(transferDetails)}
+              disabled={loading}
               className={`w-full flex justify-center items-center gap-2 font-semibold py-3 rounded-lg transition-colors ${
                 loading
                   ? "bg-green-500 cursor-not-allowed text-white"
@@ -1153,9 +1138,7 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
                   <span>Submitting...</span>
                 </>
               ) : (
-                transferDetails
-                  ? "Bank transfer account generated"
-                  : "Submit Application"
+                "Submit Application"
               )}
             </button>
           </form>
