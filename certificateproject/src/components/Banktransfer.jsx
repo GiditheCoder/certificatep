@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, Clock3, Landmark } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const getExpiryTimestamp = (value) => {
   if (typeof value !== "string" || !value.trim()) return null;
@@ -61,6 +64,7 @@ const Banktransfer = () => {
       ? null
       : Math.max(0, Math.floor((expiryTimestamp - Date.now()) / 1000))
   );
+  const [checkingPayment, setCheckingPayment] = useState(false);
 
   useEffect(() => {
     if (expiryTimestamp === null) {
@@ -78,6 +82,55 @@ const Banktransfer = () => {
     const intervalId = window.setInterval(updateCountdown, 1000);
     return () => window.clearInterval(intervalId);
   }, [expiryTimestamp]);
+
+  const handlePaymentConfirmation = async () => {
+    const sourceId = transferDetails?.sourceId ?? transferDetails?.applicationId;
+    if (!sourceId) {
+      toast.error("The application reference is missing. Please return and try again.");
+      return;
+    }
+
+    setCheckingPayment(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `https://certapp-aae046f75d3f.herokuapp.com/api/v1/partner/transaction/${encodeURIComponent(sourceId)}`,
+        {
+          params: { source: isVerificationRequest ? "certificate" : "application" },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+      const transaction = response.data?.data ?? response.data;
+      const status = String(
+        transaction?.status ??
+          transaction?.transactionStatus ??
+          transaction?.paymentStatus ??
+          ""
+      ).toLowerCase();
+      const message = response.data?.message ?? "";
+      const isCompleted =
+        ["completed", "successful", "success", "paid"].includes(status) ||
+        /transaction\s+completed|payment\s+successful/i.test(message);
+
+      if (isCompleted) {
+        toast.success(message || "Your payment has been confirmed.");
+      } else {
+        toast.error("Transfer not complete.");
+      }
+    } catch (error) {
+      const message = error.response?.data?.message;
+      toast.error(
+        error.response?.status === 404 ||
+          (message &&
+            /transaction\s+not\s+completed|payment\s+not\s+completed/i.test(message))
+          ? "Transfer not complete."
+          : message || "We couldn’t check your payment status. Please try again."
+      );
+    } finally {
+      setCheckingPayment(false);
+    }
+  };
 
   if (
     !transferDetails?.accountName ||
@@ -187,13 +240,40 @@ const Banktransfer = () => {
               ? "Your verification code will be sent to your email after your transfer is confirmed. Complete the transfer before the account expires."
               : "Complete your transfer before the account expires."}
         </p>
+        <div className="mt-8">
+          <h2 className="mb-4 text-center text-lg font-semibold text-gray-900">
+            Have you made your transfer?
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={handlePaymentConfirmation}
+              disabled={checkingPayment}
+              className="w-full rounded-lg bg-green-700 px-5 py-3 font-semibold text-white transition-colors hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {checkingPayment ? "Checking payment..." : "Yes, I have"}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                toast.info(
+                  "Please complete the transfer using the account details above. You can confirm it after the transfer is made."
+                )
+              }
+              className="w-full rounded-lg border border-green-700 px-5 py-3 font-semibold text-green-800 transition-colors hover:bg-green-50"
+            >
+              No, I haven’t
+            </button>
+          </div>
+        </div>
         <button
           type="button"
           onClick={() => navigate("/dashboard")}
-          className="mt-8 w-full rounded-lg bg-green-700 px-5 py-3 font-semibold text-white transition-colors hover:bg-green-800"
+          className="mt-5 w-full rounded-lg bg-green-700 px-5 py-3 font-semibold text-white transition-colors hover:bg-green-800"
         >
           Go to Dashboard
         </button>
+        <ToastContainer position="top-center" theme="colored" />
       </section>
     </main>
   );

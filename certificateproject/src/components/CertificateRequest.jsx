@@ -60,6 +60,7 @@ const CertificateRequest = () => {
             state: {
               flow: "certificate-verification",
               transferDetails: {
+                sourceId: certificateId,
                 applicationId:
                   response.data.data.applicationId ??
                   response.data.data.certificateId ??
