@@ -37,6 +37,21 @@ const pdfStyles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    position: "relative",
+    zIndex: 1,
+  },
+  watermark: {
+    position: "absolute",
+    top: "44%",
+    left: 0,
+    right: 0,
+    zIndex: 0,
+    color: "#11860f",
+    opacity: 0.08,
+    fontSize: 46,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "center",
+    transform: "rotate(-30deg)",
   },
   header: {
     alignItems: "center",
@@ -181,6 +196,7 @@ export const CertificatePdf = ({
         <Image src={Borderside} style={{ ...pdfStyles.corner, top: -9, right: -9, transform: "rotate(90deg) scaleY(-1)" }} />
         <Image src={Borderside} style={{ ...pdfStyles.corner, bottom: -9, left: -9, transform: "rotate(90deg) scaleX(-1)" }} />
         <Image src={Borderside} style={{ ...pdfStyles.corner, bottom: -9, right: -9, transform: "rotate(270deg)" }} />
+        <Text style={pdfStyles.watermark}>{lgaName.replace(/-/g, " ")}</Text>
         <View style={pdfStyles.content}>
           <View style={pdfStyles.header}>
             <Image src={StateLogo} style={pdfStyles.stateSeal} />
@@ -631,6 +647,17 @@ const downloadPDF = async () => {
                 aria-hidden="true"
                 className="pointer-events-none absolute -bottom-8 -right-5 z-0 h-32 w-24 rotate-[270deg] object-contain sm:-bottom-10 sm:-right-7 sm:h-44 sm:w-32 md:h-52 md:w-36"
               />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 z-[1] flex select-none items-center justify-center overflow-hidden"
+              >
+                <span
+                  className="whitespace-nowrap text-[clamp(2rem,10vw,7rem)] font-black uppercase tracking-widest text-[#11860f]"
+                  style={{ opacity: 0.08, transform: "rotate(-30deg)" }}
+                >
+                  {lgaName.replace(/-/g, " ")}
+                </span>
+              </div>
               <div className="relative z-10">
                 <div className="flex flex-col items-center pb-5 text-center">
                   <img
