@@ -95,13 +95,14 @@ const handleApprove = async () => {
     setLoading("approve");
     const token = localStorage.getItem("token");
 
-    await axios.post(
+    const approvalResponse = await axios.post(
       `${baseURL}/api/v1/admin/application/${application._id}?approve=true`,
       {}, // ✅ empty body
       {
         headers: { Authorization: "Bearer " + token },
       }
     );
+    console.log("Approval API response:", approvalResponse.data);
 
     setApplication((prev) => ({ ...prev, status: "Approved" }));
     toast.success("✅ Application successfully approved!");
@@ -109,8 +110,16 @@ const handleApprove = async () => {
     setTimeout(() => {
       navigate("/officialscreen");
     }, 1500);
-  } catch {
-    toast.error("❌ Failed to approve application. Please try again.");
+  } catch (error) {
+    console.error("Failed to approve application:", {
+      status: error.response?.status,
+      response: error.response?.data,
+      message: error.message,
+    });
+    toast.error(
+      error.response?.data?.message ||
+        `Failed to approve application${error.response?.status ? ` (HTTP ${error.response.status})` : ""}. Please try again.`
+    );
   } finally {
     setLoading("");
   }
@@ -151,8 +160,16 @@ const handleConfirmReject = async () => {
     setTimeout(() => {
       navigate("/officialscreen");
     }, 1500);
-  } catch {
-    toast.error("❌ Failed to reject application. Please try again.");
+  } catch (error) {
+    console.error("Failed to reject application:", {
+      status: error.response?.status,
+      response: error.response?.data,
+      message: error.message,
+    });
+    toast.error(
+      error.response?.data?.message ||
+        `Failed to reject application${error.response?.status ? ` (HTTP ${error.response.status})` : ""}. Please try again.`
+    );
   } finally {
     setLoading("");
     setShowRejectModal(false);

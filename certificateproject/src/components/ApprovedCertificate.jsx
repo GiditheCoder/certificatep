@@ -110,6 +110,21 @@ const pdfStyles = StyleSheet.create({
     textAlign: "center",
     fontFamily: "Times-Roman",
   },
+  officeRow: {
+    width: "100%",
+    position: "relative",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  certificateReference: {
+    position: "absolute",
+    right: 0,
+    top: 4,
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "right",
+  },
   body: {
     marginTop: 16,
     alignItems: "center",
@@ -203,7 +218,14 @@ export const CertificatePdf = ({
             <Text style={pdfStyles.organization}>{organizationName}</Text>
             <Text style={pdfStyles.organizationLocation}>{organizationLocation.toUpperCase()}</Text>
             <View style={pdfStyles.applicantBlock}>
-              <Text style={pdfStyles.officeCaption}>OFFICE OF THE CHAIRMAN</Text>
+              <View style={pdfStyles.officeRow}>
+                <Text style={pdfStyles.officeCaption}>OFFICE OF THE CHAIRMAN</Text>
+                {certificate?.certificateRef && (
+                  <Text style={pdfStyles.certificateReference}>
+                    {certificate.certificateRef}
+                  </Text>
+                )}
+              </View>
               <View style={pdfStyles.applicantImages}>
               {applicantImage ? (
                 <Image src={applicantImage} style={pdfStyles.applicantPhoto} />
@@ -671,9 +693,16 @@ const downloadPDF = async () => {
                   <p className="mt-1 text-[9px] font-bold uppercase tracking-wide text-[#26332a] sm:text-xs">
                     {organizationLocation}
                   </p>
-                  <p className="mt-2 text-[9px] font-bold uppercase text-red-600 sm:text-[10px]">
-                    Office of the Chairman
-                  </p>
+                  <div className="relative mt-2 w-full text-center">
+                    <p className="text-[9px] font-bold uppercase text-red-600 sm:text-[10px]">
+                      Office of the Chairman
+                    </p>
+                    {certificate?.certificateRef && (
+                      <p className="absolute right-0 top-0 text-right text-[8px] font-bold leading-tight text-[#26332a] sm:text-[10px]">
+                        {certificate.certificateRef}
+                      </p>
+                    )}
+                  </div>
                   <div className="mt-3 flex w-full max-w-lg items-center justify-between gap-20 px-4 sm:gap-32">
                     <div className="h-24 w-20 shrink-0 border border-[#9cb99f] bg-[#f7faf7] p-1 sm:h-32 sm:w-28">
                       {image ? (
