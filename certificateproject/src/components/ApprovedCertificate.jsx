@@ -16,9 +16,25 @@ const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 const certificateDate = "8th day of October, 2026";
 const organizationLocation = "Owode Egba, Ogun State, Nigeria";
 
+const createWatermarkPositions = (lgaName) => {
+  const label = lgaName.toUpperCase();
+  const labelWidth = Math.max(32, label.length * 9.5);
+  const columnSpacing = labelWidth + 20;
+  const columnCount = Math.ceil(530 / columnSpacing) + 1;
+
+  return Array.from({ length: 20 }, (_, rowIndex) =>
+    Array.from({ length: columnCount }, (_, columnIndex) => ({
+      key: `${rowIndex}-${columnIndex}`,
+      left: columnIndex * columnSpacing - (rowIndex % 2 === 1 ? columnSpacing / 2 : 0),
+      top: 8 + rowIndex * 42,
+      width: labelWidth,
+    }))
+  ).flat();
+};
+
 const pdfStyles = StyleSheet.create({
   page: {
-    padding: 22,
+    padding: 0,
     backgroundColor: "#ffffff",
     color: "#26332a",
     fontFamily: "Helvetica",
@@ -40,18 +56,21 @@ const pdfStyles = StyleSheet.create({
     position: "relative",
     zIndex: 1,
   },
-  watermark: {
+  watermarkPattern: {
     position: "absolute",
-    top: "44%",
     left: 0,
+    top: 0,
     right: 0,
+    bottom: 0,
     zIndex: 0,
+    overflow: "hidden",
+  },
+  watermarkLine: {
+    position: "absolute",
     color: "#11860f",
-    opacity: 0.08,
-    fontSize: 46,
+    opacity: 0.1,
+    fontSize: 14,
     fontFamily: "Helvetica-Bold",
-    textAlign: "center",
-    transform: "rotate(-30deg)",
   },
   header: {
     alignItems: "center",
@@ -202,7 +221,13 @@ export const CertificatePdf = ({
         <Image src={Borderside} style={{ ...pdfStyles.corner, top: -9, right: -9, transform: "rotate(90deg) scaleY(-1)" }} />
         <Image src={Borderside} style={{ ...pdfStyles.corner, bottom: -9, left: -9, transform: "rotate(90deg) scaleX(-1)" }} />
         <Image src={Borderside} style={{ ...pdfStyles.corner, bottom: -9, right: -9, transform: "rotate(270deg)" }} />
-        <Text style={pdfStyles.watermark}>{lgaName.replace(/-/g, " ")}</Text>
+        <View style={pdfStyles.watermarkPattern}>
+          {createWatermarkPositions(lgaName).map(({ key, ...position }) => (
+            <Text key={key} wrap={false} style={[pdfStyles.watermarkLine, position]}>
+              {lgaName.toUpperCase()}
+            </Text>
+          ))}
+        </View>
         <View style={pdfStyles.content}>
           <View style={pdfStyles.header}>
             <Image src={StateLogo} style={pdfStyles.stateSeal} />
@@ -660,14 +685,27 @@ const downloadPDF = async () => {
               />
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 z-[1] flex select-none items-center justify-center overflow-hidden"
+                className="pointer-events-none absolute inset-0 z-[1] flex select-none flex-col justify-around overflow-hidden"
               >
-                <span
-                  className="whitespace-nowrap text-[clamp(2rem,10vw,7rem)] font-black uppercase tracking-widest text-[#11860f]"
-                  style={{ opacity: 0.08, transform: "rotate(-30deg)" }}
-                >
-                  {lgaName.replace(/-/g, " ")}
-                </span>
+                {Array.from({ length: 20 }, (_, rowIndex) => (
+                  <div
+                    key={rowIndex}
+                    className="flex w-max flex-nowrap whitespace-nowrap text-[clamp(0.75rem,1.4vw,1.125rem)] font-black tracking-wide text-[#11860f]"
+                    style={{
+                      opacity: 0.1,
+                      transform: `translateX(${rowIndex % 2 === 0 ? "-4%" : "-18%"})`,
+                    }}
+                  >
+                    {Array.from(
+                      { length: Math.max(12, Math.ceil(180 / lgaName.length)) },
+                      (_, repeatIndex) => (
+                        <span key={repeatIndex} className="mr-5">
+                          {lgaName.toUpperCase()}
+                        </span>
+                      )
+                    )}
+                  </div>
+                ))}
               </div>
               <div className="relative z-10">
                 <div className="flex flex-col items-center pb-5 text-center">

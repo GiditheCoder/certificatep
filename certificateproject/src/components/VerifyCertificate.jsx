@@ -20,9 +20,25 @@ import CloseLogo from "../images/close.png";
 import Borderside from "../images/border.png";
 import QRCode from "react-qr-code";
 
+const createWatermarkPositions = (lgaName) => {
+  const label = lgaName.toUpperCase();
+  const labelWidth = Math.max(32, label.length * 9.5);
+  const columnSpacing = labelWidth + 20;
+  const columnCount = Math.ceil(530 / columnSpacing) + 1;
+
+  return Array.from({ length: 20 }, (_, rowIndex) =>
+    Array.from({ length: columnCount }, (_, columnIndex) => ({
+      key: `${rowIndex}-${columnIndex}`,
+      left: columnIndex * columnSpacing - (rowIndex % 2 === 1 ? columnSpacing / 2 : 0),
+      top: 8 + rowIndex * 42,
+      width: labelWidth,
+    }))
+  ).flat();
+};
+
 const pdfStyles = StyleSheet.create({
   page: {
-    padding: 22,
+    padding: 0,
     backgroundColor: "#ffffff",
     color: "#26332a",
     fontFamily: "Helvetica",
@@ -41,6 +57,24 @@ const pdfStyles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    position: "relative",
+    zIndex: 1,
+  },
+  watermarkPattern: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+    overflow: "hidden",
+  },
+  watermarkLine: {
+    position: "absolute",
+    color: "#11860f",
+    opacity: 0.1,
+    fontSize: 14,
+    fontFamily: "Helvetica-Bold",
   },
   header: {
     alignItems: "center",
@@ -205,6 +239,13 @@ const VerificationCertificatePdf = ({
           src={Borderside}
           style={{ ...pdfStyles.corner, bottom: -9, right: -9, transform: "rotate(270deg)" }}
         />
+        <View style={pdfStyles.watermarkPattern}>
+          {createWatermarkPositions(lgaName).map(({ key, ...position }) => (
+            <Text key={key} wrap={false} style={[pdfStyles.watermarkLine, position]}>
+              {lgaName.toUpperCase()}
+            </Text>
+          ))}
+        </View>
         <View style={pdfStyles.content}>
           <View style={pdfStyles.header}>
             <PdfImage src={StateLogo} style={pdfStyles.stateSeal} />
