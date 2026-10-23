@@ -88,6 +88,12 @@ const pdfStyles = StyleSheet.create({
     fontFamily: "Helvetica-Bold",
     textAlign: "center",
   },
+  certificateReference: {
+    marginTop: 2,
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "center",
+  },
   qrCode: {
     width: 76,
     height: 76,
@@ -108,6 +114,7 @@ const pdfStyles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 500,
     lineHeight: 1.5,
+    
     textAlign: "center",
   },
   emphasizedText: {
@@ -175,6 +182,7 @@ const VerificationCertificatePdf = ({
   applicantImage,
   organizationName,
   lgaName,
+  certificateRef,
   nativeTown,
   nativePoliticalWard,
 }) => (
@@ -204,6 +212,9 @@ const VerificationCertificatePdf = ({
             <Text style={pdfStyles.organizationLocation}>
               OWODE EGBA, OGUN STATE, NIGERIA
             </Text>
+            {certificateRef && (
+              <Text style={pdfStyles.certificateReference}>{certificateRef}</Text>
+            )}
             <View style={pdfStyles.applicantBlock}>
               <Text style={pdfStyles.officeCaption}>OFFICE OF THE CHAIRMAN</Text>
               <View style={pdfStyles.applicantImages}>
@@ -345,7 +356,9 @@ const VerifyCertificate = () => {
 
     setLoading(true);
     try {
-      const res = await axios.get(`${baseURL}/api/v1/certificate/verify/${inputCode}`);
+      const res = await axios.get(
+        `${baseURL}/api/v1/certificate/verify/${encodeURIComponent(inputCode.trim())}`
+      );
       const { data } = res.data;
 
       toast.success("Certificate verified successfully!");
@@ -370,7 +383,9 @@ const VerifyCertificate = () => {
 
     const timer = setTimeout(async () => {
       try {
-        await axios.delete(`${baseURL}/api/v1/certificate/nullify-verification/${certificateRef}`);
+        await axios.delete(
+          `${baseURL}/api/v1/certificate/nullify-verification/${encodeURIComponent(certificateRef)}`
+        );
         console.log(`Verification for ${certificateRef} nullified ✅`);
       } catch (err) {
         console.warn("Failed to nullify verification:", err);
@@ -445,6 +460,7 @@ const VerifyCertificate = () => {
           applicantImage={applicantImage}
           organizationName={`${lgaName} Local Government`}
           lgaName={lgaName}
+          certificateRef={cert.certificateRef}
           nativeTown={app.nativeTown || app.town || "N/A"}
           nativePoliticalWard={app.nativePoliticalWard || "N/A"}
         />
@@ -604,6 +620,11 @@ const VerifyCertificate = () => {
                     <p className="mt-1 text-[9px] font-bold uppercase tracking-wide text-[#26332a] sm:text-xs">
                       Owode Egba, Ogun State, Nigeria
                     </p>
+                    {cert.certificateRef && (
+                      <p className="mt-1 text-[8px] font-bold text-[#26332a] sm:text-[10px]">
+                        {cert.certificateRef}
+                      </p>
+                    )}
                     <p className="mt-2 text-[9px] font-bold uppercase text-red-600 sm:text-[10px]">
                       Office of the Chairman
                     </p>

@@ -113,7 +113,6 @@ const CertificateRequest = () => {
         <p className="text-gray-500 mb-4">
           Enter your email to receive a verification code for your certificate.
         </p>
-
         <fieldset className="mb-4 space-y-3 rounded-lg border border-gray-200 p-4 text-left">
           <legend className="px-1 text-sm font-semibold text-gray-800">
             Payment method
