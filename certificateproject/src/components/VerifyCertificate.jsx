@@ -398,7 +398,8 @@ const VerifyCertificate = () => {
     setLoading(true);
     try {
       const res = await axios.get(
-        `${baseURL}/api/v1/certificate/verify/${encodeURIComponent(inputCode.trim())}`
+        `${baseURL}/api/v1/certificate/verify`,
+        { params: { code: inputCode.trim() } }
       );
       const { data } = res.data;
 
@@ -425,7 +426,8 @@ const VerifyCertificate = () => {
     const timer = setTimeout(async () => {
       try {
         await axios.delete(
-          `${baseURL}/api/v1/certificate/nullify-verification/${encodeURIComponent(certificateRef)}`
+          `${baseURL}/api/v1/certificate/nullify-verification`,
+          { params: { ref: certificateRef } }
         );
         console.log(`Verification for ${certificateRef} nullified ✅`);
       } catch (err) {
