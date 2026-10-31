@@ -654,6 +654,25 @@ const VerifyCertificate = () => {
                   className="pointer-events-none absolute -bottom-8 -right-5 z-0 h-32 w-24 rotate-[270deg] object-contain sm:-bottom-10 sm:-right-7 sm:h-44 sm:w-32 md:h-52 md:w-36"
                 />
 
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 z-0 grid grid-rows-[repeat(20,minmax(0,1fr))] overflow-hidden"
+                >
+                  {Array.from({ length: 20 }, (_, rowIndex) => (
+                    <div
+                      key={rowIndex}
+                      className="flex items-center justify-around whitespace-nowrap text-[10px] font-bold text-[#11860f] opacity-10 sm:text-sm"
+                      style={{
+                        transform: rowIndex % 2 === 1 ? "translateX(-6%)" : undefined,
+                      }}
+                    >
+                      {Array.from({ length: 4 }, (_, columnIndex) => (
+                        <span key={columnIndex}>{lgaName.toUpperCase()}</span>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
                 <div className="relative z-10">
                   <div className="flex flex-col items-center pb-5 text-center">
                     <img src={StateLogo} alt="Ogun State seal" className="h-20 w-20 shrink-0 object-contain sm:h-24 sm:w-24" />
