@@ -35,12 +35,13 @@ import AdminSpec from './components/AdminSpec.jsx'
 import DownloadReport from './components/DownloadReport.jsx'
 import DashboardWithFilter from './components/DashboardWithFilter.jsx'
 import './index.css'
+import 'react-toastify/dist/ReactToastify.css'
 
 const App = () => {
   return (
      <UserProvider>
-    <Router>
-      <Routes>
+     <Router>
+        <Routes>
         {/* Home page */}
         <Route path="/" element={<Home />} />
         {/* Signup page */}

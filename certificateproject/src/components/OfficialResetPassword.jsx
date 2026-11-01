@@ -17,6 +17,11 @@ const OfficialResetPassword = () => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const passwordsDoNotMatch =
+    confirmPassword.length > 0 && newPassword !== confirmPassword;
+  const passwordMismatchStyle = passwordsDoNotMatch
+    ? { borderColor: "#ef4444" }
+    : undefined;
 
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
   const [resending, setResending] = useState(false);
@@ -133,7 +138,7 @@ const OfficialResetPassword = () => {
     }
 
         const timer = setTimeout(() => {
-      navigate("/login");
+      navigate("/official");
     }, 1000);
 
     // Clean up timer if component unmounts
@@ -214,7 +219,8 @@ const OfficialResetPassword = () => {
             placeholder="New password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full font-semibold px-4 py-4 border rounded-lg  text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
+            style={passwordMismatchStyle}
+            className="w-full font-semibold px-4 py-4 border rounded-lg text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
           />
           <button
             type="button"
@@ -232,6 +238,7 @@ const OfficialResetPassword = () => {
             placeholder="Confirm new password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            style={passwordMismatchStyle}
             className="w-full font-semibold px-4 py-4 border rounded-lg text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
           />
           <button
@@ -242,6 +249,11 @@ const OfficialResetPassword = () => {
             {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
+        {passwordsDoNotMatch && (
+          <p className="text-sm font-bold" style={{ color: "#ef4444" }}>
+            Passwords do not match.
+          </p>
+        )}
 
       
         {/* API Message */}

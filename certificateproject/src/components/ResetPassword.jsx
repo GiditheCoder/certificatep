@@ -4,6 +4,8 @@ import Bg from "../images/Bg.png";
 import { Eye, EyeOff } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -17,6 +19,11 @@ const ResetPassword = () => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const passwordsDoNotMatch =
+    confirmPassword.length > 0 && newPassword !== confirmPassword;
+  const passwordMismatchStyle = passwordsDoNotMatch
+    ? { borderColor: "#ef4444" }
+    : undefined;
 
   // 🕒 Timer state (10 minutes = 600 seconds)
   const [timeLeft, setTimeLeft] = useState(600);
@@ -73,6 +80,8 @@ const ResetPassword = () => {
     const newCode = [...codeArray];
     newCode[index] = value;
     setCodeArray(newCode);
+    setErrors((previousErrors) => ({ ...previousErrors, otp: "" }));
+    setMessage("");
 
     if (value && index < 5) {
       const nextInput = document.getElementById(`code-input-${index + 1}`);
@@ -111,7 +120,14 @@ const ResetPassword = () => {
   setErrors(newErrors);
   setMessage("");
 
-  if (Object.keys(newErrors).length > 0) return;
+  if (Object.keys(newErrors).length > 0) {
+    toast.error(Object.values(newErrors)[0], {
+      position: "top-center",
+      autoClose: 4000,
+      theme: "colored",
+    });
+    return;
+  }
 
   setLoading(true);
   try {
@@ -124,6 +140,28 @@ const ResetPassword = () => {
         confirmPassword,
       }
     );
+
+    const responseMessage =
+      response.data?.message || response.data?.error || "";
+    const responseIndicatesInvalidOtp =
+      response.data?.success === false ||
+      /(?:invalid|incorrect|expired|wrong|not valid).{0,30}(?:otp|one.?time|verification code|code)|(?:otp|one.?time|verification code|code).{0,30}(?:invalid|incorrect|expired|wrong|not valid)/i.test(
+        responseMessage
+      );
+
+    if (responseIndicatesInvalidOtp) {
+      const errorMessage =
+        typeof responseMessage === "string" && responseMessage
+          ? responseMessage
+          : "Invalid OTP. Please check the code and try again.";
+      setErrors((previousErrors) => ({ ...previousErrors, otp: errorMessage }));
+      toast.error(errorMessage, {
+        position: "top-center",
+        autoClose: 4000,
+        theme: "colored",
+      });
+      return;
+    }
 
     // ✅ Reset UI
     setMessage("🎉 Password reset successful! Redirecting to login...");
@@ -149,9 +187,33 @@ const ResetPassword = () => {
 
   } catch (error) {
     console.error("Error resetting password:", error);
-    setMessage(
-      error.response?.data?.message || "Failed to reset password. Try again."
-    );
+    const rawApiMessage =
+      error.response?.data?.message || error.response?.data?.error || "";
+    const apiMessage =
+      typeof rawApiMessage === "string" ? rawApiMessage : "";
+    const isInvalidOtp =
+      /(?:invalid|incorrect|expired|wrong|not valid).{0,30}(?:otp|one.?time|verification code|code)|(?:otp|one.?time|verification code|code).{0,30}(?:invalid|incorrect|expired|wrong|not valid)/i.test(
+        apiMessage
+      ) || (!apiMessage && [400, 401, 422].includes(error.response?.status));
+
+    if (isInvalidOtp) {
+      setErrors((previousErrors) => ({
+        ...previousErrors,
+        otp: "Invalid OTP. Please check the code and try again.",
+      }));
+      setMessage("");
+      toast.error("Invalid OTP. Please check the code and try again.", {
+        position: "top-center",
+        autoClose: 4000,
+        theme: "colored",
+      });
+    } else {
+      toast.error(apiMessage || "Failed to reset password. Try again.", {
+        position: "top-center",
+        autoClose: 4000,
+        theme: "colored",
+      });
+    }
   } finally {
     setLoading(false);
   }
@@ -163,6 +225,12 @@ const ResetPassword = () => {
       className="min-h-screen flex items-center justify-center bg-cover bg-center px-4 sm:px-6"
       style={{ backgroundImage: `url(${Bg})` }}
     >
+      <ToastContainer
+        position="top-center"
+        autoClose={4000}
+        theme="colored"
+        style={{ zIndex: 9999 }}
+      />
       <div className="w-full max-w-sm space-y-6">
         <h1 className="text-white text-2xl sm:text-3xl font-bold text-center mb-6">
           Set a New Password
@@ -198,9 +266,6 @@ const ResetPassword = () => {
             />
           ))}
         </div>
-        {errors.otp && (
-          <p className="text-red-500 text-sm text-center">{errors.otp}</p>
-        )}
 
         {/* Timer or Resend */}
         <div className="text-center font-medium text-gray-600 text-sm mt-2">
@@ -229,7 +294,12 @@ const ResetPassword = () => {
             placeholder="New password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full px-4 py-4 border rounded-lg font-semibold text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
+            style={passwordMismatchStyle}
+            className={`w-full px-4 py-4 border rounded-lg font-semibold text-black placeholder-gray-400 pr-12 focus:outline-none ${
+              passwordsDoNotMatch
+                ? "border-red-500 focus:border-red-500"
+                : "border-[#3c3c51] focus:border-green-600"
+            }`}
           />
           <button
             type="button"
@@ -247,7 +317,12 @@ const ResetPassword = () => {
             placeholder="Confirm new password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-4 py-4 border rounded-lg font-semibold text-black placeholder-gray-400 pr-12 focus:border-green-600 focus:outline-none border-[#3c3c51]"
+            style={passwordMismatchStyle}
+            className={`w-full px-4 py-4 border rounded-lg font-semibold text-black placeholder-gray-400 pr-12 focus:outline-none ${
+              passwordsDoNotMatch
+                ? "border-red-500 focus:border-red-500"
+                : "border-[#3c3c51] focus:border-green-600"
+            }`}
           />
           
           <button
@@ -259,6 +334,11 @@ const ResetPassword = () => {
           </button>
 
         </div>
+        {passwordsDoNotMatch && (
+          <p className="text-sm font-bold" style={{ color: "#ef4444" }}>
+            Passwords do not match.
+          </p>
+        )}
 
         {/* API Message */}
         {message && (
@@ -277,6 +357,7 @@ const ResetPassword = () => {
 
         {/* Submit Button */}
         <button
+          type="button"
           onClick={handleResetPassword}
           disabled={loading}
           className="w-full bg-[#11860F] text-white font-semibold py-4 rounded-lg hover:bg-[#0c670b] transition"
@@ -284,9 +365,18 @@ const ResetPassword = () => {
           {loading ? "Resetting..." : "Set New Password"}
         </button>
       </div>
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="colored"
+      />
     </div>
   );
 };
 
 export default ResetPassword;
-
