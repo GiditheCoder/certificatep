@@ -32,7 +32,6 @@ const requestAuditLogs = async (token, filters) => {
     limit: String(filters.limit),
   });
 
-  if (filters.adminId) params.set("adminId", filters.adminId);
   if (filters.startDate) params.set("startDate", filters.startDate);
   if (filters.endDate) params.set("endDate", filters.endDate);
 
@@ -48,7 +47,6 @@ const AuditLogs = () => {
   const token = localStorage.getItem("token");
   const admin = JSON.parse(localStorage.getItem("user") || "null");
   const isSuperAdmin = admin?.role === "super_admin";
-  const [adminId, setAdminId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [limit, setLimit] = useState(20);
@@ -106,7 +104,6 @@ const AuditLogs = () => {
     setAccessError("");
     try {
       const result = await requestAuditLogs(token, {
-        adminId: adminId.trim(),
         startDate,
         endDate,
         page: requestedPage,
@@ -143,7 +140,7 @@ const AuditLogs = () => {
   const pageCount = Math.max(1, Math.ceil(total / limit));
 
   return (
-    <section className="min-w-0 w-full space-y-5">
+    <section className="min-w-0 w-full space-y-5 pt-12 md:pt-0">
       <ToastContainer
         position="top-center"
         autoClose={3000}
@@ -171,21 +168,12 @@ const AuditLogs = () => {
       {isSuperAdmin && (
         <>
           <form
-            className="grid gap-3 rounded-lg bg-white p-4 shadow sm:grid-cols-2 lg:grid-cols-5"
+            className="grid gap-3 rounded-lg bg-white p-4 shadow sm:grid-cols-2 lg:grid-cols-4"
             onSubmit={(event) => {
               event.preventDefault();
               loadLogs(1);
             }}
           >
-            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-              Admin ID
-              <input
-                value={adminId}
-                onChange={(event) => setAdminId(event.target.value)}
-                className="rounded border border-gray-300 px-3 py-2"
-                placeholder="Filter by admin ID"
-              />
-            </label>
             <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
               Start date
               <input
@@ -226,7 +214,7 @@ const AuditLogs = () => {
           </form>
 
           <div className="max-w-full overflow-x-auto rounded-lg bg-white shadow">
-            <table className="w-full min-w-[900px] table-fixed divide-y divide-gray-200 text-left text-sm">
+            <table className="w-full min-w-[900px] table-fixed divide-y divide-gray-200 text-left text-sm font-bold">
               <thead className="bg-gray-100 text-gray-700">
                 <tr>
                   <th className="w-[14%] break-words px-3 py-3 font-semibold">Date</th>

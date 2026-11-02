@@ -51,19 +51,13 @@ const AdminScreen = ({onOpenFilter}) => {
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
   
-  // 🔥 FETCH SUMMARY
-  // ======================================================
   const fetchSummary = async () => {
     try {
       const res = await axios.get(
         `${baseURL}/api/v1/admin/summary/application`,
         config
       );
-      console.log("🔥 Summary response:", res.data?.data);
-      console.log("🔥 Summary Raw:", res);
-
       const summaryData = res.data?.data?.summary;
-      console.log("🔥 Summary Data:", summaryData);
       setSummary(summaryData || null);
 
     } catch (error) {
@@ -71,9 +65,6 @@ const AdminScreen = ({onOpenFilter}) => {
     }
   };
 
-  // ======================================================
-  // 🔥 FETCH APPLICATIONS (All, Approved, Pending, Rejected)
-  // ======================================================
   const fetchApplications = async (status = "all") => {
     setLoading(true);
     setFilterError("");
@@ -93,8 +84,6 @@ const AdminScreen = ({onOpenFilter}) => {
         `${baseURL}/api/v1/admin/applications`,
         { ...config, params }
       );
-
-      console.log("🔥 Applications Raw:", res.data);
 
       // Extract correct array
       const arr = res.data?.data?.data || [];
@@ -182,7 +171,16 @@ const AdminScreen = ({onOpenFilter}) => {
   return name.toLowerCase().includes(search.toLowerCase());
 });
 
-const handleSendDownloadReport = async () => {
+  const handleApplyFilters = () => {
+    if (!lga) {
+      setFilterError("Please select an LGA before applying filters.");
+      return;
+    }
+
+    fetchApplications(filter === "All" ? "all" : filter);
+  };
+
+  const handleSendDownloadReport = async () => {
   if (!downloadEmail) {
     alert("Please enter an email address");
     return;
@@ -250,24 +248,11 @@ const handleSendDownloadReport = async () => {
 
  
     <div className="flex items-center justify-between mb-4">
-  <h1 className="text-2xl font-bold">
-    Dashboard
-  </h1>
+      <h1 className="text-2xl font-bold">
+        Dashboard
+      </h1>
 
-   <button
-          className="bg-green-700 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-800 transition-colors"
-          // onClick={onOpenFilter}
-          onClick={() => setFilterOpen(true)}
-
-        >
-          Filter
-        </button>
-
-        
-               
-                
-
-</div>
+    </div>
 
 
 
@@ -428,7 +413,7 @@ const handleSendDownloadReport = async () => {
             onChange={(event) => setLga(event.target.value)}
             className="rounded border border-gray-300 bg-white px-3 py-2"
           >
-            <option value="">All LGAs</option>
+              <option value="">Select an LGA</option>
             {lgas.map((lgaName) => (
               <option key={lgaName} value={lgaName}>
                 {lgaName}
@@ -438,11 +423,9 @@ const handleSendDownloadReport = async () => {
         </label>
         <button
           type="button"
-          onClick={() =>
-            fetchApplications(filter === "All" ? "all" : filter)
-          }
-          disabled={loading}
-          className="self-end rounded bg-green-700 px-4 py-2 font-semibold text-white hover:bg-green-800 disabled:opacity-60"
+          onClick={handleApplyFilters}
+          disabled={loading || !lga}
+          className="self-end rounded bg-green-700 px-4 py-2 font-semibold text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Apply filters
         </button>

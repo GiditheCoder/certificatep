@@ -11,7 +11,7 @@ const OfficialForgotPassword = () => {
   const navigate = useNavigate();
 
   const handleLoginRedirect = () => {
-    navigate("/official-login");
+    navigate("/official");
   };
 
   const handleSubmit = async (e) => {

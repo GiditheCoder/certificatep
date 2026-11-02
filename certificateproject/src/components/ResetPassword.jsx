@@ -76,17 +76,42 @@ const ResetPassword = () => {
 
   // 🧩 Handle OTP input
   const handleInputChange = (e, index) => {
-    const value = e.target.value.slice(-1);
+    const value = e.target.value.replace(/\D/g, "").slice(-1);
     const newCode = [...codeArray];
     newCode[index] = value;
     setCodeArray(newCode);
     setErrors((previousErrors) => ({ ...previousErrors, otp: "" }));
     setMessage("");
+    toast.dismiss();
 
     if (value && index < 5) {
       const nextInput = document.getElementById(`code-input-${index + 1}`);
       if (nextInput) nextInput.focus();
     }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pastedCode = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    if (!pastedCode) return;
+
+    setCodeArray(Array.from({ length: 6 }, (_, index) => pastedCode[index] || ""));
+    setErrors((previousErrors) => ({ ...previousErrors, otp: "" }));
+    setMessage("");
+    toast.dismiss();
+    document
+      .getElementById(`code-input-${Math.min(pastedCode.length, 6) - 1}`)
+      ?.focus();
+  };
+
+  const clearOtpForRetry = () => {
+    setCodeArray(["", "", "", "", "", ""]);
+    window.requestAnimationFrame(() => {
+      document.getElementById("code-input-0")?.focus();
+    });
   };
 
   const handleKeyDown = (e, index) => {
@@ -144,7 +169,7 @@ const ResetPassword = () => {
     const responseMessage =
       response.data?.message || response.data?.error || "";
     const responseIndicatesInvalidOtp =
-      response.data?.success === false ||
+      typeof responseMessage === "string" &&
       /(?:invalid|incorrect|expired|wrong|not valid).{0,30}(?:otp|one.?time|verification code|code)|(?:otp|one.?time|verification code|code).{0,30}(?:invalid|incorrect|expired|wrong|not valid)/i.test(
         responseMessage
       );
@@ -154,12 +179,27 @@ const ResetPassword = () => {
         typeof responseMessage === "string" && responseMessage
           ? responseMessage
           : "Invalid OTP. Please check the code and try again.";
+      clearOtpForRetry();
       setErrors((previousErrors) => ({ ...previousErrors, otp: errorMessage }));
       toast.error(errorMessage, {
         position: "top-center",
         autoClose: 4000,
         theme: "colored",
       });
+      return;
+    }
+
+    if (response.data?.success === false) {
+      toast.error(
+        typeof responseMessage === "string" && responseMessage
+          ? responseMessage
+          : "Failed to reset password. Please try again.",
+        {
+          position: "top-center",
+          autoClose: 4000,
+          theme: "colored",
+        }
+      );
       return;
     }
 
@@ -194,9 +234,10 @@ const ResetPassword = () => {
     const isInvalidOtp =
       /(?:invalid|incorrect|expired|wrong|not valid).{0,30}(?:otp|one.?time|verification code|code)|(?:otp|one.?time|verification code|code).{0,30}(?:invalid|incorrect|expired|wrong|not valid)/i.test(
         apiMessage
-      ) || (!apiMessage && [400, 401, 422].includes(error.response?.status));
+      );
 
     if (isInvalidOtp) {
+      clearOtpForRetry();
       setErrors((previousErrors) => ({
         ...previousErrors,
         otp: "Invalid OTP. Please check the code and try again.",
@@ -259,13 +300,20 @@ const ResetPassword = () => {
               value={char}
               onChange={(e) => handleInputChange(e, index)}
               onKeyDown={(e) => handleKeyDown(e, index)}
+              onPaste={index === 0 ? handleOtpPaste : undefined}
               maxLength={1}
+              aria-label={`OTP digit ${index + 1}`}
               className={`w-10 h-10 sm:w-12 sm:h-12 font-semibold text-black text-lg text-center rounded-md bg-transparent border 
                 focus:outline-none focus:border-green-600 transition 
                 ${errors.otp ? "border-red-500" : "border-[#3c3c51]"}`}
             />
           ))}
         </div>
+        {errors.otp && (
+          <p className="text-center text-sm font-medium text-red-600" role="alert">
+            {errors.otp}
+          </p>
+        )}
 
         {/* Timer or Resend */}
         <div className="text-center font-medium text-gray-600 text-sm mt-2">
