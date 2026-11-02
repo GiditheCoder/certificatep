@@ -5,6 +5,12 @@ import { Eye, EyeOff } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
+const isInvalidOtpMessage = (message) =>
+  typeof message === "string" &&
+  /(?:invalid|incorrect|expired|wrong|not valid).{0,30}(?:otp|one.?time|verification code|code)|(?:otp|one.?time|verification code|code).{0,30}(?:invalid|incorrect|expired|wrong|not valid)/i.test(
+    message
+  );
+
 const OfficialResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,6 +31,7 @@ const OfficialResetPassword = () => {
 
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
   const [resending, setResending] = useState(false);
+  const [otpRejected, setOtpRejected] = useState(false);
 
   // Countdown timer
   useEffect(() => {
@@ -59,6 +66,7 @@ const OfficialResetPassword = () => {
       setMessage(res.data.message || "A new OTP has been sent to your email.");
       setCodeArray(["", "", "", "", "", ""]);
       setTimeLeft(600); // reset timer
+      setOtpRejected(false);
 
     } catch (error) {
   console.error("Error resending OTP:", error.response?.data || error.message);
@@ -125,6 +133,28 @@ const OfficialResetPassword = () => {
           confirmPassword,
         }
       );
+      const responseMessage =
+        response.data?.message || response.data?.error || "";
+      if (
+        isInvalidOtpMessage(responseMessage) ||
+        response.data?.success === false
+      ) {
+        if (isInvalidOtpMessage(responseMessage)) {
+          setCodeArray(["", "", "", "", "", ""]);
+          setOtpRejected(true);
+          setErrors((previousErrors) => ({
+            ...previousErrors,
+            otp: responseMessage,
+          }));
+          window.requestAnimationFrame(() => {
+            document.getElementById("code-input-0")?.focus();
+          });
+        } else {
+          setMessage(responseMessage || "Failed to reset password. Try again.");
+        }
+        return;
+      }
+
       setMessage(response.data.message || "Password reset successful!");
       setErrors({});
       setCodeArray(["", "", "", "", "", ""]);
@@ -147,9 +177,21 @@ const OfficialResetPassword = () => {
 
     } catch (error) {
       console.error("Error resetting password:", error);
-      setMessage(
-        error.response?.data?.message || "Failed to reset password. Try again."
-      );
+      const apiMessage =
+        error.response?.data?.message || error.response?.data?.error || "";
+      if (isInvalidOtpMessage(apiMessage)) {
+        setCodeArray(["", "", "", "", "", ""]);
+        setOtpRejected(true);
+        setErrors((previousErrors) => ({
+          ...previousErrors,
+          otp: apiMessage,
+        }));
+        window.requestAnimationFrame(() => {
+          document.getElementById("code-input-0")?.focus();
+        });
+      } else {
+        setMessage(apiMessage || "Failed to reset password. Try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -197,7 +239,7 @@ const OfficialResetPassword = () => {
 
         {/* Timer / Resend OTP */}
         <div className="text-center font-medium text-gray-600 text-sm mt-2">
-          {timeLeft > 0 ? (
+          {timeLeft > 0 && !otpRejected ? (
             <p className="font-medium">
               OTP expires in{" "}
               <span className="text-green-600 font-semibold">{formatTime(timeLeft)}</span>
