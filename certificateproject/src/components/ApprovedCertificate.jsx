@@ -323,6 +323,7 @@ const ApprovedCertificate = () => {
   // Fetch certificate data by ID
   useEffect(() => {
     const fetchCertificate = async () => {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
       try {
         setLoading(true);
         setError(null);
@@ -339,13 +340,15 @@ const ApprovedCertificate = () => {
           setLoading(false);
           return;
         }
-
         const token = localStorage.getItem("token");
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
         
         if (!token) {
           toast.error("Authentication token not found. Please login again.");
-          navigate("/login");
+          navigate(
+            user?.role === "admin" || user?.role === "super_admin"
+              ? "/official"
+              : "/login"
+          );
           return;
         }
 
@@ -355,12 +358,15 @@ const ApprovedCertificate = () => {
           return;
         }
 
-        const certificateRes = await axios.get(`${baseURL}/api/v1/certificate/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const certificateRes = await axios.get(
+          `${baseURL}/api/v1/certificate/${encodeURIComponent(id)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         const cert =
           certificateRes?.data?.data ??
@@ -386,12 +392,19 @@ const ApprovedCertificate = () => {
 
         if (error.response?.status === 401) {
           toast.error("Session expired or invalid token. Please login again.");
+          const loginRoute =
+            user?.role === "admin" || user?.role === "super_admin"
+              ? "/official"
+              : "/login";
           localStorage.removeItem("token");
           localStorage.removeItem("user");
-          setTimeout(() => {
-            const user = JSON.parse(localStorage.getItem("user") || "{}");
-            navigate(user?.role === "admin" ? "/official" : "/login");
-          }, 2000);
+          setTimeout(() => navigate(loginRoute), 2000);
+        } else if (error.response?.status === 403) {
+          const forbiddenMessage =
+            error.response?.data?.message ||
+            "Forbidden: you do not have access to this certificate.";
+          setError(forbiddenMessage);
+          toast.error(forbiddenMessage);
         } else if (error.response?.status === 404) {
           toast.error("Certificate not found");
           setTimeout(() => navigate("/dashboard"), 2000);

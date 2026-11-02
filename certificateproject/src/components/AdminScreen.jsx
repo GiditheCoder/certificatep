@@ -33,6 +33,11 @@ const AdminScreen = ({onOpenFilter}) => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [downloadEmail, setDownloadEmail] = useState("");
+  const [states, setStates] = useState(["Ogun"]);
+  const [state, setState] = useState("Ogun");
+  const [lgas, setLgas] = useState([]);
+  const [lga, setLga] = useState("");
+  const [filterError, setFilterError] = useState("");
 
 
   const navigate = useNavigate();
@@ -71,15 +76,18 @@ const AdminScreen = ({onOpenFilter}) => {
   // ======================================================
   const fetchApplications = async (status = "all") => {
     setLoading(true);
+    setFilterError("");
 
     try {
       const params = {
         page: 1,
         startDate,
         endDate,
+        state,
       };
 
       if (status !== "all") params.status = status.toLowerCase();
+      if (lga) params.lga = lga;
 
       const res = await axios.get(
         `${baseURL}/api/v1/admin/applications`,
@@ -94,6 +102,9 @@ const AdminScreen = ({onOpenFilter}) => {
 
     } catch (error) {
       console.error("❌ Fetch apps error:", error.response?.data || error);
+      setFilterError(
+        error.response?.data?.message || "Unable to load applications."
+      );
     } finally {
       setLoading(false);
     }
@@ -104,6 +115,66 @@ const AdminScreen = ({onOpenFilter}) => {
     fetchSummary();
     fetchApplications("all");
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchStates = async () => {
+      try {
+        const response = await axios.get(`${baseURL}/api/v1/states`);
+        const stateList = response.data?.data;
+        if (!Array.isArray(stateList)) {
+          throw new Error("Unexpected states response format.");
+        }
+        if (active) {
+          setStates(
+            stateList.includes("Ogun") ? stateList : ["Ogun", ...stateList]
+          );
+        }
+      } catch (error) {
+        if (active) {
+          setFilterError(
+            error.response?.data?.message || "Unable to load states."
+          );
+        }
+      }
+    };
+
+    fetchStates();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setLgas([]);
+    setLga("");
+
+    const fetchLgas = async () => {
+      try {
+        const response = await axios.get(
+          `${baseURL}/api/v1/lgas?state=${encodeURIComponent(state)}`
+        );
+        const lgaList = response.data?.data?.lgas;
+        if (!Array.isArray(lgaList)) {
+          throw new Error(`Unexpected LGA response format for ${state}.`);
+        }
+        if (active) setLgas(lgaList);
+      } catch (error) {
+        if (active) {
+          setFilterError(
+            error.response?.data?.message || `Unable to load LGAs for ${state}.`
+          );
+        }
+      }
+    };
+
+    fetchLgas();
+    return () => {
+      active = false;
+    };
+  }, [state]);
 
  
   const filteredApps = applications.filter((app) => {
@@ -123,6 +194,8 @@ const handleSendDownloadReport = async () => {
       startDate,
       endDate,
       email: downloadEmail,
+      state,
+      ...(lga ? { lga } : {}),
     };
 
     const res = await axios.post(
@@ -319,6 +392,67 @@ const handleSendDownloadReport = async () => {
      
 
       {/* Tabs */}
+      <div className="mb-4 grid gap-3 rounded-lg border bg-gray-50 p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="flex flex-col gap-1 text-sm font-medium">
+          Search by name
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Applicant name"
+            className="rounded border border-gray-300 bg-white px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm font-medium">
+          State
+          <select
+            value={state}
+            onChange={(event) => {
+              setLga("");
+              setFilterError("");
+              setState(event.target.value);
+            }}
+            className="rounded border border-gray-300 bg-white px-3 py-2"
+          >
+            {states.map((stateName) => (
+              <option key={stateName} value={stateName}>
+                {stateName}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-sm font-medium">
+          LGA
+          <select
+            value={lga}
+            onChange={(event) => setLga(event.target.value)}
+            className="rounded border border-gray-300 bg-white px-3 py-2"
+          >
+            <option value="">All LGAs</option>
+            {lgas.map((lgaName) => (
+              <option key={lgaName} value={lgaName}>
+                {lgaName}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          onClick={() =>
+            fetchApplications(filter === "All" ? "all" : filter)
+          }
+          disabled={loading}
+          className="self-end rounded bg-green-700 px-4 py-2 font-semibold text-white hover:bg-green-800 disabled:opacity-60"
+        >
+          Apply filters
+        </button>
+        {filterError && (
+          <p className="text-sm text-red-600 sm:col-span-2 lg:col-span-4">
+            {filterError}
+          </p>
+        )}
+      </div>
+
       <div className="flex font-semibold border-b mb-4 space-x-4">
         {["All", "Pending", "Approved", "Rejected"].map((t) => (
           <button
@@ -436,5 +570,3 @@ const handleSendDownloadReport = async () => {
 };
 
 export default AdminScreen;
-
-

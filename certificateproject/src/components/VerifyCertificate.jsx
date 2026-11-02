@@ -123,8 +123,8 @@ const pdfStyles = StyleSheet.create({
     textAlign: "center",
   },
   certificateReference: {
-    marginTop: 3,
-    fontSize: 9,
+    marginTop: 2,
+    fontSize: 8,
     fontFamily: "Helvetica-Bold",
     textAlign: "center",
   },
@@ -656,19 +656,25 @@ const VerifyCertificate = () => {
 
                 <div
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 z-0 grid grid-rows-[repeat(20,minmax(0,1fr))] overflow-hidden"
+                  className="pointer-events-none absolute inset-0 z-[1] flex select-none flex-col justify-around overflow-hidden"
                 >
                   {Array.from({ length: 20 }, (_, rowIndex) => (
                     <div
                       key={rowIndex}
-                      className="flex items-center justify-around whitespace-nowrap text-[10px] font-bold text-[#11860f] opacity-10 sm:text-sm"
+                      className="flex w-max flex-nowrap whitespace-nowrap text-[clamp(0.75rem,1.4vw,1.125rem)] font-black tracking-wide text-[#11860f]"
                       style={{
-                        transform: rowIndex % 2 === 1 ? "translateX(-6%)" : undefined,
+                        opacity: 0.1,
+                        transform: `translateX(${rowIndex % 2 === 0 ? "-4%" : "-18%"})`,
                       }}
                     >
-                      {Array.from({ length: 4 }, (_, columnIndex) => (
-                        <span key={columnIndex}>{lgaName.toUpperCase()}</span>
-                      ))}
+                      {Array.from(
+                        { length: Math.max(12, Math.ceil(180 / lgaName.length)) },
+                        (_, repeatIndex) => (
+                          <span key={repeatIndex} className="mr-5">
+                            {lgaName.toUpperCase()}
+                          </span>
+                        )
+                      )}
                     </div>
                   ))}
                 </div>
@@ -683,7 +689,7 @@ const VerifyCertificate = () => {
                       Owode Egba, Ogun State, Nigeria
                     </p>
                     {cert.certificateRef && (
-                      <p className="mt-1 text-[8px] font-bold text-[#26332a] sm:text-[10px]">
+                      <p className="mt-1 text-center text-[8px] font-bold leading-tight text-[#26332a] sm:text-[10px]">
                         {cert.certificateRef}
                       </p>
                     )}

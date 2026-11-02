@@ -107,6 +107,7 @@ import OfficialSignUp from "./OfficialSignUp";
 import DownloadReport from "./DownloadReport";
 import AdminScreen from "./AdminScreen";
 import DashboardWithFilter from "./DashboardWithFilter";
+import AuditLogs from "./AuditLogs";
 import { Menu, X } from "lucide-react";
 
 const AdminSpec = () => {
@@ -147,6 +148,7 @@ const AdminSpec = () => {
           <NavBtn view="dashboard" label="Dashboard" />
           <NavBtn view="registerOfficial" label="Register Official" />
           <NavBtn view="downloadReport" label="Download Report" />
+          <NavBtn view="auditLogs" label="Audit Logs" />
         </nav>
       </aside>
 
@@ -173,13 +175,14 @@ const AdminSpec = () => {
               <NavBtn view="dashboard" label="Dashboard" />
               <NavBtn view="registerOfficial" label="Register Official" />
               <NavBtn view="downloadReport" label="Download Report" />
+              <NavBtn view="auditLogs" label="Audit Logs" />
             </nav>
           </div>
         </div>
       )}
 
       {/* ===== MAIN BODY ===== */}
-      <main className="flex-1 p-3 sm:p-6">
+      <main className="min-w-0 flex-1 p-3 sm:p-6">
         {activeView === "dashboard" && (
           <AdminScreen
             onOpenFilter={() => setActiveView("dashboardWithFilter")}
@@ -190,11 +193,10 @@ const AdminSpec = () => {
         )}
         {activeView === "registerOfficial" && <OfficialSignUp />}
         {activeView === "downloadReport" && <DownloadReport />}
+        {activeView === "auditLogs" && <AuditLogs />}
       </main>
     </div>
   );
 };
 
 export default AdminSpec;
-
-

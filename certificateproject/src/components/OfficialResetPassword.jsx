@@ -43,7 +43,8 @@ const OfficialResetPassword = () => {
 
   // Resend OTP
   const handleResendOtp = async () => {
-    if (!email) {
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
       setErrors({ email: "Please enter your email before requesting OTP." });
       return;
     }
@@ -53,7 +54,7 @@ const OfficialResetPassword = () => {
     try {
       const res = await axios.post(
         "https://certapp-aae046f75d3f.herokuapp.com/api/v1/admin/resend-otp",
-        { email }
+        { email: normalizedEmail }
       );
       setMessage(res.data.message || "A new OTP has been sent to your email.");
       setCodeArray(["", "", "", "", "", ""]);

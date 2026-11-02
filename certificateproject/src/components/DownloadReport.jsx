@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Download, X, Mail, Loader2 } from 'lucide-react';
 
 const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
 export default function DownloadReport() {
+  const [states, setStates] = useState(["Ogun"]);
+  const [state, setState] = useState("Ogun");
+  const [lgas, setLgas] = useState([]);
+  const [lga, setLga] = useState("");
+  const [locationsLoading, setLocationsLoading] = useState(false);
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: ''
@@ -14,6 +19,68 @@ export default function DownloadReport() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchStates = async () => {
+      try {
+        const response = await fetch(`${baseURL}/api/v1/states`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Unable to load states.");
+        }
+        if (!Array.isArray(data?.data)) {
+          throw new Error("Unexpected states response format.");
+        }
+        if (active) {
+          setStates(data.data.includes("Ogun") ? data.data : ["Ogun", ...data.data]);
+        }
+      } catch (fetchError) {
+        if (active) setError(fetchError.message || "Unable to load states.");
+      }
+    };
+
+    fetchStates();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setLgas([]);
+    setLga("");
+    setLocationsLoading(true);
+
+    const fetchLgas = async () => {
+      try {
+        const response = await fetch(
+          `${baseURL}/api/v1/lgas?state=${encodeURIComponent(state)}`
+        );
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || `Unable to load LGAs for ${state}.`);
+        }
+        const lgaList = data?.data?.lgas;
+        if (!Array.isArray(lgaList)) {
+          throw new Error(`Unexpected LGA response format for ${state}.`);
+        }
+        if (active) setLgas(lgaList);
+      } catch (fetchError) {
+        if (active) {
+          setError(fetchError.message || `Unable to load LGAs for ${state}.`);
+        }
+      } finally {
+        if (active) setLocationsLoading(false);
+      }
+    };
+
+    fetchLgas();
+    return () => {
+      active = false;
+    };
+  }, [state]);
 
   const handleFilterChange = (e) => {
     setFilters({
@@ -64,8 +131,10 @@ const handleDownload = async () => {
       status: 'approved',
       page: '1',
       startDate: filters.startDate,
-      endDate: filters.endDate
+      endDate: filters.endDate,
+      state,
     });
+    if (lga) queryParams.set("lga", lga);
 
     const checkResponse = await fetch(
       `${baseURL}/api/v1/admin/applications?${queryParams}`,
@@ -78,7 +147,10 @@ const handleDownload = async () => {
       }
     );
 
-    if (!checkResponse.ok) throw new Error('Failed to fetch applications');
+    if (!checkResponse.ok) {
+      const errorData = await checkResponse.json();
+      throw new Error(errorData.message || 'Failed to fetch applications');
+    }
 
     const downloadResponse = await fetch(
       `${baseURL}/api/v1/admin/download/application`,
@@ -91,7 +163,9 @@ const handleDownload = async () => {
         body: JSON.stringify({
           email,
           startDate: filters.startDate,
-          endDate: filters.endDate
+          endDate: filters.endDate,
+          state,
+          ...(lga ? { lga } : {}),
         })
       }
     );
@@ -134,6 +208,44 @@ const handleDownload = async () => {
           </h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                State
+              </label>
+              <select
+                value={state}
+                onChange={(event) => {
+                  setState(event.target.value);
+                  setError("");
+                }}
+                disabled={locationsLoading}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              >
+                {states.map((stateName) => (
+                  <option key={stateName} value={stateName}>
+                    {stateName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                LGA
+              </label>
+              <select
+                value={lga}
+                onChange={(event) => setLga(event.target.value)}
+                disabled={locationsLoading}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">All LGAs</option>
+                {lgas.map((lgaName) => (
+                  <option key={lgaName} value={lgaName}>
+                    {lgaName}
+                  </option>
+                ))}
+              </select>
+            </div>
             {/* Start Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

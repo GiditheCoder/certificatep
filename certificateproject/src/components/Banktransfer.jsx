@@ -86,19 +86,24 @@ const Banktransfer = () => {
   const handlePaymentConfirmation = async () => {
     const sourceId = transferDetails?.sourceId ?? transferDetails?.applicationId;
     if (!sourceId) {
-      toast.error("The application reference is missing. Please return and try again.");
+      toast.error("The payment reference is missing. Please return and try again.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please log in to check the transaction for your account.");
       return;
     }
 
     setCheckingPayment(true);
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
+      const response = await axios.post(
         `https://certapp-aae046f75d3f.herokuapp.com/api/v1/partner/transaction/${encodeURIComponent(sourceId)}`,
+        {},
         {
-          params: { source: isVerificationRequest ? "certificate" : "application" },
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       const transaction = response.data?.data ?? response.data;
@@ -121,9 +126,8 @@ const Banktransfer = () => {
     } catch (error) {
       const message = error.response?.data?.message;
       toast.error(
-        error.response?.status === 404 ||
-          (message &&
-            /transaction\s+not\s+completed|payment\s+not\s+completed/i.test(message))
+        message &&
+          /transaction\s+not\s+completed|payment\s+not\s+completed/i.test(message)
           ? "Transfer not complete."
           : message || "We couldn’t check your payment status. Please try again."
       );
