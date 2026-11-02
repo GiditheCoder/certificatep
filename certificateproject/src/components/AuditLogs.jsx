@@ -5,6 +5,23 @@ import "react-toastify/dist/ReactToastify.css";
 
 const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
+const getDeviceName = (userAgent = "") => {
+  if (/iPad/i.test(userAgent)) return "iPad";
+  if (/iPhone|iPod/i.test(userAgent)) return "iPhone";
+  if (/Android/i.test(userAgent)) return "Android device";
+  if (/Windows/i.test(userAgent)) return "Windows PC";
+  if (/Macintosh|Mac OS/i.test(userAgent)) return "Mac";
+  if (/Linux/i.test(userAgent)) return "Linux device";
+  return "Unknown device";
+};
+
+const formatAction = (action = "") =>
+  action
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .toLowerCase()
+    .replace(/^./, (character) => character.toUpperCase());
+
 const getDetailEntries = (details) => {
   if (!details) return [];
 
@@ -223,7 +240,7 @@ const AuditLogs = () => {
                   <th className="w-[12%] break-words px-3 py-3 font-semibold">Target</th>
                   <th className="w-[20%] break-words px-3 py-3 font-semibold">Details</th>
                   <th className="w-[10%] break-words px-3 py-3 font-semibold">IP</th>
-                  <th className="w-[16%] break-words px-3 py-3 font-semibold">User agent</th>
+                  <th className="w-[16%] break-words px-3 py-3 font-semibold">Device</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -250,7 +267,7 @@ const AuditLogs = () => {
                       </div>
                     </td>
                     <td className="break-words px-3 py-3">
-                      {log.action || "—"}
+                      {log.action ? formatAction(log.action) : "—"}
                     </td>
                     <td className="break-words px-3 py-3">
                       {log.targetType && (
@@ -278,7 +295,7 @@ const AuditLogs = () => {
                       {log.ip || "—"}
                     </td>
                     <td className="break-all px-3 py-3">
-                      {log.userAgent || "—"}
+                      {getDeviceName(log.userAgent)}
                     </td>
                   </tr>
                   );
