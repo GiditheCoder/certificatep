@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Search, LogOutIcon, Check, X, Clock } from "lucide-react";
+import { Search, LogOutIcon, Check, X, Clock, KeyRound } from "lucide-react";
 import StateLogo from "../images/StateLogo.png";
 import checkBox from "../images/checkbox.png";
 import box from "../images/boxadmin.png";
@@ -133,6 +133,13 @@ const OfficialScreen = () => {
     navigate("/official");
   };
 
+  const handlePasswordReset = () => {
+    navigate("/officialforgotpassword", {
+      state: { email: Admin?.email || "" },
+    });
+    setMenuOpen(false);
+  };
+
   const allApplications = [
     ...pending.map((item) => ({ ...item, status: "Pending" })),
     ...approved.map((item) => ({ ...item, status: "Approved" })),
@@ -236,6 +243,14 @@ const OfficialScreen = () => {
         </div>
 
         <div className="hidden sm:flex items-center space-x-3 text-sm">
+          <button
+            type="button"
+            onClick={handlePasswordReset}
+            className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:border-[#11860F] hover:text-[#11860F]"
+          >
+            <KeyRound className="h-4 w-4" />
+            Reset password
+          </button>
           <div className="text-right">
             <p className="font-semibold">
               {Admin?.firstName || ""} {Admin?.lastName || ""}
@@ -268,6 +283,14 @@ const OfficialScreen = () => {
             />
           </div>
           <div className="flex items-center space-x-3 text-sm">
+            <button
+              type="button"
+              onClick={handlePasswordReset}
+              className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:border-[#11860F] hover:text-[#11860F]"
+            >
+              <KeyRound className="h-4 w-4" />
+              Reset password
+            </button>
             <div className="text-right">
               <p className="font-semibold">
                 {Admin?.firstName || ""} {Admin?.lastName || ""}

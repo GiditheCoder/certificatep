@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Bg from "../images/Bg.png";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const OfficialForgotPassword = () => {
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const [email, setEmail] = useState(location.state?.email || "");
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const emailWasProvided = Boolean(location.state?.email);
 
   const handleLoginRedirect = () => {
     navigate("/official");
@@ -77,6 +79,7 @@ const OfficialForgotPassword = () => {
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              readOnly={emailWasProvided}
               disabled={loading}
               className={`w-full font-medium border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
                 errors.email
