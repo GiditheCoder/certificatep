@@ -168,7 +168,7 @@ const approvedApps = applications.filter((a) => a.status === "approved");
             <button
               type="button"
               onClick={handlePasswordReset}
-              className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-[#11860F]"
+              className="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-gray-700 hover:text-[#11860F]"
             >
               <KeyRound className="h-4 w-4" />
               Reset password

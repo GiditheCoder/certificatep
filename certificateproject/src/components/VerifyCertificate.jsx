@@ -377,7 +377,6 @@ const VerifyCertificate = () => {
 
         setVerifiedData(verificationData);
         toast.success("Certificate verified successfully!");
-        console.log("✅ Certificate hash verified:", verificationData);
       } catch (error) {
         console.error("❌ Certificate hash verification failed:", error.response?.data || error.message);
         toast.error(error.response?.data?.message || "Certificate verification failed.");
@@ -405,7 +404,6 @@ const VerifyCertificate = () => {
 
       toast.success("Certificate verified successfully!");
       setVerifiedData(data);
-      console.log("✅ Certificate verified:", data);
     } catch (error) {
       console.error(error);
       toast.error(
@@ -429,7 +427,6 @@ const VerifyCertificate = () => {
           `${baseURL}/api/v1/certificate/nullify-verification`,
           { params: { ref: certificateRef } }
         );
-        console.log(`Verification for ${certificateRef} nullified ✅`);
       } catch (err) {
         console.warn("Failed to nullify verification:", err);
       }
@@ -455,7 +452,6 @@ const VerifyCertificate = () => {
           `${baseURL}/api/v1/signatory/${encodeURIComponent(effectiveLga)}`
         );
         setSignatory(signRes.data.data || signRes.data);
-        console.log("✍️ Signatory data:", signRes.data);
       } catch (error) {
         console.error("❌ Failed to fetch signatory:", error);
         toast.warning("Could not load signature details");
