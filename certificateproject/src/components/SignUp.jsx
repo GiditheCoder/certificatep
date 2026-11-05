@@ -62,8 +62,6 @@ const handleSubmit = async (e) => {
       formData
     );
 
-    console.log("✅ Response:", res.data);
-
     // 🎉 Show toast notification on successful signup
     toast.success("Email registered successfully! Please verify your email.", {
       position: "top-center",
@@ -290,4 +288,3 @@ const handleSubmit = async (e) => {
 };
 
 export default SignUp;
-
