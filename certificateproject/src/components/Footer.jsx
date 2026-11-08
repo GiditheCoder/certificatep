@@ -28,7 +28,6 @@ const Footer = () => {
           <div className="text-left text-sm sm:text-base">
             <h3 className="font-medium text-sm sm:text-base mb-2">Contact Us</h3>
             <p className="text-xs sm:text-sm text-gray-300">+234 702 001 000 - Support Line</p>
-            <p className="text-xs sm:text-sm text-gray-300">+234 800 004 300 - ECG</p>
             <p className="text-xs sm:text-sm text-gray-300 mt-2 leading-snug">
               <span className="font-medium text-gray-200">Open Hours of Government:</span> <br className="sm:hidden" />
               Mon - Fri: 8.00 am - 6.00 pm.
