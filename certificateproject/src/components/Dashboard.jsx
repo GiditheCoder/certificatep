@@ -32,6 +32,7 @@ const Dashboard = () => {
   const [applications, setApplications] = useState([]);
   const [activeTab, setActiveTab] = useState("noapplication");
   const [loading, setLoading] = useState(true);
+  const [retryingPaymentId, setRetryingPaymentId] = useState(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -60,7 +61,31 @@ const Dashboard = () => {
       
         const userApps = allApps.filter((app) => app.user === parsedUser._id);
 
-        setApplications(userApps);
+        const applicationsWithDetails = await Promise.all(
+          userApps.map(async (app) => {
+            const applicationId = app._id ?? app.id;
+            if (!applicationId) return app;
+
+            try {
+              const detailsResponse = await axios.get(
+                `${baseURL}/api/v1/application/${encodeURIComponent(applicationId)}`,
+                { headers: { Authorization: "Bearer " + token } }
+              );
+              const details =
+                detailsResponse.data?.data?.application ??
+                detailsResponse.data?.data ??
+                detailsResponse.data;
+              return { ...app, ...details };
+            } catch (error) {
+              console.error(
+                `Failed to load application details (${applicationId}):`,
+                error.response?.data || error.message
+              );
+              return app;
+            }
+          })
+        );
+        setApplications(applicationsWithDetails);
 
         if (userApps.length === 0) {
           setActiveTab("noapplication");
@@ -95,6 +120,92 @@ const Dashboard = () => {
   const handlePasswordChange = () => {
     navigate("/change-password");
     setMenuOpen(false);
+  };
+
+  const handleRetryPayment = async (application) => {
+    const applicationId = application._id ?? application.id;
+    if (!applicationId) {
+      toast.error("Application reference is missing. Please try again later.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please log in again to retry your payment.");
+      navigate("/login");
+      return;
+    }
+
+    setRetryingPaymentId(applicationId);
+    try {
+      const requestConfig = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+      const detailsResponse = await axios.get(
+        `${baseURL}/api/v1/application/${encodeURIComponent(applicationId)}`,
+        requestConfig
+      );
+      const details =
+        detailsResponse.data?.data?.application ??
+        detailsResponse.data?.data ??
+        detailsResponse.data;
+      const hasPendingPaymentLink =
+        details &&
+        Object.prototype.hasOwnProperty.call(details, "pendingPaymentLink");
+      const pendingPaymentLink = hasPendingPaymentLink
+        ? details.pendingPaymentLink
+        : application.pendingPaymentLink;
+
+      const response = await axios.post(
+        `${baseURL}/api/v1/application/${pendingPaymentLink ? "" : "partner/"}${encodeURIComponent(applicationId)}/payment`,
+        {},
+        requestConfig
+      );
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || "Unable to retry payment.");
+      }
+
+      if (pendingPaymentLink) {
+        const paymentLink =
+          response.data?.data?.paymentLink ??
+          response.data?.data?.paymentUrl ??
+          response.data?.data?.url ??
+          pendingPaymentLink;
+        window.location.assign(paymentLink);
+        return;
+      }
+
+      const paymentData = response.data?.data?.paymentData;
+      const accountData = paymentData?.data ?? paymentData ?? response.data?.data;
+      if (!accountData?.accountName || !accountData?.accountNumber) {
+        throw new Error(response.data?.message || "Unable to generate bank transfer details.");
+      }
+
+      navigate("/bank-transfer", {
+        state: {
+          transferDetails: {
+            sourceId: applicationId,
+            applicationId:
+              response.data.data.applicationId ??
+              response.data.data.certificateId ??
+              applicationId,
+            accountNumber: accountData.accountNumber,
+            accountName: accountData.accountName,
+            expiryDateTime:
+              accountData.expiryDateTime || accountData.expiryTime,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Payment retry error:", error.response?.data || error.message);
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Unable to retry payment. Please try again."
+      );
+    } finally {
+      setRetryingPaymentId(null);
+    }
   };
 
   const handleVerifyCertificateDashboard = () => {
@@ -293,18 +404,27 @@ const approvedApps = applications.filter((a) => a.status === "approved");
         <div
           key={app._id}
           className={`border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between transition ${
-            app.isPendingPayment ? "cursor-pointer hover:bg-gray-50" : ""
+            app.status === "pending_payment" ? "cursor-pointer hover:bg-gray-50" : ""
           }`}
           onClick={() => {
-          if (app.status === "pending_payment") {
-  if (app.pendingPaymentLink) {
-    toast.info("Redirecting you to complete your payment...");
-    window.location.href = app.pendingPaymentLink;
-  } else {
-    toast.error("Payment link unavailable. Please start a new application.");
-  }
-}
-
+            if (
+              app.status === "pending_payment" &&
+              retryingPaymentId !== (app._id ?? app.id)
+            ) {
+              handleRetryPayment(app);
+            }
+          }}
+          role={app.status === "pending_payment" ? "button" : undefined}
+          tabIndex={app.status === "pending_payment" ? 0 : undefined}
+          onKeyDown={(event) => {
+            if (
+              app.status === "pending_payment" &&
+              (event.key === "Enter" || event.key === " ") &&
+              retryingPaymentId !== (app._id ?? app.id)
+            ) {
+              event.preventDefault();
+              handleRetryPayment(app);
+            }
           }}
         >
           <div className="flex items-center gap-3">
@@ -322,13 +442,26 @@ const approvedApps = applications.filter((a) => a.status === "approved");
                 Applied: {new Date(app.createdAt).toLocaleDateString()}
               </p>
 
+              {app.status === "pending_payment" &&
+                Object.prototype.hasOwnProperty.call(
+                  app,
+                  "pendingPaymentLink"
+                ) && (
+                  <span className="mt-1 inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                    Payment method:{" "}
+                    {app.pendingPaymentLink ? "Online payment" : "Bank transfer"}
+                  </span>
+                )}
+
               {app.status === "rejected" && (
                 <p className="text-red-600 font-medium text-sm">Rejected</p>
               )}
               
              {app.status === "pending_payment" && (
   <p className="text-yellow-600 font-medium text-sm">
-    Incomplete payment — click to retry
+    {retryingPaymentId === (app._id ?? app.id)
+      ? "Generating transfer details..."
+      : "Incomplete payment — click to retry"}
   </p>
 )}
 

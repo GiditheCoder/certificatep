@@ -179,7 +179,7 @@ const Banktransfer = () => {
             : "Transfer to the temporary account below to complete your application."}
         </p>
 
-        <dl className="space-y-5 rounded-xl border border-green-200 bg-green-50 p-5 text-sm text-green-950 sm:p-6">
+        <dl className="space-y-5 rounded-xl border border-green-200 bg-green-50 p-5 text-center text-sm text-green-950 sm:p-6 sm:text-left">
           {transferDetails.applicationId && (
             <div>
               <dt className="mb-1 text-gray-600">Application reference</dt>
@@ -201,7 +201,7 @@ const Banktransfer = () => {
             </dd>
           </div>
           {transferDetails.expiryDateTime && (
-            <div className="flex items-start gap-2 border-t border-green-200 pt-4">
+            <div className="flex items-start justify-center gap-2 border-t border-green-200 pt-4 sm:justify-start">
               <Clock3
                 size={18}
                 className="mt-0.5 shrink-0 text-green-700"
