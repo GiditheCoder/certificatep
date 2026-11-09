@@ -258,8 +258,9 @@ useEffect(() => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "nin" || name === "nativePollingUnit") {
-      if (!/^\d*$/.test(value)) return;
+    if (name === "nin" && !/^\d*$/.test(value)) return;
+    if (name === "nativePollingUnit" && !/^[a-zA-Z0-9]*$/.test(value)) {
+      return;
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -824,7 +825,7 @@ if (formData.nin?.trim() && !/^\d{11}$/.test(formData.nin)) {
                 </label>
                 <input
                   type="text"
-                  inputMode={field.name === "nativePollingUnit" ? "numeric" : undefined}
+                  inputMode={field.name === "nativePollingUnit" ? "text" : undefined}
                   name={field.name}
                   value={formData[field.name]}
                   onChange={handleInputChange}

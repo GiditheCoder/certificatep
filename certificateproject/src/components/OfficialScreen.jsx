@@ -133,10 +133,8 @@ const OfficialScreen = () => {
     navigate("/official");
   };
 
-  const handlePasswordReset = () => {
-    navigate("/officialforgotpassword", {
-      state: { email: Admin?.email || "" },
-    });
+  const handlePasswordChange = () => {
+    navigate("/officialchangepassword");
     setMenuOpen(false);
   };
 
@@ -245,11 +243,11 @@ const OfficialScreen = () => {
         <div className="hidden sm:flex items-center space-x-3 text-sm">
           <button
             type="button"
-            onClick={handlePasswordReset}
+            onClick={handlePasswordChange}
             className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:border-[#11860F] hover:text-[#11860F]"
           >
             <KeyRound className="h-4 w-4" />
-            Reset password
+            Change password
           </button>
           <div className="text-right">
             <p className="font-semibold">
@@ -285,11 +283,11 @@ const OfficialScreen = () => {
           <div className="flex items-center space-x-3 text-sm">
             <button
               type="button"
-              onClick={handlePasswordReset}
+              onClick={handlePasswordChange}
               className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:border-[#11860F] hover:text-[#11860F]"
             >
               <KeyRound className="h-4 w-4" />
-              Reset password
+              Change password
             </button>
             <div className="text-right">
               <p className="font-semibold">

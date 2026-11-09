@@ -92,8 +92,8 @@ const Dashboard = () => {
     navigate("/login");
   };
 
-  const handlePasswordReset = () => {
-    navigate("/forgot-password", { state: { email: user?.email || "" } });
+  const handlePasswordChange = () => {
+    navigate("/change-password");
     setMenuOpen(false);
   };
 
@@ -122,11 +122,11 @@ const approvedApps = applications.filter((a) => a.status === "approved");
         <div className="hidden md:flex items-center gap-5">
           <button
             type="button"
-            onClick={handlePasswordReset}
+            onClick={handlePasswordChange}
             className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-[#11860F] hover:text-[#11860F]"
           >
             <KeyRound className="h-4 w-4" />
-            Reset password
+            Change password
           </button>
           <LogOutIcon
             onClick={handleLogout}
@@ -167,11 +167,11 @@ const approvedApps = applications.filter((a) => a.status === "approved");
           <div className="absolute top-full right-4 bg-white border border-gray-200 rounded-lg shadow-lg mt-2 p-4 flex flex-col items-center gap-4 w-40 z-50 md:hidden">
             <button
               type="button"
-              onClick={handlePasswordReset}
+              onClick={handlePasswordChange}
               className="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-gray-700 hover:text-[#11860F]"
             >
               <KeyRound className="h-4 w-4" />
-              Reset password
+              Change password
             </button>
             <LogOutIcon
               onClick={handleLogout}

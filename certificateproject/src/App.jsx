@@ -4,6 +4,7 @@ import Home from './components/Home'
 import SignUp from './components/SignUp'
 import Login from './components/Login'
 import ForgotPassword from './components/ForgotPassword'
+import ChangePassword from './components/ChangePassword'
 import Dashboard from './components/Dashboard'
 import Application from './components/Application'
 import Successful from './components/Successful.jsx'
@@ -50,6 +51,8 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         {/* Forgot Password */}
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        {/* Change Password */}
+        <Route path="/change-password" element={<ChangePassword />} />
         {/* dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
         {/* Application page */}
