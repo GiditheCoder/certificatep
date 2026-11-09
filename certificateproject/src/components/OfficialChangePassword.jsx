@@ -238,6 +238,13 @@ const OfficialChangePassword = () => {
           >
             {loading ? "Changing..." : "Change Password"}
           </button>
+          <button
+            type="button"
+            onClick={() => navigate("/officialscreen")}
+            className="w-full text-sm font-medium text-gray-600 hover:text-[#11860F]"
+          >
+            Back to Dashboard
+          </button>
         </form>
       </div>
 

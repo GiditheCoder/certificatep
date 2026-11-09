@@ -232,7 +232,7 @@ const OfficialScreen = () => {
   return (
     <div className="min-h-screen bg-white p-6 font-sans text-gray-900 relative">
       {/* Header */}
-      <header className="flex justify-between items-center border-b border-gray-200 sm:px-8 md:px-0.5 pb-3 mb-6">
+      <header className="flex justify-between items-center border-b border-gray-200 sm:px-8 md:px-0.5 pb-3 mb-6 relative">
         <div className="flex items-center space-x-2">
           <img src={StateLogo} alt="State Logo" className="w-8 h-8 rounded-full" />
           <span className="text-base sm:text-lg font-semibold text-[#475467]">
@@ -240,68 +240,61 @@ const OfficialScreen = () => {
           </span>
         </div>
 
-        <div className="hidden sm:flex items-center space-x-3 text-sm">
+        <div className="hidden md:flex items-center gap-5">
           <button
             type="button"
             onClick={handlePasswordChange}
-            className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:border-[#11860F] hover:text-[#11860F]"
+            className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-[#11860F] hover:text-[#11860F]"
           >
             <KeyRound className="h-4 w-4" />
             Change password
           </button>
-          <div className="text-right">
-            <p className="font-semibold">
-              {Admin?.firstName || ""} {Admin?.lastName || ""}
-            </p>
-            <p className="text-gray-400 font-medium text-xs">{Admin?.position}</p>
-          </div>
-          <LogOutIcon onClick={handleLogout} className="cursor-pointer hover:text-red-500 transition" />
-        </div>
-
-        <div className="sm:hidden">
-          <img
-            src={MenuLogo}
-            alt="Menu"
-            className="w-6 h-6 cursor-pointer"
-            onClick={() => setMenuOpen(true)}
+          <LogOutIcon
+            onClick={handleLogout}
+            className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]"
           />
-        </div>
-      </header>
-
-      {/* Mobile Menu Popup */}
-      {menuOpen && (
-        <div className="sm:hidden absolute top-16 right-4 bg-white shadow-lg border rounded-md p-4 z-50 w-64">
-          <div className="flex justify-between items-center mb-4">
-            <p className="font-semibold">User Info</p>
-            <img
-              src={CloseLogo}
-              alt="Close"
-              className="w-5 h-5 cursor-pointer"
-              onClick={() => setMenuOpen(false)}
-            />
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-700 font-semibold uppercase">
+            {Admin
+              ? `${Admin.firstName?.charAt(0).toUpperCase()}${Admin.lastName
+                  ?.charAt(0)
+                  .toUpperCase()}`
+              : "?"}
           </div>
-          <div className="flex items-center space-x-3 text-sm">
+        </div>
+
+        <div className="md:hidden flex items-center">
+          <button type="button" onClick={() => setMenuOpen(!menuOpen)}>
+            <img
+              src={menuOpen ? CloseLogo : MenuLogo}
+              alt="menu toggle"
+              className="w-6 h-6"
+            />
+          </button>
+        </div>
+        {menuOpen && (
+          <div className="absolute top-full right-4 bg-white border border-gray-200 rounded-lg shadow-lg mt-2 p-4 flex flex-col items-center gap-4 w-40 z-50 md:hidden">
             <button
               type="button"
               onClick={handlePasswordChange}
-              className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:border-[#11860F] hover:text-[#11860F]"
+              className="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-gray-700 hover:text-[#11860F]"
             >
               <KeyRound className="h-4 w-4" />
               Change password
             </button>
-            <div className="text-right">
-              <p className="font-semibold">
-                {Admin?.firstName || ""} {Admin?.lastName || ""}
-              </p>
-              <p className="text-gray-400 font-medium text-xs">{Admin?.position}</p>
-            </div>
             <LogOutIcon
               onClick={handleLogout}
-              className="cursor-pointer hover:text-red-500 transition"
+              className="w-5 h-5 text-gray-600 cursor-pointer hover:text-[#11860F]"
             />
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-700 font-semibold uppercase">
+              {Admin
+                ? `${Admin.firstName?.charAt(0).toUpperCase()}${Admin.lastName
+                    ?.charAt(0)
+                    .toUpperCase()}`
+                : "?"}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </header>
 
       {/* Title */}
       <h1 className="text-2xl font-bold mb-4">Approval Dashboard</h1>
