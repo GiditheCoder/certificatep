@@ -5,43 +5,50 @@ import { useSearchParams } from "react-router-dom";
 
 const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
-const findApprovedBy = (value) => {
+const findApprover = (value) => {
   if (!value || typeof value !== "object") return null;
 
-  const approvedBy = value.approvedBy ?? value.approved_by;
-  if (approvedBy != null) return approvedBy;
+  for (const [key, nestedValue] of Object.entries(value)) {
+    if (
+      ["approvedby", "approved_by", "approver", "approverdetails"].includes(
+        key.toLowerCase().replace(/[-\s]/g, "")
+      ) &&
+      nestedValue
+    ) {
+      return nestedValue;
+    }
+  }
 
   for (const nestedValue of Object.values(value)) {
-    const result = findApprovedBy(nestedValue);
-    if (result != null) return result;
+    const approver = findApprover(nestedValue);
+    if (approver) return approver;
   }
 
   return null;
 };
 
-const getApproverName = (approvedBy) => {
-  if (approvedBy == null) return "Not provided";
-  if (typeof approvedBy === "string" || typeof approvedBy === "number") {
-    return approvedBy;
+const findApproverField = (approver, fieldNames) => {
+  if (!approver || typeof approver !== "object") return "";
+
+  for (const [key, value] of Object.entries(approver)) {
+    if (fieldNames.includes(key.toLowerCase()) && typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
   }
 
-  return (
-    approvedBy.fullNames ||
-    approvedBy.fullName ||
-    approvedBy.displayName ||
-    [approvedBy.firstName, approvedBy.lastName].filter(Boolean).join(" ") ||
-    approvedBy.name ||
-    approvedBy.username ||
-    approvedBy.email ||
-    JSON.stringify(approvedBy)
-  );
+  for (const value of Object.values(approver)) {
+    const result = findApproverField(value, fieldNames);
+    if (result) return result;
+  }
+
+  return "";
 };
 
 const CertValidation = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState("loading");
   const [certificate, setCertificate] = useState(null);
-  const [approvedBy, setApprovedBy] = useState(null);
+  const [approver, setApprover] = useState(null);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -62,7 +69,7 @@ const CertValidation = () => {
         const verifiedCertificate = data?.certificate ?? data;
 
         setCertificate(verifiedCertificate);
-        setApprovedBy(findApprovedBy(response.data));
+        setApprover(findApprover(response.data));
         setStatus("success");
       } catch (error) {
         console.error("Certificate validation failed:", error.response?.data || error.message);
@@ -75,7 +82,13 @@ const CertValidation = () => {
   }, [searchParams]);
 
   const application = certificate?.application ?? certificate;
-  const approverName = getApproverName(approvedBy);
+  const approverName = [
+    findApproverField(approver, ["firstname", "first_name"]),
+    findApproverField(approver, ["lastname", "last_name"]),
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const approverLga = findApproverField(approver, ["lga"]);
 
   return (
     <main className="min-h-screen bg-[#edf3ef] flex items-center justify-center px-4 py-10">
@@ -110,7 +123,11 @@ const CertValidation = () => {
             )}
             <p className="mt-4 text-sm text-gray-600">
               <span className="font-semibold text-gray-900">Approved by: </span>
-              {approverName}
+              {approverName || "Approver details unavailable"}
+            </p>
+            <p className="mt-1 text-sm text-gray-600">
+              <span className="font-semibold text-gray-900">LGA: </span>
+              {approverLga || "Unavailable"}
             </p>
           </>
         )}

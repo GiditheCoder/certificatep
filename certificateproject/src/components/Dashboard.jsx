@@ -103,6 +103,81 @@ const Dashboard = () => {
     fetchApplications();
   }, [navigate]);
 
+  const handleCertificateDownload = async (app) => {
+    const applicationId = app._id ?? app.id;
+    if (!applicationId) {
+      toast.error("Application reference is missing. Please try again later.");
+      return;
+    }
+
+    try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `${baseURL}/api/v1/certificate/${applicationId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.info("[Dashboard Download] Certificate API response:", response.data);
+        const certificateResponse =
+          response?.data?.data?.certificate ??
+          response?.data?.data ??
+          response?.data?.certificate ??
+          response?.data;
+        const certificate = {
+          ...app,
+          ...certificateResponse,
+          fullNames: certificateResponse?.fullNames ?? app.fullNames,
+          currentAddress: certificateResponse?.currentAddress ?? app.currentAddress,
+          dateOfBirth: certificateResponse?.dateOfBirth ?? app.dateOfBirth,
+          isRevoked:
+            certificateResponse?.isRevoked ??
+            certificateResponse?.data?.isRevoked ??
+            app.isRevoked,
+          revocationReason:
+            certificateResponse?.revocationReason ??
+            certificateResponse?.data?.revocationReason ??
+            app.revocationReason,
+        };
+
+        console.info("[Dashboard Download] Certificate data:", certificate);
+
+        if (certificate.isRevoked) {
+          toast.error(
+            `This certificate has been revoked. Reason: ${
+              certificate.revocationReason || "No reason was provided."
+            }`,
+            { autoClose: 10000 }
+          );
+          return;
+        }
+
+        if (!certificateResponse?.certificateHash) {
+          throw new Error("Certificate hash was not returned by the certificate API");
+        }
+
+        const hash = certificate.certificateHash;
+        const verifyHashUrl =
+          `${baseURL}/api/v1/certificate/verify-hash/${encodeURIComponent(hash)}`;
+        console.info("[Dashboard Download] Verify-hash request:", verifyHashUrl);
+        await axios.get(verifyHashUrl);
+
+        navigate(`/certificate/${applicationId}`, {
+          state: {
+            email: user?.email,
+            certificate,
+            certificateHash: hash,
+          },
+        });
+    } catch (error) {
+      console.error("❌ Failed to fetch certificate details:", {
+        status: error.response?.status,
+        response: error.response?.data,
+        message: error.message,
+        applicationId,
+      });
+      toast.error("Unable to load certificate details. Please try again.");
+    }
+  };
+
   const handleNewApplication = () => {
     if (user?.state !== "verified") {
       toast.error("User must be verified to start an application");
@@ -504,7 +579,13 @@ const approvedApps = applications.filter((a) => a.status === "approved");
             {/* ✅ Download Certificate Button */}
             <button
               className="flex items-center gap-2 bg-[#11860F] text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
-              onClick={async () => {
+              onClickCapture={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                handleCertificateDownload(app);
+              }}
+              onClick={async (event) => {
+                if (event.defaultPrevented) return;
                 try {
                   const token = localStorage.getItem("token");
                   const response = await axios.get(
