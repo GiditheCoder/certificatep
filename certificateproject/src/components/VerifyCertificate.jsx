@@ -20,6 +20,14 @@ import CloseLogo from "../images/close.png";
 import Borderside from "../images/border.png";
 import QRCode from "react-qr-code";
 
+const createValidationUrl = (hash, approvedBy) => {
+  const params = new URLSearchParams({ hash });
+  if (approvedBy?.firstName) params.set("approvedByFirstName", approvedBy.firstName);
+  if (approvedBy?.lastName) params.set("approvedByLastName", approvedBy.lastName);
+  if (approvedBy?.lga) params.set("approvedByLga", approvedBy.lga);
+  return `${window.location.origin}/cert-validation?${params.toString()}`;
+};
+
 const createWatermarkPositions = (lgaName) => {
   const label = lgaName.toUpperCase();
   const labelWidth = Math.max(32, label.length * 9.5);
@@ -483,7 +491,7 @@ const VerifyCertificate = () => {
         .join("-");
       const verificationHash = cert.certificateHash || cert.hash || app._id || "certificate";
       const qrCode = await QRCodeGenerator.toDataURL(
-        `${window.location.origin}/cert-validation?hash=${encodeURIComponent(verificationHash)}`,
+        createValidationUrl(verificationHash, cert.approvedBy ?? app.approvedBy),
         { margin: 1, width: 256 }
       );
       const applicantImage = app.passport
@@ -712,7 +720,10 @@ const VerifyCertificate = () => {
                       </div>
                       <div className="shrink-0 rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
                         <QRCode
-                          value={`${window.location.origin}/cert-validation?hash=${encodeURIComponent(verificationHash || "certificate")}`}
+                          value={createValidationUrl(
+                            verificationHash || "certificate",
+                            cert.approvedBy ?? app.approvedBy
+                          )}
                           size={84}
                         />
                       </div>

@@ -16,6 +16,14 @@ const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 const certificateDate = "8th day of October, 2026";
 const organizationLocation = "Owode Egba, Ogun State, Nigeria";
 
+const createValidationUrl = (hash, approvedBy) => {
+  const params = new URLSearchParams({ hash });
+  if (approvedBy?.firstName) params.set("approvedByFirstName", approvedBy.firstName);
+  if (approvedBy?.lastName) params.set("approvedByLastName", approvedBy.lastName);
+  if (approvedBy?.lga) params.set("approvedByLga", approvedBy.lga);
+  return `${window.location.origin}/cert-validation?${params.toString()}`;
+};
+
 const createWatermarkPositions = (lgaName) => {
   const label = lgaName.toUpperCase();
   const labelWidth = Math.max(32, label.length * 9.5);
@@ -550,7 +558,7 @@ const downloadPDF = async () => {
     toast.info("Generating PDF...");
     const verificationHash = certificateHash || certificate?._id || id || "certificate";
     const qrCode = await QRCodeGenerator.toDataURL(
-      `${window.location.origin}/cert-validation?hash=${encodeURIComponent(verificationHash)}`,
+      createValidationUrl(verificationHash, certificate?.approvedBy),
       { margin: 1, width: 256 }
     );
     const document = pdf(
@@ -762,7 +770,10 @@ const downloadPDF = async () => {
                     </div>
                     <div className="shrink-0 rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
                       <QRCode
-                        value={`${window.location.origin}/cert-validation?hash=${encodeURIComponent(certificateHash || "certificate")}`}
+                        value={createValidationUrl(
+                          certificateHash || "certificate",
+                          certificate?.approvedBy
+                        )}
                         size={84}
                       />
                     </div>

@@ -83,12 +83,15 @@ const CertValidation = () => {
 
   const application = certificate?.application ?? certificate;
   const approverName = [
-    findApproverField(approver, ["firstname", "first_name"]),
-    findApproverField(approver, ["lastname", "last_name"]),
+    searchParams.get("approvedByFirstName") ||
+      findApproverField(approver, ["firstname", "first_name"]),
+    searchParams.get("approvedByLastName") ||
+      findApproverField(approver, ["lastname", "last_name"]),
   ]
     .filter(Boolean)
     .join(" ");
-  const approverLga = findApproverField(approver, ["lga"]);
+  const approverLga =
+    searchParams.get("approvedByLga") || findApproverField(approver, ["lga"]);
 
   return (
     <main className="min-h-screen bg-[#edf3ef] flex items-center justify-center px-4 py-10">
