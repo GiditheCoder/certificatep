@@ -5,6 +5,38 @@ import { useSearchParams } from "react-router-dom";
 
 const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
+const findApprovedBy = (value) => {
+  if (!value || typeof value !== "object") return null;
+
+  const approvedBy = value.approvedBy ?? value.approved_by;
+  if (approvedBy != null) return approvedBy;
+
+  for (const nestedValue of Object.values(value)) {
+    const result = findApprovedBy(nestedValue);
+    if (result != null) return result;
+  }
+
+  return null;
+};
+
+const getApproverName = (approvedBy) => {
+  if (approvedBy == null) return "Not provided";
+  if (typeof approvedBy === "string" || typeof approvedBy === "number") {
+    return approvedBy;
+  }
+
+  return (
+    approvedBy.fullNames ||
+    approvedBy.fullName ||
+    approvedBy.displayName ||
+    [approvedBy.firstName, approvedBy.lastName].filter(Boolean).join(" ") ||
+    approvedBy.name ||
+    approvedBy.username ||
+    approvedBy.email ||
+    JSON.stringify(approvedBy)
+  );
+};
+
 const CertValidation = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState("loading");
@@ -30,9 +62,7 @@ const CertValidation = () => {
         const verifiedCertificate = data?.certificate ?? data;
 
         setCertificate(verifiedCertificate);
-        setApprovedBy(
-          data?.approvedBy ?? verifiedCertificate?.approvedBy ?? response.data?.approvedBy ?? null
-        );
+        setApprovedBy(findApprovedBy(response.data));
         setStatus("success");
       } catch (error) {
         console.error("Certificate validation failed:", error.response?.data || error.message);
@@ -45,15 +75,7 @@ const CertValidation = () => {
   }, [searchParams]);
 
   const application = certificate?.application ?? certificate;
-  const approverName =
-    typeof approvedBy === "string" || typeof approvedBy === "number"
-      ? approvedBy
-      : approvedBy?.fullNames ||
-        approvedBy?.fullName ||
-        [approvedBy?.firstName, approvedBy?.lastName].filter(Boolean).join(" ") ||
-        approvedBy?.name ||
-        approvedBy?.email ||
-        "Not provided";
+  const approverName = getApproverName(approvedBy);
 
   return (
     <main className="min-h-screen bg-[#edf3ef] flex items-center justify-center px-4 py-10">
