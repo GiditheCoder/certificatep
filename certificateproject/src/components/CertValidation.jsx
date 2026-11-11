@@ -9,6 +9,7 @@ const CertValidation = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState("loading");
   const [certificate, setCertificate] = useState(null);
+  const [approvedBy, setApprovedBy] = useState(null);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -29,6 +30,9 @@ const CertValidation = () => {
         const verifiedCertificate = data?.certificate ?? data;
 
         setCertificate(verifiedCertificate);
+        setApprovedBy(
+          data?.approvedBy ?? verifiedCertificate?.approvedBy ?? response.data?.approvedBy ?? null
+        );
         setStatus("success");
       } catch (error) {
         console.error("Certificate validation failed:", error.response?.data || error.message);
@@ -41,6 +45,15 @@ const CertValidation = () => {
   }, [searchParams]);
 
   const application = certificate?.application ?? certificate;
+  const approverName =
+    typeof approvedBy === "string" || typeof approvedBy === "number"
+      ? approvedBy
+      : approvedBy?.fullNames ||
+        approvedBy?.fullName ||
+        [approvedBy?.firstName, approvedBy?.lastName].filter(Boolean).join(" ") ||
+        approvedBy?.name ||
+        approvedBy?.email ||
+        "Not provided";
 
   return (
     <main className="min-h-screen bg-[#edf3ef] flex items-center justify-center px-4 py-10">
@@ -73,6 +86,10 @@ const CertValidation = () => {
                 {application.fullNames}
               </p>
             )}
+            <p className="mt-4 text-sm text-gray-600">
+              <span className="font-semibold text-gray-900">Approved by: </span>
+              {approverName}
+            </p>
           </>
         )}
 
