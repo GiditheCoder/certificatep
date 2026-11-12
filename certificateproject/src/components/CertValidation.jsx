@@ -5,50 +5,10 @@ import { useSearchParams } from "react-router-dom";
 
 const baseURL = "https://certapp-aae046f75d3f.herokuapp.com";
 
-const findApprover = (value) => {
-  if (!value || typeof value !== "object") return null;
-
-  for (const [key, nestedValue] of Object.entries(value)) {
-    if (
-      ["approvedby", "approved_by", "approver", "approverdetails"].includes(
-        key.toLowerCase().replace(/[-\s]/g, "")
-      ) &&
-      nestedValue
-    ) {
-      return nestedValue;
-    }
-  }
-
-  for (const nestedValue of Object.values(value)) {
-    const approver = findApprover(nestedValue);
-    if (approver) return approver;
-  }
-
-  return null;
-};
-
-const findApproverField = (approver, fieldNames) => {
-  if (!approver || typeof approver !== "object") return "";
-
-  for (const [key, value] of Object.entries(approver)) {
-    if (fieldNames.includes(key.toLowerCase()) && typeof value === "string" && value.trim()) {
-      return value.trim();
-    }
-  }
-
-  for (const value of Object.values(approver)) {
-    const result = findApproverField(value, fieldNames);
-    if (result) return result;
-  }
-
-  return "";
-};
-
 const CertValidation = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState("loading");
   const [certificate, setCertificate] = useState(null);
-  const [approver, setApprover] = useState(null);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -69,7 +29,6 @@ const CertValidation = () => {
         const verifiedCertificate = data?.certificate ?? data;
 
         setCertificate(verifiedCertificate);
-        setApprover(findApprover(response.data));
         setStatus("success");
       } catch (error) {
         console.error("Certificate validation failed:", error.response?.data || error.message);
@@ -82,16 +41,14 @@ const CertValidation = () => {
   }, [searchParams]);
 
   const application = certificate?.application ?? certificate;
-  const approverName = [
-    searchParams.get("approvedByFirstName") ||
-      findApproverField(approver, ["firstname", "first_name"]),
-    searchParams.get("approvedByLastName") ||
-      findApproverField(approver, ["lastname", "last_name"]),
-  ]
-    .filter(Boolean)
-    .join(" ");
-  const approverLga =
-    searchParams.get("approvedByLga") || findApproverField(approver, ["lga"]);
+  const approvedBy =
+    certificate?.approvedBy ?? certificate?.application?.approvedBy ?? null;
+  const approverFirstName =
+    searchParams.get("approvedByFirstName") ?? approvedBy?.firstName ?? "";
+  const approverLastName =
+    searchParams.get("approvedByLastName") ?? approvedBy?.lastName ?? "";
+  const approverLga = searchParams.get("approvedByLga") ?? approvedBy?.lga ?? "";
+  const approverName = [approverFirstName, approverLastName].filter(Boolean).join(" ");
 
   return (
     <main className="min-h-screen bg-[#edf3ef] flex items-center justify-center px-4 py-10">
