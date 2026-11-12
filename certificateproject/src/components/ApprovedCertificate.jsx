@@ -343,7 +343,6 @@ const ApprovedCertificate = () => {
             passedCertificate?._id ||
             id;
 
-          console.info("[Certificate Page] Certificate data:", passedCertificate);
           setCertificate(passedCertificate);
           setCertificateHash(hashFromPayload);
           setLoading(false);
@@ -389,8 +388,6 @@ const ApprovedCertificate = () => {
           return;
         }
 
-        console.info("[Certificate Page] Certificate API response:", certificateRes.data);
-        console.info("[Certificate Page] Certificate data:", cert);
         setCertificate(cert);
         setCertificateHash(cert?.certificateHash || cert?.hash || cert?._id || id);
         setLoading(false);
